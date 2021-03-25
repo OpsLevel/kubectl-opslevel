@@ -4,8 +4,8 @@ WORKDIR /workspace
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
-COPY . ./src
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 ./src/build.sh
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./kubectl-opslevel
 
 
 FROM golang:1.16 AS release
