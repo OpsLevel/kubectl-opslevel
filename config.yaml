@@ -1,0 +1,11 @@
+service:
+  import:
+    - kind: deployment
+      namespace: "*"
+      ol_service_name: "{$.metadata.name}-{$.metadata.labels.component}"
+      ol_product: "bookstore"
+    - kind: deployment
+      namespace: "infra"
+      ol_service_name: "{$.metadata.name}-{$.metadata.labels.component}"
+      ol_alias: "infra-{$.metadata.name}"
+      ol_product: "infra"

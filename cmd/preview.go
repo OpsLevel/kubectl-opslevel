@@ -9,14 +9,9 @@ import (
 // previewCmd represents the preview command
 var previewCmd = &cobra.Command{
 	Use:   "preview",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: run,
+	Short: "Preview the service entries that will be created",
+	Long: `Preview the service entries that will be created`,
+	Run: runPreview,
 }
 
 func init() {
@@ -33,6 +28,6 @@ func init() {
 	// previewCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func run(cmd *cobra.Command, args []string) {
+func runPreview(cmd *cobra.Command, args []string) {
 	fmt.Println("preview called")
 }
