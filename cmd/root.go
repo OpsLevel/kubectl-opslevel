@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
+	// "fmt"
+	// "os"
 	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
@@ -24,8 +24,8 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./opslevel.yaml)")
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./config.yaml)")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -38,15 +38,18 @@ func initConfig() {
 		home, err := homedir.Dir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".kubectl-opslevel" (without extension).
+		viper.SetConfigName("opslevel")
+		viper.SetConfigType("yaml")
+		viper.AddConfigPath(".")
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".kubectl-opslevel")
 	}
 
+	viper.SetEnvPrefix("OL")
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+	if err := viper.ReadInConfig(); err != nil {
+		// TODO: log error
+		//fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
 }

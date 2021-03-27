@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/spf13/cobra"
 	"github.com/opslevel/kubectl-opslevel/config"
@@ -18,7 +19,11 @@ var configViewCmd = &cobra.Command{
 	Short: "Print the final configuration result",
 	Long: "Print the final configuration after loading all the overrides and defaults",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(config.ConfigSample)
+		conf, err := config.New()
+		cobra.CheckErr(err)
+		output, err2 := yaml.Marshal(conf)
+		cobra.CheckErr(err2)
+		fmt.Println(string(output))
 	},
 }
 
@@ -27,7 +32,11 @@ var configSampleCmd = &cobra.Command{
 	Short: "Print a sample config file",
 	Long: "Print a sample config file which could be used",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(config.ConfigSample)
+		conf, err := config.Default()
+		cobra.CheckErr(err)
+		output, err2 := yaml.Marshal(conf)
+		cobra.CheckErr(err2)
+		fmt.Println(string(output))
 	},
 }
 

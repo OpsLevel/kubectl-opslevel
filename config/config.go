@@ -1,11 +1,21 @@
 package config
 
+import (
+	"bytes"
+	"github.com/spf13/viper"
+	"github.com/creasty/defaults"
+)
+
 var (
 	ConfigFileName = "config.yaml"
 )
 
 type Import struct {
-    kind string `json:"kind"`
+    Kind string
+	Namespace string 
+	OLServiceName string `default:"{$.metadata.name}" mapstructure:"ol_service_name" yaml:"ol_service_name"`
+	OLAlias string `mapstructure:"ol_alias" yaml:"ol_alias"`
+	OLProduct string `mapstructure:"ol_product" yaml:"ol_product"`
 }
 
 type Service struct {
@@ -18,14 +28,21 @@ type Config struct {
 
 func New() (*Config, error) {
 	c := &Config{}
-	if err := c.Load(); err != nil {
+	viper.Unmarshal(&c)
+	if err := defaults.Set(c); err != nil {
 		return c, err
 	}
-
 	return c, nil
 }
 
-func (c *Config) Load() error {
-	// Use Viper to Load config?
-	return nil
+func Default() (*Config, error) {
+	c := &Config{}
+	v := viper.New()
+	v.SetConfigType("yaml")
+	v.ReadConfig(bytes.NewBuffer([]byte(ConfigSample)))
+	v.Unmarshal(&c)
+	if err := defaults.Set(c); err != nil {
+		return c, err
+	}
+	return c, nil
 }

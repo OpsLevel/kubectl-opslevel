@@ -2,7 +2,6 @@ service:
   import:
     - kind: deployment
       namespace: "*"
-      ol_service_name: "{$.metadata.name}-{$.metadata.labels.component}"
       ol_product: "bookstore"
     - kind: deployment
       namespace: "infra"
