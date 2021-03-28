@@ -1,9 +1,8 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"github.com/rs/zerolog/log"
 )
 
 // previewCmd represents the preview command
@@ -29,5 +28,5 @@ func init() {
 }
 
 func runPreview(cmd *cobra.Command, args []string) {
-	fmt.Println("preview called")
+	log.Info().Msgf("preview called")
 }

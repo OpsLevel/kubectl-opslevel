@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	// "fmt"
 	"os"
+	"strings"
 	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
@@ -21,8 +21,6 @@ var rootCmd = &cobra.Command{
 	Long: `Opslevel Commandline Tools`,
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	cobra.CheckErr(rootCmd.Execute())
 }
@@ -34,14 +32,10 @@ func init() {
 	cobra.OnInitialize(initConfig)
 }
 
-// initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	setupLogging()
 	if cfgFile != "" {
-		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
 		home, err := homedir.Dir()
 		cobra.CheckErr(err)
 
@@ -52,27 +46,33 @@ func initConfig() {
 	}
 
 	viper.SetEnvPrefix("OL")
-	viper.AutomaticEnv() // read in environment variables that match
+	viper.AutomaticEnv()
+	viper.BindPFlags(rootCmd.Flags())
 
-	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
-		// TODO: log error
-		//fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		panic(err)
 	}
+
+	logFormat = strings.ToLower(viper.GetString("logFormat"))
+	logLevel = strings.ToLower(viper.GetString("logLevel"))
+
+	setupLogging()
 }
 
 func setupLogging() {
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
-	if logFormat == "TEXT" {
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	if logFormat == "text" {
+		output := zerolog.ConsoleWriter{Out: os.Stderr}
+		log.Logger = log.Output(output)
+
 	}
-	if logLevel == "ERROR" {
+	if logLevel == "error" {
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-	} else if logLevel == "WARN" {
+	} else if logLevel == "warn" {
 		zerolog.SetGlobalLevel(zerolog.WarnLevel)
-	} else if logLevel == "DEBUG" {
+	} else if logLevel == "debug" {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	} else {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)

@@ -1,9 +1,8 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"github.com/rs/zerolog/log"
 )
 
 // importCmd represents the import command
@@ -29,5 +28,5 @@ func init() {
 }
 
 func runImport(cmd *cobra.Command, args []string) {
-	fmt.Println("import called")
+	log.Info().Msgf("import called")
 }
