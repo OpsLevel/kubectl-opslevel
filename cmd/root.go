@@ -66,15 +66,16 @@ func setupLogging() {
 	if logFormat == "text" {
 		output := zerolog.ConsoleWriter{Out: os.Stderr}
 		log.Logger = log.Output(output)
-
 	}
-	if logLevel == "error" {
-		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-	} else if logLevel == "warn" {
-		zerolog.SetGlobalLevel(zerolog.WarnLevel)
-	} else if logLevel == "debug" {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	} else {
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+
+	switch {
+		case logLevel == "error":
+			zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+		case logLevel == "warn":
+			zerolog.SetGlobalLevel(zerolog.WarnLevel)
+		case logLevel == "debug":
+			zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		default:
+			zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 }
