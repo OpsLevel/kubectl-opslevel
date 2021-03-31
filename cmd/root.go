@@ -33,8 +33,23 @@ func init() {
 }
 
 func initConfig() {
+	readConfig()
+
+	logFormat = strings.ToLower(viper.GetString("logFormat"))
+	logLevel = strings.ToLower(viper.GetString("logLevel"))
+
+	setupLogging()
+}
+
+func readConfig() {
 	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
+		if cfgFile == "." {
+			viper.SetConfigType("yaml")
+			viper.ReadConfig(os.Stdin)
+			return
+		} else {
+			viper.SetConfigFile(cfgFile)
+		}
 	} else {
 		home, err := homedir.Dir()
 		cobra.CheckErr(err)
@@ -52,11 +67,6 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 		panic(err)
 	}
-
-	logFormat = strings.ToLower(viper.GetString("logFormat"))
-	logLevel = strings.ToLower(viper.GetString("logLevel"))
-
-	setupLogging()
 }
 
 func setupLogging() {

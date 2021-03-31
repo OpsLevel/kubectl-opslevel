@@ -1,8 +1,14 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
+	"context"
+
+	"github.com/opslevel/kubectl-opslevel/config"
+	"github.com/opslevel/kubectl-opslevel/controller"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // previewCmd represents the preview command
@@ -28,5 +34,20 @@ func init() {
 }
 
 func runPreview(cmd *cobra.Command, args []string) {
-	log.Info().Msgf("preview called")
+	_, err := config.New()
+	cobra.CheckErr(err)
+
+	client := controller.CreateKubernetesClient()
+
+    listOptions := metav1.ListOptions{
+		LabelSelector: "k8s-app=kube-dns",
+		FieldSelector: "metadata.name=coredns",
+    }
+
+	deployments, err2 := client.AppsV1().Deployments("").List(context.TODO(), listOptions)
+	cobra.CheckErr(err2)
+
+	for i, deployment := range deployments.Items {
+		log.Info().Msgf("%d = %s\n", i, deployment.ObjectMeta.Name)
+	}
 }
