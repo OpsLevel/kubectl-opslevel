@@ -10,12 +10,28 @@ var (
 	ConfigFileName = "config.yaml"
 )
 
+type OpslevelServiceRegistration struct {
+	Name string `default:".metadata.name"`
+	Description string
+	Owner string
+	Lifecycle string
+	Tier string
+	Product string
+	Language string
+	Framework string
+	Aliases []string
+	Tags []string
+}
+
+type OpslevelKubernetesSelector struct {
+	Kind string
+	Namespace string
+	Labels map[string]string
+}
+
 type Import struct {
-    Kind string
-	Namespace string 
-	OLServiceName string `default:"{$.metadata.name}" mapstructure:"ol_service_name" yaml:"ol_service_name"`
-	OLAlias string `mapstructure:"ol_alias" yaml:"ol_alias"`
-	OLProduct string `mapstructure:"ol_product" yaml:"ol_product"`
+    Selector OpslevelKubernetesSelector
+    Opslevel OpslevelServiceRegistration
 }
 
 type Service struct {
