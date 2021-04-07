@@ -1,23 +1,25 @@
 service:
   import:
-    - selector:
+    - selector: #Works like a standard k8s selector
         kind: deployment
-        namespace: infra
-        labels:
-          app: infra
+        # namespace: kube-system
+        # labels:
+        #   k8s-app: kube-dns
       opslevel:
-        name: \(.metadata.name)-\(.metadata.labels.component)
-        description: .metadata.annotations."opslevel.com/description"
-        aliases: 
-        - .metadata.labels.alias
-        - .metadata.annotations
-        product: infra
-        owner: 
-        tier: 
-        tags:
-        - "{InternalProduct: .metadata.labels.IP}"
-        - .metadata.labels
-    - selector:
-        kind: deployment
-      opslevel:
-        product: bookstore
+        name: '"\(.metadata.name)-\(.metadata.namespace)"' #Make composite strings
+        description: .metadata.annotations."opslevel.com/description" #Use annotations
+        owner: .metadata.labels."k8s-app" #Handle Exotic Key names
+        tier: '"1"' #Specify Constant Values
+#         aliases: 
+#         - .metadata.labels.alias
+#         - .metadata.annotations
+#         product: infra
+#         owner: 
+#         tier: 
+#         tags:
+#         - "{InternalProduct: .metadata.labels.IP}"
+#         - .metadata.labels
+#     - selector:
+#         kind: deployment
+#       opslevel:
+#         product: bookstore

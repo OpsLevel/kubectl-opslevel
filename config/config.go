@@ -1,37 +1,28 @@
 package config
 
 import (
+	"fmt"
 	"bytes"
+	"strings"
 	"github.com/spf13/viper"
 	"github.com/creasty/defaults"
+
+	"github.com/opslevel/kubectl-opslevel/opslevel"
 )
 
 var (
 	ConfigFileName = "config.yaml"
 )
 
-type OpslevelServiceRegistration struct {
-	Name string `default:".metadata.name"`
-	Description string
-	Owner string
-	Lifecycle string
-	Tier string
-	Product string
-	Language string
-	Framework string
-	Aliases []string
-	Tags []string
-}
-
-type OpslevelKubernetesSelector struct {
+type OpslevelKubernetesSelectorConfig struct {
 	Kind string
 	Namespace string
 	Labels map[string]string
 }
 
 type Import struct {
-    Selector OpslevelKubernetesSelector
-    Opslevel OpslevelServiceRegistration
+    SelectorConfig OpslevelKubernetesSelectorConfig `mapstructure:"selector"`
+    OpslevelConfig opslevel.ServiceRegistrationConfig `mapstructure:"opslevel"`
 }
 
 type Service struct {
@@ -61,4 +52,12 @@ func Default() (*Config, error) {
 		return c, err
 	}
 	return c, nil
+}
+
+func (selector *OpslevelKubernetesSelectorConfig) LabelSelector() string {
+	var labels []string
+    for key, value := range selector.Labels {
+		labels = append(labels, fmt.Sprintf("%s=%s", key, value))
+    }
+    return strings.Join(labels, ",")
 }
