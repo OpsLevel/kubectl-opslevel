@@ -1,8 +1,16 @@
 package cmd
 
 import (
+	"fmt"
+	"io/ioutil"
+
+	_ "github.com/opslevel/kubectl-opslevel/config"
+	_ "github.com/opslevel/kubectl-opslevel/k8sutils"
+	"github.com/opslevel/kubectl-opslevel/opslevel"
+
 	"github.com/spf13/cobra"
-	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
+	_ "github.com/rs/zerolog/log"
 )
 
 // importCmd represents the import command
@@ -16,17 +24,26 @@ var importCmd = &cobra.Command{
 func init() {
 	serviceCmd.AddCommand(importCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// importCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// importCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// TODO: should this be a global flag?
+	importCmd.Flags().String("api-token", "", "The OpsLevel API Token. Overrides environment variable 'OL_APITOKEN'")
 }
 
 func runImport(cmd *cobra.Command, args []string) {
-	log.Info().Msgf("import called")
+	// config, err := config.New()
+	// cobra.CheckErr(err)
+
+	apiToken := viper.GetString("apitoken")
+	// exampleService := &opslevel.ServiceRegistration {
+	// 	Name: "my-cool-service",
+	// }
+	client := opslevel.NewClient(apiToken)
+
+	resp, respErr := client.Post(`{ "query": "mutation {  serviceCreate(input:{name:\"Brand New Service\",ownerAlias:\"infra\"}) { service { id name description owner { name alias } } errors { message path } } }" }`)
+	defer resp.Body.Close()
+	cobra.CheckErr(respErr)
+
+    fmt.Println("response Status:", resp.Status)
+    fmt.Println("response Headers:", resp.Header)
+    body, _ := ioutil.ReadAll(resp.Body)
+    fmt.Println("response Body:", string(body))
 }

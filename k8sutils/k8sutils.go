@@ -5,7 +5,6 @@ import (
 	"os"
 	"encoding/json"
 
-	"github.com/opslevel/kubectl-opslevel/opslevel"
 	"github.com/opslevel/kubectl-opslevel/config"
 
 	"github.com/rs/zerolog/log"
@@ -59,14 +58,14 @@ func CreateKubernetesClient() kubernetes.Interface {
 	return client
 }
 
-func QueryForServices(config *config.Config) ([]opslevel.ServiceRegistration, error) {
+func QueryForServices(c *config.Config) ([]config.ServiceRegistration, error) {
 	var err error
-	var parser *opslevel.ServiceRegistrationParser
-	var services []opslevel.ServiceRegistration
+	var parser *config.ServiceRegistrationParser
+	var services []config.ServiceRegistration
 	k8sClient := CreateKubernetesClient()
 	
-	for _, importConfig := range config.Service.Import {
-		parser, err = opslevel.NewParser(importConfig.OpslevelConfig)
+	for _, importConfig := range c.Service.Import {
+		parser, err = config.NewParser(importConfig.OpslevelConfig)
 		if (err != nil) { return nil, err }
 		listOptions := metav1.ListOptions{
 			LabelSelector: importConfig.SelectorConfig.LabelSelector(),

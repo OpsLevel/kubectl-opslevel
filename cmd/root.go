@@ -11,10 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var cfgFile string
-var logFormat string
-var logLevel string
-
 var rootCmd = &cobra.Command{
 	Use:   "kubectl-opslevel",
 	Short: "Opslevel Commandline Tools",
@@ -26,22 +22,19 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default \"./opslevel.yaml\")")
-	rootCmd.PersistentFlags().StringVar(&logFormat, "logFormat", "JSON", "The Log Format. (options [\"JSON\", \"TEXT\"])")
-	rootCmd.PersistentFlags().StringVar(&logLevel, "logLevel", "INFO", "The Log Level. (options [\"ERROR\", \"WARN\", \"INFO\", \"DEBUG\"])")
+	rootCmd.PersistentFlags().StringP("config", "c", "./opslevel.yaml", "")
+	rootCmd.PersistentFlags().String("logFormat", "JSON", "overrides environment variable 'OL_LOGFORMAT' (options [\"JSON\", \"TEXT\"])")
+	rootCmd.PersistentFlags().String("logLevel", "INFO", "overrides environment variable 'OL_LOGLEVEL' (options [\"ERROR\", \"WARN\", \"INFO\", \"DEBUG\"])")
 	cobra.OnInitialize(initConfig)
 }
 
 func initConfig() {
 	readConfig()
-
-	logFormat = strings.ToLower(viper.GetString("logFormat"))
-	logLevel = strings.ToLower(viper.GetString("logLevel"))
-
 	setupLogging()
 }
 
 func readConfig() {
+	cfgFile := viper.GetString("config")
 	if cfgFile != "" {
 		if cfgFile == "." {
 			viper.SetConfigType("yaml")
@@ -70,6 +63,8 @@ func readConfig() {
 }
 
 func setupLogging() {
+	logFormat := strings.ToLower(viper.GetString("logFormat"))
+	logLevel := strings.ToLower(viper.GetString("logLevel"))
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 

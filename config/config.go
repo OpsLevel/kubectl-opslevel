@@ -6,8 +6,6 @@ import (
 	"strings"
 	"github.com/spf13/viper"
 	"github.com/creasty/defaults"
-
-	"github.com/opslevel/kubectl-opslevel/opslevel"
 )
 
 var (
@@ -22,7 +20,7 @@ type OpslevelKubernetesSelectorConfig struct {
 
 type Import struct {
     SelectorConfig OpslevelKubernetesSelectorConfig `mapstructure:"selector"`
-    OpslevelConfig opslevel.ServiceRegistrationConfig `mapstructure:"opslevel"`
+    OpslevelConfig ServiceRegistrationConfig `mapstructure:"opslevel"`
 }
 
 type Service struct {
