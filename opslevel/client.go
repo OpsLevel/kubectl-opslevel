@@ -1,34 +1,58 @@
 package opslevel
 
 import (
-	"fmt"
-	"bytes"
 	"net/http"
+	"context"
+
+	"golang.org/x/oauth2"
+	"github.com/shurcooL/graphql"
 )
 
+const defaultURL = "https://api.opslevel.com/graphql"
+
+type ClientSettings struct {
+	url string
+	ctx context.Context
+	httpClient *http.Client
+}
+
 type Client struct {
-	httpClient http.Client
-	apiToken string
+	url string
+	ctx context.Context
+	client *graphql.Client
 }
 
-func NewClient(apiToken string) *Client {
-	return &Client {
-		httpClient: http.Client{},
-		apiToken: fmt.Sprintf("Bearer %v", apiToken),
+type option func(*ClientSettings)
+
+func SetURL(url string) option {
+	return func(c *ClientSettings) {
+		c.url = url
 	}
 }
 
-func (c *Client) Post(query string) (*http.Response, error) {
-	req, err := http.NewRequest("POST", "https://api.opslevel.com/graphql", bytes.NewBuffer([]byte(query)))
-	if err != nil {
-		return nil, err
+func NewClient(apiToken string, options ...option) *Client {
+	httpToken := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: apiToken, TokenType: "Bearer"},
+	)
+	settings := &ClientSettings{
+		url: defaultURL,
+		ctx: context.Background(),
+		httpClient: oauth2.NewClient(context.Background(), httpToken),
 	}
-	return c.Do(req)
+	for _, opt := range options {
+		opt(settings)
+	}
+	return &Client{
+		url: settings.url,
+		ctx: settings.ctx,
+		client: graphql.NewClient(settings.url, settings.httpClient),
+	}
 }
 
-func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Authorization", c.apiToken)
-	return c.httpClient.Do(req)
+func (c *Client) Query(q interface{}, variables map[string]interface{}) error {
+	return c.client.Query(c.ctx, q, variables)
+}
+
+func (c *Client) Mutate(m interface{}, variables map[string]interface{}) error {
+	return c.client.Mutate(c.ctx, m, variables)
 }

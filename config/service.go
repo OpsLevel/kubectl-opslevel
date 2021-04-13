@@ -80,6 +80,7 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) (*ServiceRegistratio
 			return ""
 		}
 		var bytes []byte
+		// TODO: if the parser == nil because the filter was bad - should just put the filter as the field?
 		// TODO: if the parser's filter was "" then we shouldn't run this
 		bytes, err = parser.Run(data)
 		if err != nil {

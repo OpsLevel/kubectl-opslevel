@@ -6,10 +6,13 @@ service:
         # labels:
         #   k8s-app: kube-dns
       opslevel:
-        name: '"\(.metadata.name)-\(.metadata.namespace)"' #Make composite strings
+        #name: '"\(.metadata.name)-\(.metadata.namespace)"' #Make composite strings
         description: .metadata.annotations."opslevel.com/description" #Use annotations
+        language: '"go"'
+        framework: '"all"'
         owner: .metadata.labels."k8s-app" #Handle Exotic Key names
-        tier: '"1"' #Specify Constant Values
+        product: .metadata.namespace
+        tier: '"tier_1"' #Specify Constant Values
 #         aliases: 
 #         - .metadata.labels.alias
 #         - .metadata.annotations

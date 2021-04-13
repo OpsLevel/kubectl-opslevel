@@ -19,8 +19,8 @@ type OpslevelKubernetesSelectorConfig struct {
 }
 
 type Import struct {
-    SelectorConfig OpslevelKubernetesSelectorConfig `mapstructure:"selector"`
-    OpslevelConfig ServiceRegistrationConfig `mapstructure:"opslevel"`
+    SelectorConfig OpslevelKubernetesSelectorConfig `yaml:"selector" json:"selector" mapstructure:"selector"`
+    OpslevelConfig ServiceRegistrationConfig `yaml:"opslevel" json:"opslevel" mapstructure:"opslevel"`
 }
 
 type Service struct {
