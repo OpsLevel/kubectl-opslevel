@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentry
+  namespace: demo
+  labels:
+    app: sentry
+    environment: prod
+  annotations:
+      opslevel.com/description: The sentry.io cluster for company
+      opslevel.com/owner: infra
+      opslevel.com/lifecycle: pre-alpha
+      opslevel.com/tier: tier_2
+      opslevel.com/product: shared
+      opslevel.com/languague: go
+      opslevel.com/framework: react
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+      environment: prod
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: web
+        environment: prod
+        version: "1.0"
+    spec:
+      containers:
+        - name: web
+          image: cilium/echoserver
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: 1Mi
+              cpu: "0.1"
+            limits:
+              memory: 50Mi
+              cpu: "0.5"
+          env:
+            - name: PORT
+              value: "8899"
+          ports:
+            - containerPort: 8899
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 8899
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 8899
+            initialDelaySeconds: 20
+            periodSeconds: 60

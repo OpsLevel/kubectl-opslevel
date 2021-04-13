@@ -54,6 +54,9 @@ func runImport(cmd *cobra.Command, args []string) {
 			Description: graphql.String(service.Description),
 			Languague: graphql.String(service.Language),
 			Framework: graphql.String(service.Framework),
+			// TODO: Tier
+			// TODO: Owner
+			// TODO: Lifecycle
 		})
 		cobra.CheckErr(err)
 		// TODO: loop through service.Aliases and create them

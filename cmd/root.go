@@ -11,6 +11,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var cfgFile string
+
 var rootCmd = &cobra.Command{
 	Use:   "kubectl-opslevel",
 	Short: "Opslevel Commandline Tools",
@@ -22,7 +24,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringP("config", "c", "./opslevel.yaml", "")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "./opslevel.yaml", "")
 	rootCmd.PersistentFlags().String("logFormat", "JSON", "overrides environment variable 'OL_LOGFORMAT' (options [\"JSON\", \"TEXT\"])")
 	rootCmd.PersistentFlags().String("logLevel", "INFO", "overrides environment variable 'OL_LOGLEVEL' (options [\"ERROR\", \"WARN\", \"INFO\", \"DEBUG\"])")
 	cobra.OnInitialize(initConfig)
@@ -34,7 +36,6 @@ func initConfig() {
 }
 
 func readConfig() {
-	cfgFile := viper.GetString("config")
 	if cfgFile != "" {
 		if cfgFile == "." {
 			viper.SetConfigType("yaml")
