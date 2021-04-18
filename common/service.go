@@ -45,21 +45,67 @@ func NewParser(c config.ServiceRegistrationConfig) *ServiceRegistrationParser {
 	parser.Product = NewJQParser(c.Product)
 	parser.Language = NewJQParser(c.Language)
 	parser.Framework = NewJQParser(c.Framework)
-	// TODO: Aliases & Tags
+	for _, alias := range c.Aliases {
+		parser.Aliases = append(parser.Aliases, NewJQParser(alias))
+	}
+	for _, tag := range c.Tags {
+		parser.Tags = append(parser.Tags, NewJQParser(tag))
+	}
 	return &parser
+}
+
+func GetString(parser JQParser, data []byte) string {
+	output := parser.Parse(data)
+	if (output == nil) { return "" }
+	if (output.Type == String) {
+		return output.StringObj
+	}
+	return ""
 }
 
 func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration {
 	service := ServiceRegistration{}
-	service.Name = parser.Name.Parse(data)
-	service.Description = parser.Description.Parse(data)
-	service.Owner = parser.Owner.Parse(data)
-	service.Lifecycle = parser.Lifecycle.Parse(data)
-	service.Tier = parser.Tier.Parse(data)
-	service.Product = parser.Product.Parse(data)
-	service.Language = parser.Language.Parse(data)
-	service.Framework = parser.Framework.Parse(data)
-	// TODO: Aliases & Tags
+	service.Name = GetString(parser.Name, data)
+	service.Description = GetString(parser.Description, data)
+	service.Owner = GetString(parser.Owner, data)
+	service.Lifecycle = GetString(parser.Lifecycle, data)
+	service.Tier = GetString(parser.Tier, data)
+	service.Product = GetString(parser.Product, data)
+	service.Language = GetString(parser.Language, data)
+	service.Framework = GetString(parser.Framework, data)
+	for _, alias := range parser.Aliases {
+		output := alias.Parse(data)
+		if (output == nil) { continue }
+		switch output.Type {
+		case String:
+			service.Aliases = append(service.Aliases, output.StringObj)
+			break
+		case StringArray:
+			for _, item := range output.StringArray {
+				service.Aliases = append(service.Aliases, item)
+			}
+			break
+		}
+	}
+	service.Tags = map[string]string{}
+	for _, tag := range parser.Tags {
+		output := tag.Parse(data)
+		if (output == nil) { continue }
+		switch output.Type {
+		case StringStringMap:
+			for k, v := range output.StringMap {
+				service.Tags[k] = v
+			}
+			break
+		case StringStringMapArray:
+			for _, item := range output.StringMapArray {
+				for k, v := range item {
+					service.Tags[k] = v
+				}
+			}
+			break
+		}
+	}
 	return &service
 }
 
