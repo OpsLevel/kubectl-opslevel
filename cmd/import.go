@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/opslevel/kubectl-opslevel/config"
-	"github.com/opslevel/kubectl-opslevel/k8sutils"
+	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/kubectl-opslevel/opslevel"
 
 	"github.com/spf13/cobra"
@@ -36,7 +36,7 @@ func runImport(cmd *cobra.Command, args []string) {
 
 	client := opslevel.NewClient(viper.GetString("apitoken"))
 
-	services, servicesErr := k8sutils.QueryForServices(config)
+	services, servicesErr := common.QueryForServices(config)
 	cobra.CheckErr(servicesErr)
 
 	for _, service := range services {

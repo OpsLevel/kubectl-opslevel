@@ -2,29 +2,30 @@ package k8sutils
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"strings"
 	"encoding/json"
-
-	"github.com/opslevel/kubectl-opslevel/config"
 
 	"github.com/rs/zerolog/log"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/workqueue"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/go-logr/logr"
 	"k8s.io/klog/v2"
 )
 
-type Controller struct {
-	name      string
-	clientset kubernetes.Interface
-	queue     workqueue.RateLimitingInterface
-	informer  cache.SharedIndexInformer
+type KubernetesSelector struct {
+	Kind string
+	Namespace string
+	Labels map[string]string
+}
+
+type ClientWrapper struct {
+	client kubernetes.Interface
 }
 
 func getKubernetesConfig() (*rest.Config, error) {
@@ -43,7 +44,7 @@ func getKubernetesConfig() (*rest.Config, error) {
 	return config, nil
 }
 
-func CreateKubernetesClient() kubernetes.Interface {
+func CreateKubernetesClient() ClientWrapper {
 	config, err := getKubernetesConfig()
 	if err != nil {
 		log.Fatal().Msgf("Unable to create a kubernetes client: %v", err)
@@ -55,31 +56,29 @@ func CreateKubernetesClient() kubernetes.Interface {
 	}
 	// Supress k8s client-go
 	klog.SetLogger(logr.Discard())
-	return client
+	return ClientWrapper{client: client}
 }
 
-func QueryForServices(c *config.Config) ([]config.ServiceRegistration, error) {
-	var err error
-	var parser *config.ServiceRegistrationParser
-	var services []config.ServiceRegistration
-	k8sClient := CreateKubernetesClient()
-	
-	for _, importConfig := range c.Service.Import {
-		parser, err = config.NewParser(importConfig.OpslevelConfig)
-		if (err != nil) { return nil, err }
-		listOptions := metav1.ListOptions{
-			LabelSelector: importConfig.SelectorConfig.LabelSelector(),
-		}
-		// TODO: use different client based on importConfig.SelectorConfig.Kind
-		deployments, deploymentsErr := k8sClient.AppsV1().Deployments(importConfig.SelectorConfig.Namespace).List(context.TODO(), listOptions)
-		if (deploymentsErr != nil) { return nil, deploymentsErr }
-		for _, resource := range deployments.Items {
-			bytes, bytesErr := json.Marshal(resource)
-			if (bytesErr != nil) { return nil, err }
-			service, serviceErr := parser.Parse(bytes)
-			if (serviceErr != nil) { return nil, err }
-			services = append(services, *service)
-		}
+func (c *ClientWrapper) Query(selector KubernetesSelector, handler func(resource []byte) error) error {
+	listOptions := metav1.ListOptions{
+		LabelSelector: selector.LabelSelector(),
 	}
-	return services, nil
+	// TODO: use different client based on selector.Kind
+	deployments, deploymentsErr := c.client.AppsV1().Deployments(selector.Namespace).List(context.TODO(), listOptions)
+	if (deploymentsErr != nil) { return deploymentsErr }
+	for _, resource := range deployments.Items {
+		bytes, bytesErr := json.Marshal(resource)
+		if (bytesErr != nil) { return bytesErr }
+		handlerErr := handler(bytes)
+		if (handlerErr != nil) { return handlerErr }
+	}
+	return nil
+}
+
+func (selector *KubernetesSelector) LabelSelector() string {
+	var labels []string
+    for key, value := range selector.Labels {
+		labels = append(labels, fmt.Sprintf("%s=%s", key, value))
+    }
+    return strings.Join(labels, ",")
 }

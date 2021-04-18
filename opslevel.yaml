@@ -8,11 +8,11 @@ service:
       opslevel:
         #name: '"\(.metadata.name)-\(.metadata.namespace)"' #Make composite strings
         description: .metadata.annotations."opslevel.com/description" #Use annotations
-        language: '"go"'
-        framework: '"all"'
+        language: go
+        framework: django
         owner: .metadata.labels."k8s-app" #Handle Exotic Key names
         product: .metadata.namespace
-        tier: '"tier_1"' #Specify Constant Values
+        tier: tier_1 #Specify Constant Values
 #         aliases: 
 #         - .metadata.labels.alias
 #         - .metadata.annotations

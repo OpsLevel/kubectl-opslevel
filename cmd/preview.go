@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/opslevel/kubectl-opslevel/config"
-	"github.com/opslevel/kubectl-opslevel/k8sutils"
+	"github.com/opslevel/kubectl-opslevel/common"
 
 	_ "github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -30,7 +30,7 @@ func runPreview(cmd *cobra.Command, args []string) {
 	config, err := config.New()
 	cobra.CheckErr(err)
 
-	services, err2 := k8sutils.QueryForServices(config)
+	services, err2 := common.QueryForServices(config)
 	cobra.CheckErr(err2)
 
 	var output []string
