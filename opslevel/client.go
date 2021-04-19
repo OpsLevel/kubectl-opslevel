@@ -30,6 +30,18 @@ func SetURL(url string) option {
 	}
 }
 
+func SetContext(ctx context.Context) option {
+	return func(c *ClientSettings) {
+		c.ctx = ctx
+	}
+}
+
+func SetHttpClient(client *http.Client) option {
+	return func(c *ClientSettings) {
+		c.httpClient = client
+	}
+}
+
 func NewClient(apiToken string, options ...option) *Client {
 	httpToken := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: apiToken, TokenType: "Bearer"},

@@ -48,6 +48,8 @@ type TeamDeleteInput struct {
 	Alias graphql.String `json:"alias,omitempty"`
 }
 
+//#region Get
+
 func (client *Client) GetTeamWithAlias(alias string) (*Team, error) {
 	var q struct {
 		Account struct {
@@ -78,6 +80,10 @@ func (client *Client) GetTeamWithId(id string) (*Team, error) {
 	return &q.Account.Team, nil
 }
 
+//#endregion
+
+//#region Create
+
 func (client *Client) CreateTeam(input TeamCreateInput) (*Team, error) {
 	var m struct {
 		Payload struct {
@@ -93,6 +99,10 @@ func (client *Client) CreateTeam(input TeamCreateInput) (*Team, error) {
 	}
 	return &m.Payload.Team, FormatErrors(m.Payload.Errors)
 }
+
+//#endregion
+
+//#region Update
 
 func (client *Client) UpdateTeam(input TeamUpdateInput) (*Team, error) {
 	var m struct {
@@ -110,6 +120,10 @@ func (client *Client) UpdateTeam(input TeamUpdateInput) (*Team, error) {
 	return &m.Payload.Team, FormatErrors(m.Payload.Errors)
 }
 
+//#endregion
+
+//#region Delete
+
 func (client *Client) DeleteTeam(input TeamDeleteInput) error {
 	var m struct {
 		Payload struct {
@@ -126,3 +140,5 @@ func (client *Client) DeleteTeam(input TeamDeleteInput) error {
 	}
 	return FormatErrors(m.Payload.Errors)
 }
+
+//#endregion

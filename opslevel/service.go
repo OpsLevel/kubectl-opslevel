@@ -5,22 +5,39 @@ import (
 )
 
 type Service struct {
-	Aliases []graphql.String
+	Aliases []graphql.String `json:"aliases"`
 	//CheckStats
 	//Dependencies
 	//Dependents
-	Description graphql.String
-	Framework graphql.String
-	Id graphql.ID
-	Language graphql.String
-	Lifecycle Lifecycle
-	Name graphql.String
-	Owner Team
-	Product graphql.String
+	Description graphql.String `json:"description"`
+	Framework graphql.String `json:"framework"`
+	Id graphql.ID `json:"id"`
+	Language graphql.String `json:"language"`
+	Lifecycle Lifecycle `json:"lifecycle"`
+	Name graphql.String `json:"name"`
+	Owner Team `json:"owner"`
+	Product graphql.String `json:"product"`
 	//Repositories
+	// TODO: ask about this
 	//Tags
-	Tier Tier
+	Tier Tier `json:"tier"`
 	//Tools
+}
+
+type Lifecycle struct {
+	Alias graphql.String
+	Description graphql.String
+	Id graphql.ID
+	Index graphql.Int
+	Name graphql.String
+}
+
+type Tier struct {
+	Alias graphql.String
+	Description graphql.String
+	Id graphql.ID
+	Index graphql.Int
+	Name graphql.String
 }
 
 type ServiceCreateInput struct {
@@ -50,6 +67,8 @@ type ServiceDeleteInput struct {
 	Id graphql.ID `json:"id,omitempty"`
 	Alias graphql.String `json:"alias,omitempty"`
 }
+
+//#region Get
 
 func (client *Client) GetServiceWithAlias(alias string) (*Service, error) {
 	var q struct {
@@ -81,6 +100,10 @@ func (client *Client) GetServiceWithId(id string) (*Service, error) {
 	return &q.Account.Service, nil
 }
 
+//#endregion
+
+//#region Create
+
 func (client *Client) CreateService(input ServiceCreateInput) (*Service, error) {
 	var m struct {
 		Payload struct {
@@ -96,6 +119,10 @@ func (client *Client) CreateService(input ServiceCreateInput) (*Service, error) 
 	}
 	return &m.Payload.Service, FormatErrors(m.Payload.Errors)
 }
+
+//#endregion
+
+//#region Update
 
 func (client *Client) UpdateService(input ServiceUpdateInput) (*Service, error) {
 	var m struct {
@@ -113,6 +140,10 @@ func (client *Client) UpdateService(input ServiceUpdateInput) (*Service, error) 
 	return &m.Payload.Service, FormatErrors(m.Payload.Errors)
 }
 
+//#endregion
+
+//#region Delete
+
 func (client *Client) DeleteService(input ServiceDeleteInput) error {
 	var m struct {
 		Payload struct {
@@ -129,3 +160,5 @@ func (client *Client) DeleteService(input ServiceDeleteInput) error {
 	}
 	return FormatErrors(m.Payload.Errors)
 }
+
+//#endregion

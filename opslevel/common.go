@@ -9,22 +9,6 @@ import (
 
 type PayloadVariables map[string]interface{}
 
-type Lifecycle struct {
-	Alias graphql.String
-	Description graphql.String
-	Id graphql.ID
-	Index graphql.Int
-	Name graphql.String
-}
-
-type Tier struct {
-	Alias graphql.String
-	Description graphql.String
-	Id graphql.ID
-	Index graphql.Int
-	Name graphql.String
-}
-
 type OpsLevelErrors struct {
 	Message graphql.String
 	Path []graphql.String
