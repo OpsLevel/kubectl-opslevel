@@ -20,7 +20,8 @@ const (
 
 type Tag struct {
 	Id graphql.ID `json:"id"`
-	Owner TagOwner `json:"owner"`
+	// TODO: this seems to be a weird type that is either Service OR Repository
+	//Owner TagOwner `json:"owner"`
 	Key graphql.String `json:"key"`
 	Value graphql.String `json:"value"`
 }
@@ -58,30 +59,28 @@ type TagDeleteInput struct {
 //#region Assign
 
 func (client *Client) AssignTagsForAlias(alias string, tags map[string]string) ([]Tag, error) {
-	var output []Tag
 	input := TagAssignInput{
-		Alias: alias,
-		Tags: []TagInput{}
+		Alias: graphql.String(alias),
+		Tags: []TagInput{},
 	}
 	for key, value := range tags {
         input.Tags = append(input.Tags, TagInput{
-			Key: key,
-			Value: value,
+			Key: graphql.String(key),
+			Value: graphql.String(value),
 		})
     }
 	return client.AssignTags(input)
 }
 
 func (client *Client) AssignTagsForId(id graphql.ID, tags map[string]string) ([]Tag, error) {
-	var output []Tag
 	input := TagAssignInput{
-		Id: id,
-		Tags: []TagInput{}
+		Id: graphql.ID(id),
+		Tags: []TagInput{},
 	}
 	for key, value := range tags {
         input.Tags = append(input.Tags, TagInput{
-			Key: key,
-			Value: value,
+			Key: graphql.String(key),
+			Value: graphql.String(value),
 		})
     }
 	return client.AssignTags(input)
@@ -100,7 +99,7 @@ func (client *Client) AssignTags(input TagAssignInput) ([]Tag, error) {
 	if err := client.Mutate(&m, v); err != nil {
 		return nil, err
 	}
-	return &m.Payload.Tags, FormatErrors(m.Payload.Errors)
+	return m.Payload.Tags, FormatErrors(m.Payload.Errors)
 }
 
 //#endregion
@@ -111,15 +110,15 @@ func (client *Client) CreateTags(alias string, tags map[string]string) ([]Tag, e
 	var output []Tag
 	for key, value := range tags {
 		input := TagCreateInput{
-			Alias: alias,
-			Key: key,
-			Value: value,
+			Alias: graphql.String(alias),
+			Key: graphql.String(key),
+			Value: graphql.String(value),
 		}
 		newTag, err := client.CreateTag(input)
         if (err != nil) {
 			// TODO: combind errors?
 		} else {
-			output = append(output, newTag)
+			output = append(output, *newTag)
 		}
     }
 	return output, nil
@@ -129,15 +128,15 @@ func (client *Client) CreateTagsForId(id graphql.ID, tags map[string]string) ([]
 	var output []Tag
 	for key, value := range tags {
 		input := TagCreateInput{
-			Id: id,
-			Key: key,
-			Value: value,
+			Id: graphql.ID(id),
+			Key: graphql.String(key),
+			Value: graphql.String(value),
 		}
 		newTag, err := client.CreateTag(input)
         if (err != nil) {
 			// TODO: combind errors?
 		} else {
-			output = append(output, newTag)
+			output = append(output, *newTag)
 		}
     }
 	return output, nil

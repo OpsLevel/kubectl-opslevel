@@ -11,17 +11,23 @@ type AliasCreateInput struct {
 
 //#region Create
 
-func (client *Client) CreateAliases(ownerId string, aliases []string) {
+func (client *Client) CreateAliases(ownerId string, aliases []string) []graphql.String {
+	var output []graphql.String
 	for _, alias := range aliases {
 		input := AliasCreateInput{
-			Alias: alias,
-			OwnerId: ownerId,
+			Alias: graphql.String(alias),
+			OwnerId: graphql.String(ownerId),
 		}
-		if err := client.CreateAlias(input); err != nil {
+		result, err := client.CreateAlias(input)
+		if err != nil {
 			// TODO: log warning about failed create?
 		}
-		// TODO: should we append all aliases and return a final result []graphql.String?
+		for _, resultAlias := range result {
+			output = append(output, resultAlias)
+		}
 	}
+	// TODO: need to treat this like a HashSet to deduplicate
+	return output
 }
 
 func (client *Client) CreateAlias(input AliasCreateInput) ([]graphql.String, error) {
@@ -38,7 +44,7 @@ func (client *Client) CreateAlias(input AliasCreateInput) ([]graphql.String, err
 	if err := client.Mutate(&m, v); err != nil {
 		return nil, err
 	}
-	return &m.Payload.Aliases, FormatErrors(m.Payload.Errors)
+	return m.Payload.Aliases, FormatErrors(m.Payload.Errors)
 }
 
 //#endregion

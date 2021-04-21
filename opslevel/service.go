@@ -61,7 +61,8 @@ type ServiceUpdateInput struct {
 	Framework graphql.String `json:"framework,omitempty"`
 	Tier graphql.String `json:"tierAlias,omitempty"`
 	Owner graphql.String `json:"ownerAlias,omitempty"`
-	Lifecycle graphql.String `json:"lifecycleAlias,omitempty"`}
+	Lifecycle graphql.String `json:"lifecycleAlias,omitempty"`
+}
 
 type ServiceDeleteInput struct {
 	Id graphql.ID `json:"id,omitempty"`
