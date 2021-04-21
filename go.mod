@@ -9,6 +9,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/imdario/mergo v0.3.10 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/rocktavious/autopilot v0.1.4 // indirect
 	github.com/rs/zerolog v1.21.0
 	github.com/shurcooL/graphql v0.0.0-20200928012149-18c5c3165e3a
 	github.com/spf13/cobra v1.1.3

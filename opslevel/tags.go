@@ -20,36 +20,35 @@ const (
 
 type Tag struct {
 	Id graphql.ID `json:"id"`
-	// TODO: this seems to be a weird type that is either Service OR Repository
-	//Owner TagOwner `json:"owner"`
+	Owner TagOwner `json:"owner"`
 	Key graphql.String `json:"key"`
 	Value graphql.String `json:"value"`
 }
 
 type TagInput struct {
-	Key graphql.String `json:"key"`
-	Value graphql.String `json:"value"`
+	Key string `json:"key"`
+	Value string `json:"value"`
 }
 
 type TagAssignInput struct {
 	Id graphql.ID `json:"id"`
-	Alias graphql.String `json:"alias,omitempty"`
+	Alias string `json:"alias,omitempty"`
 	Type TaggableResource `json:"type,omitempty"`
 	Tags []TagInput `json:"tags"`
 }
 
 type TagCreateInput struct {
 	Id graphql.ID `json:"id"`
-	Alias graphql.String `json:"alias,omitempty"`
+	Alias string `json:"alias,omitempty"`
 	Type TaggableResource `json:"type,omitempty"`
-	Key graphql.String `json:"key"`
-	Value graphql.String `json:"value"`
+	Key string `json:"key"`
+	Value string `json:"value"`
 }
 
 type TagUpdateInput struct {
 	Id graphql.ID `json:"id"`
-	Key graphql.String `json:"key"`
-	Value graphql.String `json:"value"`
+	Key string `json:"key"`
+	Value string `json:"value"`
 }
 
 type TagDeleteInput struct {
@@ -60,13 +59,13 @@ type TagDeleteInput struct {
 
 func (client *Client) AssignTagsForAlias(alias string, tags map[string]string) ([]Tag, error) {
 	input := TagAssignInput{
-		Alias: graphql.String(alias),
+		Alias: alias,
 		Tags: []TagInput{},
 	}
 	for key, value := range tags {
         input.Tags = append(input.Tags, TagInput{
-			Key: graphql.String(key),
-			Value: graphql.String(value),
+			Key: key,
+			Value: value,
 		})
     }
 	return client.AssignTags(input)
@@ -79,8 +78,8 @@ func (client *Client) AssignTagsForId(id graphql.ID, tags map[string]string) ([]
 	}
 	for key, value := range tags {
         input.Tags = append(input.Tags, TagInput{
-			Key: graphql.String(key),
-			Value: graphql.String(value),
+			Key: key,
+			Value: value,
 		})
     }
 	return client.AssignTags(input)
@@ -110,9 +109,9 @@ func (client *Client) CreateTags(alias string, tags map[string]string) ([]Tag, e
 	var output []Tag
 	for key, value := range tags {
 		input := TagCreateInput{
-			Alias: graphql.String(alias),
-			Key: graphql.String(key),
-			Value: graphql.String(value),
+			Alias: alias,
+			Key: key,
+			Value: value,
 		}
 		newTag, err := client.CreateTag(input)
         if (err != nil) {
@@ -128,9 +127,9 @@ func (client *Client) CreateTagsForId(id graphql.ID, tags map[string]string) ([]
 	var output []Tag
 	for key, value := range tags {
 		input := TagCreateInput{
-			Id: graphql.ID(id),
-			Key: graphql.String(key),
-			Value: graphql.String(value),
+			Id: id,
+			Key: key,
+			Value: value,
 		}
 		newTag, err := client.CreateTag(input)
         if (err != nil) {

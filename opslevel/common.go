@@ -7,6 +7,13 @@ import (
 	"github.com/shurcooL/graphql"
 )
 
+type PageInfo struct {
+	HasNextPage graphql.Boolean `graphql:"hasNextPage"`
+	HasPreviousPage graphql.Boolean `graphql:"hasPreviousPage"`
+	Start graphql.String `graphql:"startCursor"`
+	End graphql.String `graphql:"endCursor"`
+}
+
 type PayloadVariables map[string]interface{}
 
 type OpsLevelErrors struct {

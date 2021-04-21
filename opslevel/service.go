@@ -18,8 +18,9 @@ type Service struct {
 	Owner Team `json:"owner"`
 	Product graphql.String `json:"product"`
 	//Repositories
-	// TODO: ask about this
-	//Tags
+	Tags struct {
+		Nodes []Tag
+	} `json:"tags"`
 	Tier Tier `json:"tier"`
 	//Tools
 }
@@ -41,67 +42,33 @@ type Tier struct {
 }
 
 type ServiceCreateInput struct {
-	Name graphql.String `json:"name"`
-	Product graphql.String `json:"product,omitempty"`
-	Description graphql.String `json:"description,omitempty"`
-	Languague graphql.String `json:"language,omitempty"`
-	Framework graphql.String `json:"framework,omitempty"`
-	Tier graphql.String `json:"tierAlias,omitempty"`
-	Owner graphql.String `json:"ownerAlias,omitempty"`
-	Lifecycle graphql.String `json:"lifecycleAlias,omitempty"`
+	Name string `json:"name"`
+	Product string `json:"product,omitempty"`
+	Description string `json:"description,omitempty"`
+	Languague string `json:"language,omitempty"`
+	Framework string `json:"framework,omitempty"`
+	Tier string `json:"tierAlias,omitempty"`
+	Owner string `json:"ownerAlias,omitempty"`
+	Lifecycle string `json:"lifecycleAlias,omitempty"`
 }
 
 type ServiceUpdateInput struct {
 	Id graphql.ID `json:"id,omitempty"`
-	Alias graphql.String `json:"alias,omitempty"`
-	Name graphql.String `json:"name,omitempty"`
-	Product graphql.String `json:"product,omitempty"`
-	Descripition graphql.String `json:"description,omitempty"`
-	Languague graphql.String `json:"languague,omitempty"`
-	Framework graphql.String `json:"framework,omitempty"`
-	Tier graphql.String `json:"tierAlias,omitempty"`
-	Owner graphql.String `json:"ownerAlias,omitempty"`
-	Lifecycle graphql.String `json:"lifecycleAlias,omitempty"`
+	Alias string `json:"alias,omitempty"`
+	Name string `json:"name,omitempty"`
+	Product string `json:"product,omitempty"`
+	Descripition string `json:"description,omitempty"`
+	Languague string `json:"languague,omitempty"`
+	Framework string `json:"framework,omitempty"`
+	Tier string `json:"tierAlias,omitempty"`
+	Owner string `json:"ownerAlias,omitempty"`
+	Lifecycle string `json:"lifecycleAlias,omitempty"`
 }
 
 type ServiceDeleteInput struct {
 	Id graphql.ID `json:"id,omitempty"`
-	Alias graphql.String `json:"alias,omitempty"`
+	Alias string `json:"alias,omitempty"`
 }
-
-//#region Get
-
-func (client *Client) GetServiceWithAlias(alias string) (*Service, error) {
-	var q struct {
-		Account struct {
-			Service Service `graphql:"service(alias: $service)"`
-		}
-	}
-	v := PayloadVariables{
-		"service": graphql.String(alias),
-	}
-	if err := client.Query(&q, v); err != nil {
-		return nil, err
-	}
-	return &q.Account.Service, nil
-}
-
-func (client *Client) GetServiceWithId(id string) (*Service, error) {
-	var q struct {
-		Account struct {
-			Service Service `graphql:"service(id: $service)"`
-		}
-	}
-	v := PayloadVariables{
-		"service": graphql.ID(id),
-	}
-	if err := client.Query(&q, v); err != nil {
-		return nil, err
-	}
-	return &q.Account.Service, nil
-}
-
-//#endregion
 
 //#region Create
 
@@ -119,6 +86,92 @@ func (client *Client) CreateService(input ServiceCreateInput) (*Service, error) 
 		return nil, err
 	}
 	return &m.Payload.Service, FormatErrors(m.Payload.Errors)
+}
+
+//#endregion
+
+//#region Retrieve
+
+func (client *Client) GetServiceWithAlias(alias string) (*Service, error) {
+	var q struct {
+		Account struct {
+			Service Service `graphql:"service(alias: $service)"`
+		}
+	}
+	v := PayloadVariables{
+		"service": graphql.String(alias),
+	}
+	if err := client.Query(&q, v); err != nil {
+		return nil, err
+	}
+	// TODO: if q.Account.Service.Tags.PageInfo.HasNextPage - Do Further Paginate Query?!
+	return &q.Account.Service, nil
+}
+
+func (client *Client) GetServiceWithId(id string) (*Service, error) {
+	var q struct {
+		Account struct {
+			Service Service `graphql:"service(id: $service)"`
+		}
+	}
+	v := PayloadVariables{
+		"service": graphql.ID(id),
+	}
+	if err := client.Query(&q, v); err != nil {
+		return nil, err
+	}
+	// TODO: if q.Account.Service.Tags.PageInfo.HasNextPage - Do Further Paginate Query?!
+	return &q.Account.Service, nil
+}
+
+func (client *Client) GetServiceCount() (int, error) {
+	var q struct {
+		Account struct {
+			Services struct {
+				TotalCount graphql.Int
+			}
+		}
+	}
+	if err := client.Query(&q, nil); err != nil {
+		return 0, err
+	}
+	return int(q.Account.Services.TotalCount), nil
+}
+
+type ListServicesQuery struct {
+	Account struct {
+		Services struct {
+			Nodes []Service
+			PageInfo PageInfo
+		} `graphql:"services(after: $after, first: $first)"`
+	}
+}
+
+func (q *ListServicesQuery) Query(client *Client) error {
+	var subQ ListServicesQuery
+	v := PayloadVariables{
+		"after": q.Account.Services.PageInfo.End,
+		"first": graphql.Int(100),
+	}
+	if err := client.Query(&subQ, v); err != nil {
+		return err
+	}
+	if (subQ.Account.Services.PageInfo.HasNextPage) {
+		subQ.Query(client)
+	}
+	for _, service := range subQ.Account.Services.Nodes {
+		// TODO: if service.Tags.PageInfo.HasNextPage - Do Further Paginate Query?!
+		q.Account.Services.Nodes = append(q.Account.Services.Nodes, service)
+	}
+	return nil
+}
+
+func (client *Client) ListServices() ([]Service, error) {
+	q := ListServicesQuery{}
+	if  err := q.Query(client); err != nil {
+		return []Service{}, err
+	}
+	return q.Account.Services.Nodes, nil
 }
 
 //#endregion

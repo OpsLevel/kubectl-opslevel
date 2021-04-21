@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/shurcooL/graphql"
 	"github.com/rs/zerolog/log"
 )
 
@@ -48,19 +47,19 @@ func runImport(cmd *cobra.Command, args []string) {
 			continue
 		}
 		// TODO: really sucks to have to transform these field the graphql types
-		_, err := client.CreateService(opslevel.ServiceCreateInput{
-			Name: graphql.String(service.Name),
-			Product: graphql.String(service.Product),
-			Description: graphql.String(service.Description),
-			Languague: graphql.String(service.Language),
-			Framework: graphql.String(service.Framework),
+		newService, err := client.CreateService(opslevel.ServiceCreateInput{
+			Name: service.Name,
+			Product: service.Product,
+			Description: service.Description,
+			Languague: service.Language,
+			Framework: service.Framework,
 			// TODO: Tier
 			// TODO: Owner
 			// TODO: Lifecycle
 		})
 		cobra.CheckErr(err)
-		// TODO: loop through service.Aliases and create them
-		// TODO: loop through service.Tags and create them
+		client.CreateAliases(newService.Id, service.Aliases)
+		client.AssignTagsForId(newService.Id, service.Tags)
 	}
 	log.Info().Msg("Import Complete")
 

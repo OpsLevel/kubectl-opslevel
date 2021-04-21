@@ -5,32 +5,32 @@ import (
 )
 
 type AliasCreateInput struct {
-	Alias graphql.String `json:"alias"`
-	OwnerId graphql.String `json:"ownerId"`
+	Alias string `json:"alias"`
+	OwnerId graphql.ID `json:"ownerId"`
 }
 
 //#region Create
 
-func (client *Client) CreateAliases(ownerId string, aliases []string) []graphql.String {
-	var output []graphql.String
+func (client *Client) CreateAliases(ownerId graphql.ID, aliases []string) []string {
+	var output []string
 	for _, alias := range aliases {
 		input := AliasCreateInput{
-			Alias: graphql.String(alias),
-			OwnerId: graphql.String(ownerId),
+			Alias: alias,
+			OwnerId: ownerId,
 		}
 		result, err := client.CreateAlias(input)
 		if err != nil {
 			// TODO: log warning about failed create?
 		}
 		for _, resultAlias := range result {
-			output = append(output, resultAlias)
+			output = append(output, string(resultAlias))
 		}
 	}
 	// TODO: need to treat this like a HashSet to deduplicate
 	return output
 }
 
-func (client *Client) CreateAlias(input AliasCreateInput) ([]graphql.String, error) {
+func (client *Client) CreateAlias(input AliasCreateInput) ([]string, error) {
 	var m struct {
 		Payload struct {
 			Aliases []graphql.String
@@ -44,7 +44,11 @@ func (client *Client) CreateAlias(input AliasCreateInput) ([]graphql.String, err
 	if err := client.Mutate(&m, v); err != nil {
 		return nil, err
 	}
-	return m.Payload.Aliases, FormatErrors(m.Payload.Errors)
+	output := make([]string, len(m.Payload.Aliases))
+	for i, item := range m.Payload.Aliases {
+		output[i] = string(item)
+	}
+	return output, FormatErrors(m.Payload.Errors)
 }
 
 //#endregion

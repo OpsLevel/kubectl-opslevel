@@ -1,18 +1,30 @@
 service:
   import:
-    - selector: #Works like a standard k8s selector
-        kind: deployment
-        # namespace: kube-system
-        # labels:
-        #   k8s-app: kube-dns
+    - selector:
+        kind: Secret
       opslevel:
-        #name: '"\(.metadata.name)-\(.metadata.namespace)"' #Make composite strings
-        description: .metadata.annotations."opslevel.com/description" #Use annotations
-        language: go
-        framework: django
-        owner: .metadata.labels."k8s-app" #Handle Exotic Key names
-        product: .metadata.namespace
-        tier: tier_1 #Specify Constant Values
+        name: '"\(.metadata.name)__\(.metadata.namespace)"' #Make composite strings
+    # - selector: #Works like a standard k8s selector
+    #     kind: service
+    #     namespace: demo
+    # - selector: #Works like a standard k8s selector
+    #     kind: ingress
+    #     namespace: demo
+    #   opslevel:
+    #     name: '"\(.metadata.labels.app)-\(.metadata.labels.environment)"' #Make composite strings
+    # - selector: #Works like a standard k8s selector
+    #     kind: deployment
+    #     # namespace: kube-system
+    #     # labels:
+    #     #   k8s-app: kube-dns
+    #   opslevel:
+    #     #name: '"\(.metadata.name)-\(.metadata.namespace)"' #Make composite strings
+    #     description: .metadata.annotations."opslevel.com/description" #Use annotations
+    #     language: go
+    #     framework: django
+    #     owner: .metadata.labels."k8s-app" #Handle Exotic Key names
+    #     product: .metadata.namespace
+    #     tier: tier_1 #Specify Constant Values
 #         aliases: 
 #         - .metadata.labels.alias
 #         - .metadata.annotations
