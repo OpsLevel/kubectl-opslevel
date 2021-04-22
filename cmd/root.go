@@ -24,7 +24,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "./opslevel.yaml", "")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "./opslevel-k8s.yaml", "")
 	rootCmd.PersistentFlags().String("logFormat", "JSON", "overrides environment variable 'OL_LOGFORMAT' (options [\"JSON\", \"TEXT\"])")
 	rootCmd.PersistentFlags().String("logLevel", "INFO", "overrides environment variable 'OL_LOGLEVEL' (options [\"ERROR\", \"WARN\", \"INFO\", \"DEBUG\"])")
 	cobra.OnInitialize(initConfig)
