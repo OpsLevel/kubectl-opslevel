@@ -2,7 +2,6 @@ name: Main
 on: 
   release:
     types: [created]
-
 jobs:
   releas-go-matrix:
     name: Release Go Binary
@@ -27,7 +26,7 @@ jobs:
         goversion: "https://dl.google.com/go/go1.13.1.linux-amd64.tar.gz"
         project_path: "./cmd/test-binary"
         binary_name: "kubectl-opslevel"
-        ldflags: "-X 'github.com/opslevel/kubectl-opslevel/cmd.version=$(git describe --tags --long --abbrev=12 --match "v[0-9].*" --always)'"
+        ldflags: "-X 'github.com/opslevel/kubectl-opslevel/cmd.version=$(git describe --tags --long --abbrev=12 --match \"v[0-9].*\" --always)'"
   release-docker:
     name: Release Docker Image
     runs-on: ubuntu-latest
