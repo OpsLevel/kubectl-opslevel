@@ -18,8 +18,8 @@ jobs:
     - name: Fetch Tags
       run: |
         git fetch --tags --force
-        export TAG=$(git describe --tags --long --abbrev=12 --match \"v[0-9].*\" --always)
-        echo "::set-env name=TAG::$TAG"
+        export TAG=$(git describe --tags --long --abbrev=12 --match "v[0-9].*" --always)
+        echo "TAG=${TAG}" >> $GITHUB_ENV
     - uses: wangyoucao577/go-release-action@v1.17
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
