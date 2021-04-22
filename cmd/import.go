@@ -25,10 +25,6 @@ func init() {
 	importCmd.Flags().String("api-token", "", "The OpsLevel API Token. Overrides environment variable 'OL_APITOKEN'")
 }
 
-
-
-
-
 func runImport(cmd *cobra.Command, args []string) {
 	config, configErr := config.New()
 	cobra.CheckErr(configErr)
@@ -46,7 +42,6 @@ func runImport(cmd *cobra.Command, args []string) {
 			// fmt.Printf("Found Existing Service: %s, %s\n", foundService.Name, foundService.Id)
 			continue
 		}
-		// TODO: really sucks to have to transform these field the graphql types
 		newService, err := client.CreateService(opslevel.ServiceCreateInput{
 			Name: service.Name,
 			Product: service.Product,

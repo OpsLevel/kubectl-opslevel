@@ -7,8 +7,6 @@ import (
 	_ "github.com/rs/zerolog/log"
 )
 
-
-
 type ServiceRegistrationParser struct {
 	Name JQParser
 	Description JQParser
@@ -73,6 +71,7 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 	service.Product = GetString(parser.Product, data)
 	service.Language = GetString(parser.Language, data)
 	service.Framework = GetString(parser.Framework, data)
+	// TODO: need to treat service.Aliases as a "hash set" to not append duplicates
 	for _, alias := range parser.Aliases {
 		output := alias.Parse(data)
 		if (output == nil) { continue }
