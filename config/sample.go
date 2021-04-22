@@ -17,7 +17,7 @@ service:
       language: .metadata.annotations."opslevel.com/languague"
       framework: .metadata.annotations."opslevel.com/framework"
       aliases:
-      - .metadata.name
+      - '"\(.metadata.name)-\(.metadata.namespace)"'
       tags:
       - .metadata.labels
 `

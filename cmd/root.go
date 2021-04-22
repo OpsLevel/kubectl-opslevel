@@ -57,10 +57,7 @@ func readConfig() {
 	viper.SetEnvPrefix("OL")
 	viper.AutomaticEnv()
 	viper.BindPFlags(rootCmd.Flags())
-
-	if err := viper.ReadInConfig(); err != nil {
-		panic(err)
-	}
+	viper.ReadInConfig()
 }
 
 func setupLogging() {
