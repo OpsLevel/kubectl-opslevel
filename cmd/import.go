@@ -67,6 +67,12 @@ func runImport(cmd *cobra.Command, args []string) {
 		cobra.CheckErr(err)
 		client.CreateAliases(newService.Id, service.Aliases)
 		client.AssignTagsForId(newService.Id, service.Tags)
+		for _, tool := range service.Tools {
+			if _, createToolErr := client.CreateTool(tool); createToolErr != nil {
+				cobra.CheckErr(createToolErr)
+				break
+			}
+		}
 	}
 	log.Info().Msg("Import Complete")
 }

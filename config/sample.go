@@ -25,4 +25,6 @@ service:
       - '.metadata.annotations."opslevel.com/tags" | fromjson?'
       - .metadata.labels
       - .spec.template.metadata.labels
+      tools:
+      - '.metadata.annotations."opslevel.com/tools" | fromjson?'
 `

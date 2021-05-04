@@ -24,6 +24,7 @@ type ServiceRegistrationConfig struct {
 	Framework   string
 	Aliases     []string // JQ expressions that return a single string or a string[]
 	Tags        []string // JQ expressions that return a single string or a map[string]string
+	Tools       []string // JQ expressions that return a single map[string]string or a []map[string]string
 }
 
 type Import struct {
