@@ -1,8 +1,8 @@
 package opslevel
 
 import (
-	"os"
 	"flag"
+	"os"
 	"testing"
 
 	"github.com/rocktavious/autopilot"

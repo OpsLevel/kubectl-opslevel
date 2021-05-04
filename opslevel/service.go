@@ -10,13 +10,13 @@ type Service struct {
 	//Dependencies
 	//Dependents
 	Description graphql.String `json:"description"`
-	Framework graphql.String `json:"framework"`
-	Id graphql.ID `json:"id"`
-	Language graphql.String `json:"language"`
-	Lifecycle Lifecycle `json:"lifecycle"`
-	Name graphql.String `json:"name"`
-	Owner Team `json:"owner"`
-	Product graphql.String `json:"product"`
+	Framework   graphql.String `json:"framework"`
+	Id          graphql.ID     `json:"id"`
+	Language    graphql.String `json:"language"`
+	Lifecycle   Lifecycle      `json:"lifecycle"`
+	Name        graphql.String `json:"name"`
+	Owner       Team           `json:"owner"`
+	Product     graphql.String `json:"product"`
 	//Repositories
 	Tags struct {
 		Nodes []Tag
@@ -26,48 +26,48 @@ type Service struct {
 }
 
 type Lifecycle struct {
-	Alias graphql.String
+	Alias       graphql.String
 	Description graphql.String
-	Id graphql.ID
-	Index graphql.Int
-	Name graphql.String
+	Id          graphql.ID
+	Index       graphql.Int
+	Name        graphql.String
 }
 
 type Tier struct {
-	Alias graphql.String
+	Alias       graphql.String
 	Description graphql.String
-	Id graphql.ID
-	Index graphql.Int
-	Name graphql.String
+	Id          graphql.ID
+	Index       graphql.Int
+	Name        graphql.String
 }
 
 type ServiceCreateInput struct {
-	Name string `json:"name"`
-	Product string `json:"product,omitempty"`
+	Name        string `json:"name"`
+	Product     string `json:"product,omitempty"`
 	Description string `json:"description,omitempty"`
-	Languague string `json:"language,omitempty"`
-	Framework string `json:"framework,omitempty"`
-	Tier string `json:"tierAlias,omitempty"`
-	Owner string `json:"ownerAlias,omitempty"`
-	Lifecycle string `json:"lifecycleAlias,omitempty"`
+	Languague   string `json:"language,omitempty"`
+	Framework   string `json:"framework,omitempty"`
+	Tier        string `json:"tierAlias,omitempty"`
+	Owner       string `json:"ownerAlias,omitempty"`
+	Lifecycle   string `json:"lifecycleAlias,omitempty"`
 }
 
 type ServiceUpdateInput struct {
-	Id graphql.ID `json:"id,omitempty"`
-	Alias string `json:"alias,omitempty"`
-	Name string `json:"name,omitempty"`
-	Product string `json:"product,omitempty"`
-	Descripition string `json:"description,omitempty"`
-	Languague string `json:"languague,omitempty"`
-	Framework string `json:"framework,omitempty"`
-	Tier string `json:"tierAlias,omitempty"`
-	Owner string `json:"ownerAlias,omitempty"`
-	Lifecycle string `json:"lifecycleAlias,omitempty"`
+	Id           graphql.ID `json:"id,omitempty"`
+	Alias        string     `json:"alias,omitempty"`
+	Name         string     `json:"name,omitempty"`
+	Product      string     `json:"product,omitempty"`
+	Descripition string     `json:"description,omitempty"`
+	Languague    string     `json:"languague,omitempty"`
+	Framework    string     `json:"framework,omitempty"`
+	Tier         string     `json:"tierAlias,omitempty"`
+	Owner        string     `json:"ownerAlias,omitempty"`
+	Lifecycle    string     `json:"lifecycleAlias,omitempty"`
 }
 
 type ServiceDeleteInput struct {
-	Id graphql.ID `json:"id,omitempty"`
-	Alias string `json:"alias,omitempty"`
+	Id    graphql.ID `json:"id,omitempty"`
+	Alias string     `json:"alias,omitempty"`
 }
 
 //#region Create
@@ -76,7 +76,7 @@ func (client *Client) CreateService(input ServiceCreateInput) (*Service, error) 
 	var m struct {
 		Payload struct {
 			Service Service
-			Errors []OpsLevelErrors
+			Errors  []OpsLevelErrors
 		} `graphql:"serviceCreate(input: $input)"`
 	}
 	v := PayloadVariables{
@@ -141,7 +141,7 @@ func (client *Client) GetServiceCount() (int, error) {
 type ListServicesQuery struct {
 	Account struct {
 		Services struct {
-			Nodes []Service
+			Nodes    []Service
 			PageInfo PageInfo
 		} `graphql:"services(after: $after, first: $first)"`
 	}
@@ -156,7 +156,7 @@ func (q *ListServicesQuery) Query(client *Client) error {
 	if err := client.Query(&subQ, v); err != nil {
 		return err
 	}
-	if (subQ.Account.Services.PageInfo.HasNextPage) {
+	if subQ.Account.Services.PageInfo.HasNextPage {
 		subQ.Query(client)
 	}
 	for _, service := range subQ.Account.Services.Nodes {
@@ -168,7 +168,7 @@ func (q *ListServicesQuery) Query(client *Client) error {
 
 func (client *Client) ListServices() ([]Service, error) {
 	q := ListServicesQuery{}
-	if  err := q.Query(client); err != nil {
+	if err := q.Query(client); err != nil {
 		return []Service{}, err
 	}
 	return q.Account.Services.Nodes, nil
@@ -182,7 +182,7 @@ func (client *Client) UpdateService(input ServiceUpdateInput) (*Service, error) 
 	var m struct {
 		Payload struct {
 			Service Service
-			Errors []OpsLevelErrors
+			Errors  []OpsLevelErrors
 		} `graphql:"serviceUpdate(input: $input)"`
 	}
 	v := PayloadVariables{
@@ -201,8 +201,8 @@ func (client *Client) UpdateService(input ServiceUpdateInput) (*Service, error) 
 func (client *Client) DeleteService(input ServiceDeleteInput) error {
 	var m struct {
 		Payload struct {
-			Id graphql.ID `graphql:"deletedServiceId"`
-			Alias graphql.String `graphql:"deletedServiceAlias"`
+			Id     graphql.ID       `graphql:"deletedServiceId"`
+			Alias  graphql.String   `graphql:"deletedServiceAlias"`
 			Errors []OpsLevelErrors `graphql:"errors"`
 		} `graphql:"serviceDelete(input: $input)"`
 	}

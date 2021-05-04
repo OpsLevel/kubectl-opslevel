@@ -8,29 +8,29 @@ import (
 )
 
 type ServiceRegistrationParser struct {
-	Name JQParser
+	Name        JQParser
 	Description JQParser
-	Owner JQParser
-	Lifecycle JQParser
-	Tier JQParser
-	Product JQParser
-	Language JQParser
-	Framework JQParser
-	Aliases []JQParser
-	Tags []JQParser
+	Owner       JQParser
+	Lifecycle   JQParser
+	Tier        JQParser
+	Product     JQParser
+	Language    JQParser
+	Framework   JQParser
+	Aliases     []JQParser
+	Tags        []JQParser
 }
 
 type ServiceRegistration struct {
-	Name string
-	Description string `json:",omitempty"`
-	Owner string `json:",omitempty"`
-	Lifecycle string `json:",omitempty"`
-	Tier string `json:",omitempty"`
-	Product string `json:",omitempty"`
-	Language string `json:",omitempty"`
-	Framework string `json:",omitempty"`
-	Aliases []string `json:",omitempty"`
-	Tags map[string]string `json:",omitempty"`
+	Name        string
+	Description string            `json:",omitempty"`
+	Owner       string            `json:",omitempty"`
+	Lifecycle   string            `json:",omitempty"`
+	Tier        string            `json:",omitempty"`
+	Product     string            `json:",omitempty"`
+	Language    string            `json:",omitempty"`
+	Framework   string            `json:",omitempty"`
+	Aliases     []string          `json:",omitempty"`
+	Tags        map[string]string `json:",omitempty"`
 }
 
 func NewParser(c config.ServiceRegistrationConfig) *ServiceRegistrationParser {
@@ -54,8 +54,10 @@ func NewParser(c config.ServiceRegistrationConfig) *ServiceRegistrationParser {
 
 func GetString(parser JQParser, data []byte) string {
 	output := parser.Parse(data)
-	if (output == nil) { return "" }
-	if (output.Type == String) {
+	if output == nil {
+		return ""
+	}
+	if output.Type == String {
 		return output.StringObj
 	}
 	return ""
@@ -74,7 +76,9 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 	// TODO: need to treat service.Aliases as a "hash set" to not append duplicates
 	for _, alias := range parser.Aliases {
 		output := alias.Parse(data)
-		if (output == nil) { continue }
+		if output == nil {
+			continue
+		}
 		switch output.Type {
 		case String:
 			service.Aliases = append(service.Aliases, output.StringObj)
@@ -89,7 +93,9 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 	service.Tags = map[string]string{}
 	for _, tag := range parser.Tags {
 		output := tag.Parse(data)
-		if (output == nil) { continue }
+		if output == nil {
+			continue
+		}
 		switch output.Type {
 		case StringStringMap:
 			for k, v := range output.StringMap {
@@ -112,7 +118,7 @@ func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
 	var parser *ServiceRegistrationParser
 	var services []ServiceRegistration
 	k8sClient := k8sutils.CreateKubernetesClient()
-	
+
 	for _, importConfig := range c.Service.Import {
 		parser = NewParser(importConfig.OpslevelConfig)
 		process := func(resource []byte) error {

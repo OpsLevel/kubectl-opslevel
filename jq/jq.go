@@ -1,20 +1,20 @@
 package jq
 
 import (
-	"context"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
-	"os/exec"
-	"time"
 	"io/ioutil"
+	"os/exec"
 	"strings"
+	"time"
 )
 
 type JQ struct {
 	options []string
 	timeout time.Duration
-	writer io.Writer
+	writer  io.Writer
 }
 
 type JQOpt struct {
@@ -26,19 +26,19 @@ type JQErrorType int
 
 const (
 	EmptyFilter JQErrorType = iota
-    BadOptions
-    BadFilter
-    BadJSON
-    BadExcution
+	BadOptions
+	BadFilter
+	BadJSON
+	BadExcution
 	Unknown
 )
 
 type JQError struct {
 	Message string
-    Type JQErrorType
+	Type    JQErrorType
 }
 
-func (e *JQError) Error() string { 
+func (e *JQError) Error() string {
 	switch e.Type {
 	case EmptyFilter:
 		return "Empty JQ Filter"
@@ -82,16 +82,16 @@ func (jq *JQ) Run(json []byte) ([]byte, *JQError) {
 		//fmt.Println("Got Error on JQ Execution")
 		//fmt.Println(err.Error())
 		//fmt.Println(string(stderr.Bytes()))
-		if (err.Error() == "exit status 2") {
+		if err.Error() == "exit status 2" {
 			return nil, &JQError{Message: jq.Commandline(), Type: BadOptions}
 		}
-		if (err.Error() == "exit status 3") {
+		if err.Error() == "exit status 3" {
 			return nil, &JQError{Message: jq.Filter(), Type: BadFilter}
 		}
-		if (err.Error() == "exit status 4") {
+		if err.Error() == "exit status 4" {
 			return nil, &JQError{Message: string(json), Type: BadJSON}
 		}
-		if (err.Error() == "exit status 5") {
+		if err.Error() == "exit status 5" {
 			return nil, &JQError{Message: string(stderr.Bytes()), Type: BadExcution}
 		}
 		return nil, &JQError{Message: string(stderr.Bytes()), Type: BadExcution}
@@ -101,7 +101,7 @@ func (jq *JQ) Run(json []byte) ([]byte, *JQError) {
 
 func (jq *JQ) Validate(json []byte) *JQError {
 	filter := jq.Filter()
-	if (filter == "") {
+	if filter == "" {
 		return &JQError{Message: filter, Type: EmptyFilter}
 	}
 	_, err := jq.Run(json)
@@ -123,7 +123,7 @@ func NewWithOptions(filter string, timeout time.Duration, options []JQOpt) JQ {
 	jq := &JQ{
 		options: opts,
 		timeout: timeout,
-		writer: ioutil.Discard,
+		writer:  ioutil.Discard,
 	}
 	return *jq
 }

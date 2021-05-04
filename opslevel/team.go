@@ -5,47 +5,47 @@ import (
 )
 
 type User struct {
-	Name graphql.String
+	Name  graphql.String
 	Email graphql.String
 }
 
 type Contact struct {
 	DisplayName graphql.String
-	Address graphql.String
+	Address     graphql.String
 }
 
 type ContactInput struct {
-	Type string `json:"type,omitEmpty"`
-    DisplayName string `json:"displayName,omitEmpty"`
-	Address string `json:"address,omitEmpty"`
+	Type        string `json:"type,omitEmpty"`
+	DisplayName string `json:"displayName,omitEmpty"`
+	Address     string `json:"address,omitEmpty"`
 }
 
 type Team struct {
-	Id graphql.String
-	Name graphql.String
+	Id               graphql.String
+	Name             graphql.String
 	Responsibilities graphql.String
-	Manager User
-	Contacts []Contact
+	Manager          User
+	Contacts         []Contact
 }
 
 type TeamCreateInput struct {
-	Name string `json:"name"`
-	ManagerEmail string `json:"managerEmail,omitempty"`
-	Responsibilities string `json:"responsibilities,omitempty"`
-	Contacts []ContactInput `json:"contacts,omitempty"`
+	Name             string         `json:"name"`
+	ManagerEmail     string         `json:"managerEmail,omitempty"`
+	Responsibilities string         `json:"responsibilities,omitempty"`
+	Contacts         []ContactInput `json:"contacts,omitempty"`
 }
 
 type TeamUpdateInput struct {
-	Id graphql.ID `json:"id,omitempty"`
-	Alias string `json:"alias,omitempty"`
-	Name string `json:"name,omitempty"`
-	ManagerEmail string `json:"managerEmail,omitempty"`
-	Responsibilities string `json:"responsibilities,omitempty"`
+	Id               graphql.ID `json:"id,omitempty"`
+	Alias            string     `json:"alias,omitempty"`
+	Name             string     `json:"name,omitempty"`
+	ManagerEmail     string     `json:"managerEmail,omitempty"`
+	Responsibilities string     `json:"responsibilities,omitempty"`
 }
 
 type TeamDeleteInput struct {
-	Id graphql.ID `json:"id,omitempty"`
-	Alias string `json:"alias,omitempty"`
+	Id    graphql.ID `json:"id,omitempty"`
+	Alias string     `json:"alias,omitempty"`
 }
 
 //#region Create
@@ -53,7 +53,7 @@ type TeamDeleteInput struct {
 func (client *Client) CreateTeam(input TeamCreateInput) (*Team, error) {
 	var m struct {
 		Payload struct {
-			Team Team
+			Team   Team
 			Errors []OpsLevelErrors
 		} `graphql:"teamCreate(input: $input)"`
 	}
@@ -117,7 +117,7 @@ func (client *Client) GetTeamCount() (int, error) {
 type ListTeamsQuery struct {
 	Account struct {
 		Teams struct {
-			Nodes []Team
+			Nodes    []Team
 			PageInfo PageInfo
 		} `graphql:"teams(after: $after, first: $first)"`
 	}
@@ -132,7 +132,7 @@ func (q *ListTeamsQuery) Query(client *Client) error {
 	if err := client.Query(&subQ, v); err != nil {
 		return err
 	}
-	if (subQ.Account.Teams.PageInfo.HasNextPage) {
+	if subQ.Account.Teams.PageInfo.HasNextPage {
 		subQ.Query(client)
 	}
 	for _, team := range subQ.Account.Teams.Nodes {
@@ -143,7 +143,7 @@ func (q *ListTeamsQuery) Query(client *Client) error {
 
 func (client *Client) ListTeams() ([]Team, error) {
 	q := ListTeamsQuery{}
-	if  err := q.Query(client); err != nil {
+	if err := q.Query(client); err != nil {
 		return []Team{}, err
 	}
 	return q.Account.Teams.Nodes, nil
@@ -156,7 +156,7 @@ func (client *Client) ListTeams() ([]Team, error) {
 func (client *Client) UpdateTeam(input TeamUpdateInput) (*Team, error) {
 	var m struct {
 		Payload struct {
-			Team Team
+			Team   Team
 			Errors []OpsLevelErrors
 		} `graphql:"teamUpdate(input: $input)"`
 	}
@@ -176,8 +176,8 @@ func (client *Client) UpdateTeam(input TeamUpdateInput) (*Team, error) {
 func (client *Client) DeleteTeamWithAlias(alias string) error {
 	var m struct {
 		Payload struct {
-			Id graphql.ID `graphql:"deletedTeamId"`
-			Alias graphql.String `graphql:"deletedTeamAlias"`
+			Id     graphql.ID       `graphql:"deletedTeamId"`
+			Alias  graphql.String   `graphql:"deletedTeamAlias"`
 			Errors []OpsLevelErrors `graphql:"errors"`
 		} `graphql:"teamDelete(input: $input)"`
 	}
@@ -195,8 +195,8 @@ func (client *Client) DeleteTeamWithAlias(alias string) error {
 func (client *Client) DeleteTeamWithId(id graphql.ID) error {
 	var m struct {
 		Payload struct {
-			Id graphql.ID `graphql:"deletedTeamId"`
-			Alias graphql.String `graphql:"deletedTeamAlias"`
+			Id     graphql.ID       `graphql:"deletedTeamId"`
+			Alias  graphql.String   `graphql:"deletedTeamAlias"`
 			Errors []OpsLevelErrors `graphql:"errors"`
 		} `graphql:"teamDelete(input: $input)"`
 	}

@@ -1,21 +1,21 @@
 package cmd
 
 import (
-	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/kubectl-opslevel/common"
+	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/kubectl-opslevel/opslevel"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/rs/zerolog/log"
 )
 
 // importCmd represents the import command
 var importCmd = &cobra.Command{
 	Use:   "import",
 	Short: "Create service entries from kubernetes data",
-	Long: `Create service entries from kubernetes data`,
-	Run: runImport,
+	Long:  `Create service entries from kubernetes data`,
+	Run:   runImport,
 }
 
 func init() {
@@ -38,16 +38,16 @@ func runImport(cmd *cobra.Command, args []string) {
 		// fmt.Printf("Searching For: %s\n", service.Name)
 		foundService, foundServiceErr := client.GetServiceWithAlias(service.Name)
 		cobra.CheckErr(foundServiceErr)
-		if (foundService.Id != nil) {
+		if foundService.Id != nil {
 			// fmt.Printf("Found Existing Service: %s, %s\n", foundService.Name, foundService.Id)
 			continue
 		}
 		newService, err := client.CreateService(opslevel.ServiceCreateInput{
-			Name: service.Name,
-			Product: service.Product,
+			Name:        service.Name,
+			Product:     service.Product,
 			Description: service.Description,
-			Languague: service.Language,
-			Framework: service.Framework,
+			Languague:   service.Language,
+			Framework:   service.Framework,
 			// TODO: Tier
 			// TODO: Owner
 			// TODO: Lifecycle
@@ -113,7 +113,6 @@ func runImport(cmd *cobra.Command, args []string) {
 	// fmt.Println(teamId)
 	// fmt.Println(teamAlias)
 
-
 	// var mutation struct {
 	// 	ServiceCreate ServiceCreatePayload `graphql:"serviceCreate(input: $input)"`
 	// }
@@ -136,8 +135,8 @@ func runImport(cmd *cobra.Command, args []string) {
 	// defer resp.Body.Close()
 	// cobra.CheckErr(respErr)
 
-    // fmt.Println("response Status:", resp.Status)
-    // fmt.Println("response Headers:", resp.Header)
-    // body, _ := ioutil.ReadAll(resp.Body)
-    // fmt.Println("response Body:", string(body))
+	// fmt.Println("response Status:", resp.Status)
+	// fmt.Println("response Headers:", resp.Header)
+	// body, _ := ioutil.ReadAll(resp.Body)
+	// fmt.Println("response Body:", string(body))
 }

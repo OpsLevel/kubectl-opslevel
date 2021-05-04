@@ -5,8 +5,8 @@ import (
 
 	"github.com/opslevel/kubectl-opslevel/k8sutils"
 
-	"github.com/spf13/viper"
 	"github.com/creasty/defaults"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -14,21 +14,21 @@ var (
 )
 
 type ServiceRegistrationConfig struct {
-	Name string `default:".metadata.name"`
+	Name        string `default:".metadata.name"`
 	Description string
-	Owner string
-	Lifecycle string
-	Tier string
-	Product string
-	Language string
-	Framework string
-	Aliases []string // JQ expressions that return a single string or a string[]
-	Tags []string // JQ expressions that return a single string or a map[string]string
+	Owner       string
+	Lifecycle   string
+	Tier        string
+	Product     string
+	Language    string
+	Framework   string
+	Aliases     []string // JQ expressions that return a single string or a string[]
+	Tags        []string // JQ expressions that return a single string or a map[string]string
 }
 
 type Import struct {
-    SelectorConfig k8sutils.KubernetesSelector `yaml:"selector" json:"selector" mapstructure:"selector"`
-    OpslevelConfig ServiceRegistrationConfig `yaml:"opslevel" json:"opslevel" mapstructure:"opslevel"`
+	SelectorConfig k8sutils.KubernetesSelector `yaml:"selector" json:"selector" mapstructure:"selector"`
+	OpslevelConfig ServiceRegistrationConfig   `yaml:"opslevel" json:"opslevel" mapstructure:"opslevel"`
 }
 
 type Service struct {

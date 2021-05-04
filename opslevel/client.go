@@ -1,24 +1,24 @@
 package opslevel
 
 import (
-	"net/http"
 	"context"
+	"net/http"
 
-	"golang.org/x/oauth2"
 	"github.com/shurcooL/graphql"
+	"golang.org/x/oauth2"
 )
 
 const defaultURL = "https://api.opslevel.com/graphql"
 
 type ClientSettings struct {
-	url string
-	ctx context.Context
+	url        string
+	ctx        context.Context
 	httpClient *http.Client
 }
 
 type Client struct {
-	url string
-	ctx context.Context
+	url    string
+	ctx    context.Context
 	client *graphql.Client
 }
 
@@ -47,16 +47,16 @@ func NewClient(apiToken string, options ...option) *Client {
 		&oauth2.Token{AccessToken: apiToken, TokenType: "Bearer"},
 	)
 	settings := &ClientSettings{
-		url: defaultURL,
-		ctx: context.Background(),
+		url:        defaultURL,
+		ctx:        context.Background(),
 		httpClient: oauth2.NewClient(context.Background(), httpToken),
 	}
 	for _, opt := range options {
 		opt(settings)
 	}
 	return &Client{
-		url: settings.url,
-		ctx: settings.ctx,
+		url:    settings.url,
+		ctx:    settings.ctx,
 		client: graphql.NewClient(settings.url, settings.httpClient),
 	}
 }

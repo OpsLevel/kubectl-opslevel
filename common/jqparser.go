@@ -16,19 +16,19 @@ type JQResponseType int
 
 const (
 	Empty JQResponseType = iota
-    String
-    StringArray
-    StringStringMap
-    StringStringMapArray
+	String
+	StringArray
+	StringStringMap
+	StringStringMapArray
 	Unknown
 )
 
 type JQResponse struct {
-	Bytes []byte
-	Type JQResponseType
-	StringObj string
-	StringArray []string
-	StringMap map[string]string
+	Bytes          []byte
+	Type           JQResponseType
+	StringObj      string
+	StringArray    []string
+	StringMap      map[string]string
 	StringMapArray []map[string]string
 }
 
@@ -38,7 +38,7 @@ func NewJQParser(filter string) JQParser {
 }
 
 func (parser *JQParser) doParse(data []byte) *JQResponse {
-	if (parser.JQ.Filter() == "") {
+	if parser.JQ.Filter() == "" {
 		return &JQResponse{Bytes: []byte("")}
 	}
 	var bytes []byte
@@ -62,7 +62,9 @@ func (parser *JQParser) doParse(data []byte) *JQResponse {
 
 func (parser *JQParser) Parse(data []byte) *JQResponse {
 	resp := parser.doParse(data)
-	if (resp != nil) { resp.Unmarshal() }
+	if resp != nil {
+		resp.Unmarshal()
+	}
 	return resp
 }
 
@@ -70,7 +72,7 @@ func (resp *JQResponse) Unmarshal() {
 	if string(resp.Bytes) == "" {
 		resp.Type = Empty
 		return
-	} 
+	}
 
 	stringObjErr := json.Unmarshal(resp.Bytes, &resp.StringObj)
 	if stringObjErr == nil {

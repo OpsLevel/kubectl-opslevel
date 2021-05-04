@@ -2,29 +2,29 @@ package k8sutils
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
-	"encoding/json"
 
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/api/core/v1"
+	"github.com/go-logr/logr"
+	"github.com/rs/zerolog/log"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
+	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
-	"github.com/rs/zerolog/log"
-	"github.com/go-logr/logr"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
 )
 
 type KubernetesSelector struct {
-	Kind string
+	Kind      string
 	Namespace string
-	Labels map[string]string
+	Labels    map[string]string
 }
 
 type ClientWrapper struct {
@@ -66,7 +66,9 @@ func CreateKubernetesClient() ClientWrapper {
 
 func (c *ClientWrapper) ForEachDeployment(namespace string, options metav1.ListOptions, handler func(resource appsv1.Deployment) error) error {
 	resources, queryErr := c.client.AppsV1().Deployments(namespace).List(context.TODO(), options)
-	if (queryErr != nil) { return queryErr }
+	if queryErr != nil {
+		return queryErr
+	}
 	for _, resource := range resources.Items {
 		if err := handler(resource); err != nil {
 			return err
@@ -77,7 +79,9 @@ func (c *ClientWrapper) ForEachDeployment(namespace string, options metav1.ListO
 
 func (c *ClientWrapper) ForEachStatefulSet(namespace string, options metav1.ListOptions, handler func(resource appsv1.StatefulSet) error) error {
 	resources, queryErr := c.client.AppsV1().StatefulSets(namespace).List(context.TODO(), options)
-	if (queryErr != nil) { return queryErr }
+	if queryErr != nil {
+		return queryErr
+	}
 	for _, resource := range resources.Items {
 		if err := handler(resource); err != nil {
 			return err
@@ -88,7 +92,9 @@ func (c *ClientWrapper) ForEachStatefulSet(namespace string, options metav1.List
 
 func (c *ClientWrapper) ForEachDaemonSet(namespace string, options metav1.ListOptions, handler func(resource appsv1.DaemonSet) error) error {
 	resources, queryErr := c.client.AppsV1().DaemonSets(namespace).List(context.TODO(), options)
-	if (queryErr != nil) { return queryErr }
+	if queryErr != nil {
+		return queryErr
+	}
 	for _, resource := range resources.Items {
 		if err := handler(resource); err != nil {
 			return err
@@ -99,7 +105,9 @@ func (c *ClientWrapper) ForEachDaemonSet(namespace string, options metav1.ListOp
 
 func (c *ClientWrapper) ForEachJob(namespace string, options metav1.ListOptions, handler func(resource batchv1.Job) error) error {
 	resources, queryErr := c.client.BatchV1().Jobs(namespace).List(context.TODO(), options)
-	if (queryErr != nil) { return queryErr }
+	if queryErr != nil {
+		return queryErr
+	}
 	for _, resource := range resources.Items {
 		if err := handler(resource); err != nil {
 			return err
@@ -110,7 +118,9 @@ func (c *ClientWrapper) ForEachJob(namespace string, options metav1.ListOptions,
 
 func (c *ClientWrapper) ForEachCronJob(namespace string, options metav1.ListOptions, handler func(resource batchv1beta1.CronJob) error) error {
 	resources, queryErr := c.client.BatchV1beta1().CronJobs(namespace).List(context.TODO(), options)
-	if (queryErr != nil) { return queryErr }
+	if queryErr != nil {
+		return queryErr
+	}
 	for _, resource := range resources.Items {
 		if err := handler(resource); err != nil {
 			return err
@@ -121,7 +131,9 @@ func (c *ClientWrapper) ForEachCronJob(namespace string, options metav1.ListOpti
 
 func (c *ClientWrapper) ForEachService(namespace string, options metav1.ListOptions, handler func(resource v1.Service) error) error {
 	resources, queryErr := c.client.CoreV1().Services(namespace).List(context.TODO(), options)
-	if (queryErr != nil) { return queryErr }
+	if queryErr != nil {
+		return queryErr
+	}
 	for _, resource := range resources.Items {
 		if err := handler(resource); err != nil {
 			return err
@@ -132,7 +144,9 @@ func (c *ClientWrapper) ForEachService(namespace string, options metav1.ListOpti
 
 func (c *ClientWrapper) ForEachIngress(namespace string, options metav1.ListOptions, handler func(resource networkingv1.Ingress) error) error {
 	resources, queryErr := c.client.NetworkingV1().Ingresses(namespace).List(context.TODO(), options)
-	if (queryErr != nil) { return queryErr }
+	if queryErr != nil {
+		return queryErr
+	}
 	for _, resource := range resources.Items {
 		if err := handler(resource); err != nil {
 			return err
@@ -143,7 +157,9 @@ func (c *ClientWrapper) ForEachIngress(namespace string, options metav1.ListOpti
 
 func (c *ClientWrapper) ForEachConfigMap(namespace string, options metav1.ListOptions, handler func(resource v1.ConfigMap) error) error {
 	resources, queryErr := c.client.CoreV1().ConfigMaps(namespace).List(context.TODO(), options)
-	if (queryErr != nil) { return queryErr }
+	if queryErr != nil {
+		return queryErr
+	}
 	for _, resource := range resources.Items {
 		if err := handler(resource); err != nil {
 			return err
@@ -154,7 +170,9 @@ func (c *ClientWrapper) ForEachConfigMap(namespace string, options metav1.ListOp
 
 func (c *ClientWrapper) ForEachSecret(namespace string, options metav1.ListOptions, handler func(resource v1.Secret) error) error {
 	resources, queryErr := c.client.CoreV1().Secrets(namespace).List(context.TODO(), options)
-	if (queryErr != nil) { return queryErr }
+	if queryErr != nil {
+		return queryErr
+	}
 	for _, resource := range resources.Items {
 		if err := handler(resource); err != nil {
 			return err
@@ -172,9 +190,13 @@ func (c *ClientWrapper) Query(selector KubernetesSelector, handler func(resource
 	case "deployment":
 		handler := func(resource appsv1.Deployment) error {
 			bytes, bytesErr := json.Marshal(resource)
-			if (bytesErr != nil) { return bytesErr }
+			if bytesErr != nil {
+				return bytesErr
+			}
 			handlerErr := handler(bytes)
-			if (handlerErr != nil) { return handlerErr }
+			if handlerErr != nil {
+				return handlerErr
+			}
 			return nil
 		}
 		c.ForEachDeployment(selector.Namespace, listOptions, handler)
@@ -182,9 +204,13 @@ func (c *ClientWrapper) Query(selector KubernetesSelector, handler func(resource
 	case "statefulset":
 		handler := func(resource appsv1.StatefulSet) error {
 			bytes, bytesErr := json.Marshal(resource)
-			if (bytesErr != nil) { return bytesErr }
+			if bytesErr != nil {
+				return bytesErr
+			}
 			handlerErr := handler(bytes)
-			if (handlerErr != nil) { return handlerErr }
+			if handlerErr != nil {
+				return handlerErr
+			}
 			return nil
 		}
 		c.ForEachStatefulSet(selector.Namespace, listOptions, handler)
@@ -192,9 +218,13 @@ func (c *ClientWrapper) Query(selector KubernetesSelector, handler func(resource
 	case "daemonset":
 		handler := func(resource appsv1.DaemonSet) error {
 			bytes, bytesErr := json.Marshal(resource)
-			if (bytesErr != nil) { return bytesErr }
+			if bytesErr != nil {
+				return bytesErr
+			}
 			handlerErr := handler(bytes)
-			if (handlerErr != nil) { return handlerErr }
+			if handlerErr != nil {
+				return handlerErr
+			}
 			return nil
 		}
 		c.ForEachDaemonSet(selector.Namespace, listOptions, handler)
@@ -202,9 +232,13 @@ func (c *ClientWrapper) Query(selector KubernetesSelector, handler func(resource
 	case "job":
 		handler := func(resource batchv1.Job) error {
 			bytes, bytesErr := json.Marshal(resource)
-			if (bytesErr != nil) { return bytesErr }
+			if bytesErr != nil {
+				return bytesErr
+			}
 			handlerErr := handler(bytes)
-			if (handlerErr != nil) { return handlerErr }
+			if handlerErr != nil {
+				return handlerErr
+			}
 			return nil
 		}
 		c.ForEachJob(selector.Namespace, listOptions, handler)
@@ -212,9 +246,13 @@ func (c *ClientWrapper) Query(selector KubernetesSelector, handler func(resource
 	case "cronjob":
 		handler := func(resource batchv1beta1.CronJob) error {
 			bytes, bytesErr := json.Marshal(resource)
-			if (bytesErr != nil) { return bytesErr }
+			if bytesErr != nil {
+				return bytesErr
+			}
 			handlerErr := handler(bytes)
-			if (handlerErr != nil) { return handlerErr }
+			if handlerErr != nil {
+				return handlerErr
+			}
 			return nil
 		}
 		c.ForEachCronJob(selector.Namespace, listOptions, handler)
@@ -222,9 +260,13 @@ func (c *ClientWrapper) Query(selector KubernetesSelector, handler func(resource
 	case "service":
 		handler := func(resource v1.Service) error {
 			bytes, bytesErr := json.Marshal(resource)
-			if (bytesErr != nil) { return bytesErr }
+			if bytesErr != nil {
+				return bytesErr
+			}
 			handlerErr := handler(bytes)
-			if (handlerErr != nil) { return handlerErr }
+			if handlerErr != nil {
+				return handlerErr
+			}
 			return nil
 		}
 		c.ForEachService(selector.Namespace, listOptions, handler)
@@ -232,9 +274,13 @@ func (c *ClientWrapper) Query(selector KubernetesSelector, handler func(resource
 	case "ingress":
 		handler := func(resource networkingv1.Ingress) error {
 			bytes, bytesErr := json.Marshal(resource)
-			if (bytesErr != nil) { return bytesErr }
+			if bytesErr != nil {
+				return bytesErr
+			}
 			handlerErr := handler(bytes)
-			if (handlerErr != nil) { return handlerErr }
+			if handlerErr != nil {
+				return handlerErr
+			}
 			return nil
 		}
 		c.ForEachIngress(selector.Namespace, listOptions, handler)
@@ -242,9 +288,13 @@ func (c *ClientWrapper) Query(selector KubernetesSelector, handler func(resource
 	case "configmap":
 		handler := func(resource v1.ConfigMap) error {
 			bytes, bytesErr := json.Marshal(resource)
-			if (bytesErr != nil) { return bytesErr }
+			if bytesErr != nil {
+				return bytesErr
+			}
 			handlerErr := handler(bytes)
-			if (handlerErr != nil) { return handlerErr }
+			if handlerErr != nil {
+				return handlerErr
+			}
 			return nil
 		}
 		c.ForEachConfigMap(selector.Namespace, listOptions, handler)
@@ -252,9 +302,13 @@ func (c *ClientWrapper) Query(selector KubernetesSelector, handler func(resource
 	case "secret":
 		handler := func(resource v1.Secret) error {
 			bytes, bytesErr := json.Marshal(resource)
-			if (bytesErr != nil) { return bytesErr }
+			if bytesErr != nil {
+				return bytesErr
+			}
 			handlerErr := handler(bytes)
-			if (handlerErr != nil) { return handlerErr }
+			if handlerErr != nil {
+				return handlerErr
+			}
 			return nil
 		}
 		c.ForEachSecret(selector.Namespace, listOptions, handler)
@@ -265,8 +319,8 @@ func (c *ClientWrapper) Query(selector KubernetesSelector, handler func(resource
 
 func (selector *KubernetesSelector) LabelSelector() string {
 	var labels []string
-    for key, value := range selector.Labels {
+	for key, value := range selector.Labels {
 		labels = append(labels, fmt.Sprintf("%s=%s", key, value))
-    }
-    return strings.Join(labels, ",")
+	}
+	return strings.Join(labels, ",")
 }

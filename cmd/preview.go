@@ -1,25 +1,23 @@
 package cmd
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"strings"
 
-	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/kubectl-opslevel/common"
+	"github.com/opslevel/kubectl-opslevel/config"
 
 	_ "github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-
-	
 )
 
 // previewCmd represents the preview command
 var previewCmd = &cobra.Command{
 	Use:   "preview",
 	Short: "Preview the service entries that will be created",
-	Long: `Preview the service entries that will be created`,
-	Run: runPreview,
+	Long:  `Preview the service entries that will be created`,
+	Run:   runPreview,
 }
 
 func init() {

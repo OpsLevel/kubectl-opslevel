@@ -3,12 +3,13 @@ package cmd
 import (
 	"os"
 	"strings"
+
 	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/spf13/viper"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 )
 
 var cfgFile string
@@ -16,7 +17,7 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "kubectl-opslevel",
 	Short: "Opslevel Commandline Tools",
-	Long: `Opslevel Commandline Tools`,
+	Long:  `Opslevel Commandline Tools`,
 }
 
 func Execute() {
@@ -72,13 +73,13 @@ func setupLogging() {
 	}
 
 	switch {
-		case logLevel == "error":
-			zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-		case logLevel == "warn":
-			zerolog.SetGlobalLevel(zerolog.WarnLevel)
-		case logLevel == "debug":
-			zerolog.SetGlobalLevel(zerolog.DebugLevel)
-		default:
-			zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	case logLevel == "error":
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	case logLevel == "warn":
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	case logLevel == "debug":
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	default:
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 }

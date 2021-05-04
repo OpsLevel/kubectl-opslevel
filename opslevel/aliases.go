@@ -5,7 +5,7 @@ import (
 )
 
 type AliasCreateInput struct {
-	Alias string `json:"alias"`
+	Alias   string     `json:"alias"`
 	OwnerId graphql.ID `json:"ownerId"`
 }
 
@@ -15,7 +15,7 @@ func (client *Client) CreateAliases(ownerId graphql.ID, aliases []string) []stri
 	var output []string
 	for _, alias := range aliases {
 		input := AliasCreateInput{
-			Alias: alias,
+			Alias:   alias,
 			OwnerId: ownerId,
 		}
 		result, err := client.CreateAlias(input)
@@ -35,7 +35,7 @@ func (client *Client) CreateAlias(input AliasCreateInput) ([]string, error) {
 		Payload struct {
 			Aliases []graphql.String
 			OwnerId graphql.String
-			Errors []OpsLevelErrors
+			Errors  []OpsLevelErrors
 		} `graphql:"aliasCreate(input: $input)"`
 	}
 	v := PayloadVariables{

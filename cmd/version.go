@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 )
 
 var version = "development"
@@ -10,8 +10,8 @@ var version = "development"
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version information",
-	Long: `Print version information`,
-	Run: runVersion,
+	Long:  `Print version information`,
+	Run:   runVersion,
 }
 
 func init() {
