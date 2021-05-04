@@ -3,7 +3,7 @@
 
 ## Quickstart
 
-Download the latest binary from the (release page)[https://github.com/OpsLevel/kubectl-opslevel/releases] untar the binary and place it in `/usr/local/bin/`
+Download the latest binary from the [release page](https://github.com/OpsLevel/kubectl-opslevel/releases) untar the binary and place it in `/usr/local/bin/`
 
 Then generate a configuration file - you can get a starting sample using the following command
 
@@ -27,4 +27,4 @@ Once you are ready to import the data from the preview command into your OpsLeve
 
 This command may take a bit to run so be patient (we will be further imporving the UX of this output in the future) 
 
-Once the command is complete open up your (OpsLevel account)[https://app.opslevel.com/] and view all the newly generated services
+Once the command is complete open up your [OpsLevel account](https://app.opslevel.com/) and view all the newly generated services
