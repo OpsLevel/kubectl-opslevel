@@ -34,6 +34,11 @@ func runImport(cmd *cobra.Command, args []string) {
 	services, servicesErr := common.QueryForServices(config)
 	cobra.CheckErr(servicesErr)
 
+	tiers, tiersErr := GetTiers(client)
+	cobra.CheckErr(tiersErr)
+	lifecycles, lifecyclesErr := GetLifecycles(client)
+	cobra.CheckErr(lifecyclesErr)
+
 	for _, service := range services {
 		// fmt.Printf("Searching For: %s\n", service.Name)
 		foundService, foundServiceErr := client.GetServiceWithAlias(service.Name)
@@ -42,101 +47,49 @@ func runImport(cmd *cobra.Command, args []string) {
 			// fmt.Printf("Found Existing Service: %s, %s\n", foundService.Name, foundService.Id)
 			continue
 		}
-		newService, err := client.CreateService(opslevel.ServiceCreateInput{
+		serviceCreateInput := opslevel.ServiceCreateInput{
 			Name:        service.Name,
 			Product:     service.Product,
 			Description: service.Description,
 			Languague:   service.Language,
 			Framework:   service.Framework,
-			// TODO: Tier
 			// TODO: Owner
-			// TODO: Lifecycle
-		})
+		}
+		if v, ok := tiers[service.Tier]; ok {
+			serviceCreateInput.Tier = string(v.Alias)
+		}
+		if v, ok := lifecycles[service.Lifecycle]; ok {
+			serviceCreateInput.Lifecycle = string(v.Alias)
+		}
+
+		newService, err := client.CreateService(serviceCreateInput)
 		cobra.CheckErr(err)
 		client.CreateAliases(newService.Id, service.Aliases)
 		client.AssignTagsForId(newService.Id, service.Tags)
 	}
 	log.Info().Msg("Import Complete")
+}
 
-	// Exploration
+func GetTiers(client *opslevel.Client) (map[string]opslevel.Tier, error) {
+	tiersList, tiersErr := client.ListTiers()
+	if tiersErr != nil {
+		return nil, tiersErr
+	}
+	tiers := make(map[string]opslevel.Tier)
+	for _, tier := range tiersList {
+		tiers[string(tier.Alias)] = tier
+	}
+	return tiers, nil
+}
 
-	// service, err := client.GetServiceWithAlias("coredns")
-	// cobra.CheckErr(err)
-	// fmt.Println(service.Id)
-	// fmt.Println(service.Name)
-	// fmt.Printf("%v", service.Owner)
-
-	// service, err := client.CreateService(opslevel.ServiceCreateInput{
-	// 	Name: "Bosun",
-	// 	Owner: "DevOps",
-	// })
-	// cobra.CheckErr(err)
-	// fmt.Println(service.Id)
-
-	// service, err := client.UpdateService(opslevel.ServiceUpdateInput{
-	// 	Id: "Z2lkOi8vb3BzbGV2ZWwvU2VydmljZS80MTQ1",
-	// 	Name: "Vault Bosun",
-	// 	Lifecycle: "pre-pre-alpha",
-	// 	Tier: "tier_7",
-	// })
-	// cobra.CheckErr(err)
-	// fmt.Println(service.Name)
-
-	// team, teamErr := client.GetTeamWithId("Z2lkOi8vb3BzbGV2ZWwvVGVhbS83NzQ")
-	// // team, teamErr := client.GetTeamWithAlias("infra")
-	// cobra.CheckErr(teamErr)
-	// fmt.Println(team.Id)
-	// fmt.Println(team.Name)
-	// fmt.Println(team.Manager.Email)
-
-	// updateTeam, updateTeamErr := client.UpdateTeam(opslevel.TeamUpdateInput{
-	// 	Alias: "infra",
-	// 	Name: "DevOps",
-	// })
-	// cobra.CheckErr(updateTeamErr)
-	// fmt.Println(updateTeam.Name)
-	// fmt.Println(updateTeam.Manager.Email)
-
-	// newTeam, newTeamErr := client.CreateTeam(opslevel.TeamCreateInput{
-	// 	Name: "Devs",
-	// })
-	// cobra.CheckErr(newTeamErr)
-	// fmt.Println("created")
-	// fmt.Println(newTeam.Id)
-	// fmt.Println(newTeam.Name)
-
-	// teamId, teamAlias, err := client.DeleteTeam(opslevel.TeamDeleteInput{
-	// 	Id: newTeam.Id,
-	// })
-	// cobra.CheckErr(err)
-	// fmt.Println("deleted")
-	// fmt.Println(teamId)
-	// fmt.Println(teamAlias)
-
-	// var mutation struct {
-	// 	ServiceCreate ServiceCreatePayload `graphql:"serviceCreate(input: $input)"`
-	// }
-
-	// variables := map[string]interface{}{
-	// 	"input": ServiceCreateInput{
-	// 		Name: graphql.String("CoolService"),
-	// 	},
-	// }
-	// //'{ "query": "mutation {  serviceCreate(input:{name:\"Brand New Service\"}) { service { id name } errors { message path } } }" }'
-	// mutation := ServiceCreateMutation{}
-	// err := client.Mutate(&mutation, variables)
-	// if (err != nil) {
-	// 	panic(err)
-	// }
-	// fmt.Println(mutation.ServiceCreate.Service.Id)
-	// fmt.Println(mutation.ServiceCreate.Service.Name)
-
-	// resp, respErr := client.Post(`{ "query": "mutation {  serviceCreate(input:{name:\"Brand New Service\",ownerAlias:\"infra\"}) { service { id name description owner { name alias } } errors { message path } } }" }`)
-	// defer resp.Body.Close()
-	// cobra.CheckErr(respErr)
-
-	// fmt.Println("response Status:", resp.Status)
-	// fmt.Println("response Headers:", resp.Header)
-	// body, _ := ioutil.ReadAll(resp.Body)
-	// fmt.Println("response Body:", string(body))
+func GetLifecycles(client *opslevel.Client) (map[string]opslevel.Lifecycle, error) {
+	lifecyclesList, lifecyclesErr := client.ListLifecycles()
+	if lifecyclesErr != nil {
+		return nil, lifecyclesErr
+	}
+	lifecycles := make(map[string]opslevel.Lifecycle)
+	for _, lifecycle := range lifecyclesList {
+		lifecycles[string(lifecycle.Alias)] = lifecycle
+	}
+	return lifecycles, nil
 }
