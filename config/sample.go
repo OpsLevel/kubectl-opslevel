@@ -14,7 +14,7 @@ service:
       lifecycle: .metadata.annotations."opslevel.com/lifecycle"
       tier: .metadata.annotations."opslevel.com/tier"
       product: .metadata.annotations."opslevel.com/product"
-      language: .metadata.annotations."opslevel.com/languague"
+      language: .metadata.annotations."opslevel.com/language"
       framework: .metadata.annotations."opslevel.com/framework"
       aliases:
       - '.metadata.annotations."opslevel.com/aliases" | fromjson?'

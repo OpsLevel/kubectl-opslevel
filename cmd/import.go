@@ -46,7 +46,7 @@ func runImport(cmd *cobra.Command, args []string) {
 			Name:        service.Name,
 			Product:     service.Product,
 			Description: service.Description,
-			Languague:   service.Language,
+			Language:    service.Language,
 			Framework:   service.Framework,
 			// TODO: Tier
 			// TODO: Owner

@@ -45,7 +45,7 @@ type ServiceCreateInput struct {
 	Name        string `json:"name"`
 	Product     string `json:"product,omitempty"`
 	Description string `json:"description,omitempty"`
-	Languague   string `json:"language,omitempty"`
+	Language    string `json:"language,omitempty"`
 	Framework   string `json:"framework,omitempty"`
 	Tier        string `json:"tierAlias,omitempty"`
 	Owner       string `json:"ownerAlias,omitempty"`
@@ -58,7 +58,7 @@ type ServiceUpdateInput struct {
 	Name         string     `json:"name,omitempty"`
 	Product      string     `json:"product,omitempty"`
 	Descripition string     `json:"description,omitempty"`
-	Languague    string     `json:"languague,omitempty"`
+	Language     string     `json:"language,omitempty"`
 	Framework    string     `json:"framework,omitempty"`
 	Tier         string     `json:"tierAlias,omitempty"`
 	Owner        string     `json:"ownerAlias,omitempty"`
