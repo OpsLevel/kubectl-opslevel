@@ -185,7 +185,7 @@ func (c *ClientWrapper) Query(selector KubernetesSelector, handler func(resource
 	listOptions := metav1.ListOptions{
 		LabelSelector: selector.LabelSelector(),
 	}
-	// TODO: this feels horriable but i'm not sure of a better way to handle this
+	// TODO: Change handler to use []byte instead of a k8s types
 	switch strings.ToLower(selector.Kind) {
 	case "deployment":
 		handler := func(resource appsv1.Deployment) error {

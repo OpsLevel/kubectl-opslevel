@@ -18,7 +18,7 @@ type ClientSettings struct {
 
 type Client struct {
 	url    string
-	ctx    context.Context
+	ctx    context.Context // Should this be here?
 	client *graphql.Client
 }
 
@@ -61,6 +61,7 @@ func NewClient(apiToken string, options ...option) *Client {
 	}
 }
 
+// Should we create a context for every query/mutate ?
 func (c *Client) Query(q interface{}, variables map[string]interface{}) error {
 	return c.client.Query(c.ctx, q, variables)
 }

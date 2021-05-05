@@ -82,6 +82,7 @@ func (jq *JQ) Run(json []byte) ([]byte, *JQError) {
 		//fmt.Println("Got Error on JQ Execution")
 		//fmt.Println(err.Error())
 		//fmt.Println(string(stderr.Bytes()))
+		// TODO: printing out that it couldn't find JQ binary
 		if err.Error() == "exit status 2" {
 			return nil, &JQError{Message: jq.Commandline(), Type: BadOptions}
 		}

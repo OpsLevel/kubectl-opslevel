@@ -88,6 +88,7 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 				service.Aliases = append(service.Aliases, item)
 			}
 			break
+			// TODO: log warnings about a JQ filter that went unused because it returned an invalid type that we dont know how to handle
 		}
 	}
 	service.Tags = map[string]string{}
@@ -109,6 +110,7 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 				}
 			}
 			break
+			// TODO: log warnings about a JQ filter that went unused because it returned an invalid type that we dont know how to handle
 		}
 	}
 	return &service
