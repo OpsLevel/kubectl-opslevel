@@ -161,6 +161,8 @@ kubectl opslevel service preview -c ./opslevel-k8s.yaml
 
 Once you are happy with the full output you can move onto the actual import process.
 
+*NOTE: this step does not validate any of the data with Opslevel - fields that are references to other things (IE: Tier, Lifecycle, Owner, etc) are not validated at this point and might cause a warning message during import* 
+
 ## Import
 
 Once you are ready to import data into your Opslevel account run the following:
