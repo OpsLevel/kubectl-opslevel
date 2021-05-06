@@ -1,13 +1,19 @@
 # kubectl-opslevel
 
+<!---
+TOC Generated with https://github.com/ekalinin/github-markdown-toc
+-->
 ## Table of Contents
----
 
-- [Installation](#install)
-- [Installation Validation](#validate)
-- [Configuration](#config)
-- [Action: Preview](#preview)
-- [Action: Import](#import)
+* [Prerequisite](#prerequisite)
+* [Installation](#installation)
+      * [MacOS](#macos)
+      * [Linux](#linux)
+      * [Docker](#docker)
+  * [Validate Install](#validate-install)
+* [Working With The Configuration File](#working-with-the-configuration-file)
+* [Preview](#preview)
+* [Import](#import)
 
 ## Prerequisite
 
@@ -15,10 +21,9 @@
 - [jq](https://stedolan.github.io/jq/download/)
 - [OpsLevel API Token](https://app.opslevel.com/api_tokens)
 
-## Installation {#install}
+## Installation
 
 #### MacOS
-
 
 ```
 curl -Lo kubectl-opslevel.tar.gz https://github.com/opslevel/kubectl-opslevel/releases/download/$(curl -s https://api.github.com/repos/opslevel/kubectl-opslevel/releases/latest | grep tag_name | cut -d '"' -f 4)/kubectl-opslevel-darwin-amd64.tar.gz
@@ -79,7 +84,7 @@ TODO: Chocolately?
 
 -->
 
-### Validate Install {#validate}
+### Validate Install
 
 Once you have the binary on your Path you can validate it works by running:
 
@@ -93,7 +98,7 @@ Example Output:
 {"level":"info","time":1620251466,"message":"v0.1.1-0-gc52681db6b33"}
 ```
 
-## Working With The Configuration File {#config}
+## Working With The Configuration File
 
 The tool is driven by a configuration file that allows you to map data from kubernetes resource into OpsLevel fields.  Here is a simple example that maps a deployment's metadata name to an OpsLevel service name:
 
@@ -146,7 +151,7 @@ service:
       - '.spec.rules | map({"cateogry":"other","displayName":.host,"url": .host})'
 ```
 
-## Preview {#preview}
+## Preview
 
 The primary iteration loop of the tool resides in tweaking the configuration file and running the `service preview` command to view data that represents what the tool will do (think of this as a dry-run or terraform plan)
 
@@ -156,7 +161,7 @@ kubectl opslevel service preview -c ./opslevel-k8s.yaml
 
 Once you are happy with the full output you can move onto the actual import process.
 
-## Import {#import}
+## Import
 
 Once you are ready to import data into your Opslevel account run the following:
 *(insert your OpsLevel API Token)*:
