@@ -8,8 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        goos: [darwin]
-        goarch: [amd64]
+        goos: [linux, darwin]
+        goarch: ["386", amd64]
+        exclude:  
+          - goarch: "386"
+            goos: darwin 
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -28,6 +31,7 @@ jobs:
         goversion: "https://dl.google.com/go/go1.13.1.linux-amd64.tar.gz"
         binary_name: "kubectl-opslevel"
         ldflags: "-X 'github.com/opslevel/kubectl-opslevel/cmd.version=${{ env.TAG }}'"
+        asset_name: kubectl-opslevel-${{ matrix.goos }}-${{ matrix.goarch }}
   release-docker:
     name: Release Docker Image
     runs-on: ubuntu-latest

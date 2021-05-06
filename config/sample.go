@@ -18,8 +18,11 @@ service:
       framework: .metadata.annotations."opslevel.com/framework"
       aliases:
       - '.metadata.annotations."opslevel.com/aliases" | fromjson?'
+      - .metadata.annotations."app.kubernetes.io/instance"
       - '"\(.metadata.name)-\(.metadata.namespace)"'
       tags:
+      - {"imported": "kubectl-opslevel"}
       - '.metadata.annotations."opslevel.com/tags" | fromjson?'
       - .metadata.labels
+      - .spec.template.metadata.labels
 `
