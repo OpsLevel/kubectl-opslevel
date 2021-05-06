@@ -51,13 +51,15 @@ func runImport(cmd *cobra.Command, args []string) {
 			Description: service.Description,
 			Language:    service.Language,
 			Framework:   service.Framework,
-			// TODO: Owner
 		}
 		if v, ok := tiers[service.Tier]; ok {
 			serviceCreateInput.Tier = string(v.Alias)
 		}
 		if v, ok := lifecycles[service.Lifecycle]; ok {
 			serviceCreateInput.Lifecycle = string(v.Alias)
+		}
+		if v, ok := teams[service.Owner]; ok {
+			serviceCreateInput.Owner = string(v.Alias)
 		}
 
 		newService, err := client.CreateService(serviceCreateInput)
@@ -90,4 +92,16 @@ func GetLifecycles(client *opslevel.Client) (map[string]opslevel.Lifecycle, erro
 		lifecycles[string(lifecycle.Alias)] = lifecycle
 	}
 	return lifecycles, nil
+}
+
+func GetTeams(client *opslevel.Client) (map[string]opslevel.Team, error) {
+	data, dataErr := client.ListTeams()
+	if dataErr != nil {
+		return nil, dataErr
+	}
+	teams := make(map[string]opslevel.Team)
+	for _, team := range data {
+		teams[string(team.Alias)] = team
+	}
+	return teams, nil
 }
