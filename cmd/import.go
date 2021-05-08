@@ -34,10 +34,8 @@ func runImport(cmd *cobra.Command, args []string) {
 	services, servicesErr := common.QueryForServices(config)
 	cobra.CheckErr(servicesErr)
 
-	tiers, tiersErr := GetTiers(client)
-	cobra.CheckErr(tiersErr)
-	lifecycles, lifecyclesErr := GetLifecycles(client)
-	cobra.CheckErr(lifecyclesErr)
+	tiers, _ := GetTiers(client)
+	lifecycles, _ := GetLifecycles(client)
 
 	for _, service := range services {
 		// fmt.Printf("Searching For: %s\n", service.Name)
