@@ -26,14 +26,14 @@ const (
 
 type Tool struct {
 	Category        ToolCategory
-	CategoryAlias   graphql.String
+	CategoryAlias   graphql.String `json:",omitempty"`
 	DisplayCategory graphql.String `json:",omitempty"`
 	DisplayName     graphql.String
-	Environment     graphql.String
-	Id              graphql.ID
-	Locked          graphql.Boolean
-	PlainId         graphql.Int
-	Service         Service
+	Environment     graphql.String  `json:",omitempty"`
+	Id              graphql.ID      `json:",omitempty"`
+	Locked          graphql.Boolean `json:",omitempty"`
+	PlainId         graphql.Int     `json:",omitempty"`
+	Service         Service         `json:",omitempty"`
 	Url             graphql.String
 }
 
@@ -41,7 +41,7 @@ type ToolCreateInput struct {
 	Category     ToolCategory `json:"category"`
 	DisplayName  string       `json:"displayName"`
 	Url          string       `json:"url"`
-	Environment  string       `json:"environment"`
+	Environment  string       `json:"environment,omitempty"`
 	ServiceId    graphql.ID   `json:"serviceId,omitempty"`
 	ServiceAlias string       `json:"serviceAlias,omitempty"`
 }
