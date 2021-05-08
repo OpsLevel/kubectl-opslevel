@@ -36,6 +36,7 @@ func runImport(cmd *cobra.Command, args []string) {
 
 	tiers, _ := GetTiers(client)
 	lifecycles, _ := GetLifecycles(client)
+	teams, _ := GetTeams(client)
 
 	for _, service := range services {
 		// fmt.Printf("Searching For: %s\n", service.Name)
