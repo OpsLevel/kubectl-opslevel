@@ -72,11 +72,11 @@ func runImport(cmd *cobra.Command, args []string) {
 }
 
 func GetTiers(client *opslevel.Client) (map[string]opslevel.Tier, error) {
+	tiers := make(map[string]opslevel.Tier)
 	tiersList, tiersErr := client.ListTiers()
 	if tiersErr != nil {
-		return nil, tiersErr
+		return tiers, tiersErr
 	}
-	tiers := make(map[string]opslevel.Tier)
 	for _, tier := range tiersList {
 		tiers[string(tier.Alias)] = tier
 	}
@@ -84,11 +84,11 @@ func GetTiers(client *opslevel.Client) (map[string]opslevel.Tier, error) {
 }
 
 func GetLifecycles(client *opslevel.Client) (map[string]opslevel.Lifecycle, error) {
+	lifecycles := make(map[string]opslevel.Lifecycle)
 	lifecyclesList, lifecyclesErr := client.ListLifecycles()
 	if lifecyclesErr != nil {
-		return nil, lifecyclesErr
+		return lifecycles, lifecyclesErr
 	}
-	lifecycles := make(map[string]opslevel.Lifecycle)
 	for _, lifecycle := range lifecyclesList {
 		lifecycles[string(lifecycle.Alias)] = lifecycle
 	}
@@ -96,11 +96,11 @@ func GetLifecycles(client *opslevel.Client) (map[string]opslevel.Lifecycle, erro
 }
 
 func GetTeams(client *opslevel.Client) (map[string]opslevel.Team, error) {
+	teams := make(map[string]opslevel.Team)
 	data, dataErr := client.ListTeams()
 	if dataErr != nil {
-		return nil, dataErr
+		return teams, dataErr
 	}
-	teams := make(map[string]opslevel.Team)
 	for _, team := range data {
 		teams[string(team.Alias)] = team
 	}
