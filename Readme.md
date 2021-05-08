@@ -151,6 +151,32 @@ service:
       - '.spec.rules | map({"cateogry":"other","displayName":.host,"url": .host})'
 ```
 
+### Sample Configuration Explained
+
+In the sample configuration there are number of sane default jq expression set that should help you get started quickly.  Here we will breakdown some of the more advanced expressions to further your understanding
+
+#### Tools
+
+In the tools section there are 2 example expressions that show you how to build the necessary payload for attaching tools entries to your service.
+
+```
+      tools:
+      - '{"category": "other", "displayName": "my-cool-tool", "url": .metadata.annotations."example.com/my-cool-tool"}
+        | if .url then . else empty end'
+      - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tools")))
+        | map({"category": .key | split(".")[2], "displayName": .key | split(".")[3],
+        "url": .value})'
+```
+
+The first example shows you the 3 required fields - `category` , `displayName` and `url` - but the expression hardcodes the values for `category` and `displayName` leaving you to specify where the `url` field comes from.
+
+The second example leverages a convention to capture `1..N` tools.  The jq expression is looking for kubernetes annotations using the following format `opslevel.com/tools.<category>.<displayName>: <url>` and here is a example:
+
+```
+  annotations:
+    opslevel.com/tools.logs.datadog: https://app.datadoghq.com/logs
+```
+
 ## Preview
 
 The primary iteration loop of the tool resides in tweaking the configuration file and running the `service preview` command to view data that represents what the tool will do (think of this as a dry-run or terraform plan)
