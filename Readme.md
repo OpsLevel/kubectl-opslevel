@@ -1,23 +1,22 @@
-# kubectl-opslevel
+Table of Contents
+=================
 
-<!---
-TOC Generated with https://github.com/ekalinin/github-markdown-toc
--->
-## Table of Contents
-
-* [Prerequisite](#prerequisite)
-* [Installation](#installation)
-      * [MacOS](#macos)
-      * [Linux](#linux)
-      * [Docker](#docker)
-  * [Validate Install](#validate-install)
-* [Working With The Configuration File](#working-with-the-configuration-file)
-  * [Sample Configuration Explained](#sample-configuration-explained)
-      * [Aliases](#aliases)
-      * [Tags](#tags)
-      * [Tools](#tools)
-* [Preview](#preview)
-* [Import](#import)
+<!--ts-->
+   * [Prerequisite](#prerequisite)
+   * [Installation](#installation)
+         * [MacOS](#macos)
+         * [Linux](#linux)
+         * [Docker](#docker)
+      * [Validate Install](#validate-install)
+   * [Working With The Configuration File](#working-with-the-configuration-file)
+      * [Sample Configuration Explained](#sample-configuration-explained)
+         * [Lifecycle &amp; Tier &amp; Owner](#lifecycle--tier--owner)
+         * [Aliases](#aliases)
+         * [Tags](#tags)
+         * [Tools](#tools)
+   * [Preview](#preview)
+   * [Import](#import)
+<!--te-->
 
 ## Prerequisite
 
