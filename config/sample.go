@@ -21,10 +21,10 @@ service:
       - .metadata.annotations."app.kubernetes.io/instance"
       - '"\(.metadata.name)-\(.metadata.namespace)"'
       tags:
-      - {"imported": "kubectl-opslevel"}
-      - '.metadata.annotations."opslevel.com/tags" | fromjson?'
+      - '{"imported": "kubectl-opslevel"}'
+      - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tags"))) | map({(.key | split(".")[2]): .value})'
       - .metadata.labels
       - .spec.template.metadata.labels
       tools:
-      - '.metadata.annotations."opslevel.com/tools" | fromjson?'
+      - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tools"))) | map({"category": .key | split(".")[2], "displayName": .key | split(".")[3], "url": .value})'
 `
