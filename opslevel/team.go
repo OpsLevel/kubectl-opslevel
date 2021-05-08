@@ -21,11 +21,12 @@ type ContactInput struct {
 }
 
 type Team struct {
-	Id               graphql.String
+	Alias            graphql.String
+	Contacts         []Contact
+	Id               graphql.ID
+	Manager          User
 	Name             graphql.String
 	Responsibilities graphql.String
-	Manager          User
-	Contacts         []Contact
 }
 
 type TeamCreateInput struct {
