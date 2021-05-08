@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/opslevel/kubectl-opslevel/jq"
 
@@ -50,7 +51,7 @@ func (parser *JQParser) doParse(data []byte) *JQResponse {
 		case jq.BadOptions:
 			return nil
 		case jq.BadFilter:
-			return &JQResponse{Bytes: []byte(parser.JQ.Filter())}
+			return &JQResponse{Bytes: []byte(fmt.Sprintf("\"%s\"", parser.JQ.Filter()))}
 		case jq.BadJSON:
 			return nil
 		case jq.BadExcution:
