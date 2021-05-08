@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/opslevel-go"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -40,14 +43,15 @@ func runImport(cmd *cobra.Command, args []string) {
 	CacheLookupTables(client)
 
 	for _, service := range services {
-		foundService, foundServiceErr := client.GetServiceWithAlias(service.Name)
+		foundService, foundServiceErr := FindService(client, service)
 		if foundServiceErr != nil {
 			log.Error().Msgf("Exception looking up existing service: '%s' \n\tREASON: %s", foundService.Name, foundServiceErr.Error())
 			continue
 		}
+		// TODO: this pattern probably makes it hard to do "deletion" ?
 		if foundService.Id != nil {
-			log.Warn().Msgf("Found Existing Service: '%s' ... skipping", foundService.Name)
-			continue
+			UpdateService(client, service, foundService)
+			// TODO: Do we reconcile aliases?
 		} else {
 			newService, newServiceErr := CreateService(client, service)
 			if newServiceErr != nil {
@@ -67,6 +71,17 @@ func runImport(cmd *cobra.Command, args []string) {
 
 // TODO: Helpers probably shouldn't be exported
 // Helpers
+
+func FindService(client *opslevel.Client, registration common.ServiceRegistration) (*opslevel.Service, error) {
+	for _, alias := range registration.Aliases {
+		foundService, err := client.GetServiceWithAlias(alias)
+		if err == nil {
+			return foundService, nil
+		}
+		log.Info().Msgf("Unable to find an opslevel service for '%s' using alias '%s'", registration.Name, alias)
+	}
+	return nil, fmt.Errorf("Unable to find any service with aliases: %+v", registration.Aliases)
+}
 
 func GetTiers(client *opslevel.Client) (map[string]opslevel.Tier, error) {
 	tiers := make(map[string]opslevel.Tier)
@@ -147,6 +162,33 @@ func CreateService(client *opslevel.Client, registration common.ServiceRegistrat
 		serviceCreateInput.Owner = string(v.Alias)
 	}
 	return client.CreateService(serviceCreateInput)
+}
+
+func UpdateService(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
+	updateServiceInput := opslevel.ServiceUpdateInput{
+		Id:           service.Id,
+		Product:      registration.Product,
+		Descripition: registration.Description,
+		Language:     registration.Language,
+		Framework:    registration.Framework,
+	}
+	if v, ok := Tiers[registration.Tier]; ok {
+		updateServiceInput.Tier = string(v.Alias)
+	}
+	if v, ok := Lifecycles[registration.Lifecycle]; ok {
+		updateServiceInput.Lifecycle = string(v.Alias)
+	}
+	if v, ok := Teams[registration.Owner]; ok {
+		updateServiceInput.Owner = string(v.Alias)
+	}
+	updatedService, updateServiceErr := client.UpdateService(updateServiceInput)
+	if updateServiceErr != nil {
+		log.Error().Msgf("Failed updating service: '%s' \n\tREASON: %v", service.Name, updateServiceErr.Error())
+	} else {
+		if diff := cmp.Diff(service, updatedService); diff != "" {
+			log.Info().Msgf("Updated Service '%s' - Diff:\n%s", service.Name, diff)
+		}
+	}
 }
 
 func AssignAliases(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
