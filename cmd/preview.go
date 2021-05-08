@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/kubectl-opslevel/config"
@@ -31,12 +30,9 @@ func runPreview(cmd *cobra.Command, args []string) {
 	services, err2 := common.QueryForServices(config)
 	cobra.CheckErr(err2)
 
-	var output []string
-	for _, service := range services {
-		serviceBytes, serviceBytesErr := json.Marshal(service)
-		cobra.CheckErr(serviceBytesErr)
-		output = append(output, string(serviceBytes))
+	prettyJSON, err := json.MarshalIndent(services, "", "    ")
+	if err != nil {
+		fmt.Printf("[]\n")
 	}
-	// TODO: is there a better way to format this?
-	fmt.Printf("[\n    %v\n]\n", strings.Join(output, ", \n    "))
+	fmt.Printf("%s\n", string(prettyJSON))
 }

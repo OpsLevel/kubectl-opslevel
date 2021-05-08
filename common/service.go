@@ -1,8 +1,11 @@
 package common
 
 import (
+	"encoding/json"
+
 	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/kubectl-opslevel/k8sutils"
+	"github.com/opslevel/kubectl-opslevel/opslevel"
 
 	_ "github.com/rs/zerolog/log"
 )
@@ -18,19 +21,21 @@ type ServiceRegistrationParser struct {
 	Framework   JQParser
 	Aliases     []JQParser
 	Tags        []JQParser
+	Tools       []JQParser
 }
 
 type ServiceRegistration struct {
 	Name        string
-	Description string            `json:",omitempty"`
-	Owner       string            `json:",omitempty"`
-	Lifecycle   string            `json:",omitempty"`
-	Tier        string            `json:",omitempty"`
-	Product     string            `json:",omitempty"`
-	Language    string            `json:",omitempty"`
-	Framework   string            `json:",omitempty"`
-	Aliases     []string          `json:",omitempty"`
-	Tags        map[string]string `json:",omitempty"`
+	Description string                     `json:",omitempty"`
+	Owner       string                     `json:",omitempty"`
+	Lifecycle   string                     `json:",omitempty"`
+	Tier        string                     `json:",omitempty"`
+	Product     string                     `json:",omitempty"`
+	Language    string                     `json:",omitempty"`
+	Framework   string                     `json:",omitempty"`
+	Aliases     []string                   `json:",omitempty"`
+	Tags        map[string]string          `json:",omitempty"`
+	Tools       []opslevel.ToolCreateInput `json:",omitempty"` // This is a concrete class so fields are validated during `service preview`
 }
 
 func NewParser(c config.ServiceRegistrationConfig) *ServiceRegistrationParser {
@@ -48,6 +53,9 @@ func NewParser(c config.ServiceRegistrationConfig) *ServiceRegistrationParser {
 	}
 	for _, tag := range c.Tags {
 		parser.Tags = append(parser.Tags, NewJQParser(tag))
+	}
+	for _, tool := range c.Tools {
+		parser.Tools = append(parser.Tools, NewJQParser(tool))
 	}
 	return &parser
 }
@@ -73,6 +81,7 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 	service.Product = GetString(parser.Product, data)
 	service.Language = GetString(parser.Language, data)
 	service.Framework = GetString(parser.Framework, data)
+	// TODO: the following chunks should probably be extracted into named functions for clarity
 	for _, alias := range parser.Aliases {
 		output := alias.Parse(data)
 		if output == nil {
@@ -113,6 +122,27 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 			// TODO: log warnings about a JQ filter that went unused because it returned an invalid type that we dont know how to handle
 		}
 	}
+	service.Tools = []opslevel.ToolCreateInput{}
+	for _, tool := range parser.Tools {
+		output := tool.Parse(data)
+		if output == nil {
+			continue
+		}
+		switch output.Type {
+		case StringStringMap:
+			if tool, err := ConvertToTool(output.StringMap); err == nil {
+				service.Tools = append(service.Tools, *tool)
+			}
+			break
+		case StringStringMapArray:
+			for _, item := range output.StringMapArray {
+				if tool, err := ConvertToTool(item); err == nil {
+					service.Tools = append(service.Tools, *tool)
+				}
+			}
+			break
+		}
+	}
 	return &service
 }
 
@@ -127,6 +157,18 @@ func removeDuplicates(data []string) []string {
 		}
 	}
 	return list
+}
+
+func ConvertToTool(data map[string]string) (*opslevel.ToolCreateInput, error) {
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	tool := &opslevel.ToolCreateInput{}
+	if unmarshalErr := json.Unmarshal(bytes, tool); unmarshalErr != nil {
+		return nil, unmarshalErr
+	}
+	return tool, nil
 }
 
 func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {

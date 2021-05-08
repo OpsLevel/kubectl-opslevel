@@ -77,6 +77,10 @@ func (resp *JQResponse) Unmarshal() {
 
 	stringObjErr := json.Unmarshal(resp.Bytes, &resp.StringObj)
 	if stringObjErr == nil {
+		if resp.StringObj == "" {
+			resp.Type = Empty
+			return
+		}
 		resp.Type = String
 		return
 	}
