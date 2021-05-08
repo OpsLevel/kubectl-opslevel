@@ -5,6 +5,7 @@ import (
 	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/opslevel-go"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -45,9 +46,10 @@ func runImport(cmd *cobra.Command, args []string) {
 			log.Error().Msgf("Exception looking up existing service: '%s' \n\tREASON: %s", foundService.Name, foundServiceErr.Error())
 			continue
 		}
+		// TODO: this pattern probably makes it hard to do "deletion" ?
 		if foundService.Id != nil {
-			log.Warn().Msgf("Found Existing Service: '%s' ... skipping", foundService.Name)
-			continue
+			UpdateService(client, service, foundService)
+			// TODO: Do we reconcile aliases?
 		} else {
 			newService, newServiceErr := CreateService(client, service)
 			if newServiceErr != nil {
@@ -147,6 +149,33 @@ func CreateService(client *opslevel.Client, registration common.ServiceRegistrat
 		serviceCreateInput.Owner = string(v.Alias)
 	}
 	return client.CreateService(serviceCreateInput)
+}
+
+func UpdateService(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
+	updateServiceInput := opslevel.ServiceUpdateInput{
+		Id:           service.Id,
+		Product:      registration.Product,
+		Descripition: registration.Description,
+		Language:     registration.Language,
+		Framework:    registration.Framework,
+	}
+	if v, ok := Tiers[registration.Tier]; ok {
+		updateServiceInput.Tier = string(v.Alias)
+	}
+	if v, ok := Lifecycles[registration.Lifecycle]; ok {
+		updateServiceInput.Lifecycle = string(v.Alias)
+	}
+	if v, ok := Teams[registration.Owner]; ok {
+		updateServiceInput.Owner = string(v.Alias)
+	}
+	updatedService, updateServiceErr := client.UpdateService(updateServiceInput)
+	if updateServiceErr != nil {
+		log.Error().Msgf("Failed updating service: '%s' \n\tREASON: %v", service.Name, updateServiceErr.Error())
+	} else {
+		if diff := cmp.Diff(service, updatedService); diff != "" {
+			log.Info().Msgf("Updated Service '%s' - Diff:\n%s", service.Name, diff)
+		}
+	}
 }
 
 func AssignAliases(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {

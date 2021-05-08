@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/creasty/defaults v1.5.1
 	github.com/go-logr/logr v0.3.0
+	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/googleapis/gnostic v0.5.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/imdario/mergo v0.3.10 // indirect
