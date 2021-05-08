@@ -155,11 +155,34 @@ service:
 
 In the sample configuration there are number of sane default jq expression set that should help you get started quickly.  Here we will breakdown some of the more advanced expressions to further your understanding and hopefully give you an idea of the power jq brings to data collection.
 
+#### Aliases
+
+In the aliases section there are 3 example expressions that show you different ways to extract aliases for your service.  Do note that this list of aliases does need to be OpsLevel account wide unique.
+
+```
+      aliases:
+      - '.metadata.annotations."opslevel.com/aliases" | fromjson?'
+      - .metadata.annotations."app.kubernetes.io/instance"
+      - '"\(.metadata.name)-\(.metadata.namespace)"'
+```
+
+The first example leverages a convention to capture `1..N` aliases.  The jq expression is looking for a kubernetes annotation where the value is valid json and here is an example:
+
+```
+  annotations:
+    opslevel.com/aliases: '["my-alias-1","my-alias-2","my-alias-3"]' 
+```
+
+The second example leverages a [recommended annotation](https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/) by kubernetes.
+
+The third example concatenates togeather the resource name and namespace to create an kubernetes cluster wide unique alias.
+
 #### Tags
 
 In the tags section there are 4 example expressions that show you different ways to build the key/value payload for attaching tag entries to your service
 
 ```
+      tags:
       - '{"imported": "kubectl-opslevel"}'
       - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tags"))) | map({(.key | split(".")[2]): .value})'
       - .metadata.labels
