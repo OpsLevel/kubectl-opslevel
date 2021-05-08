@@ -1,0 +1,36 @@
+{
+    "data": {
+      "account": {
+        "tiers": [
+            {
+              "alias": "tier_1",
+              "description": "Mission-critical service or repository. Failure could result in significant impact to revenue or reputation.",
+              "id": "Z2lkOi8vb3BzbGV2ZWwvVGllci8zNDE",
+              "index": 1,
+              "name": "Tier 1"
+            },
+            {
+              "alias": "tier_2",
+              "description": "Customer-facing service or repository. Failure results in degraded experience for customers, although without significant impact to revenue or reputation.",
+              "id": "Z2lkOi8vb3BzbGV2ZWwvVGllci8zNDI",
+              "index": 2,
+              "name": "Tier 2"
+            },
+            {
+              "alias": "tier_3",
+              "description": "Internal service or repository. Failure could result in productivity being compromised within the company.",
+              "id": "Z2lkOi8vb3BzbGV2ZWwvVGllci8zNDM",
+              "index": 3,
+              "name": "Tier 3"
+            },
+            {
+              "alias": "tier_4",
+              "description": "Other service or repository. Failure doesn't result in immediate or significant impact.",
+              "id": "Z2lkOi8vb3BzbGV2ZWwvVGllci8zNDQ",
+              "index": 4,
+              "name": "Tier 4"
+            }
+          ]
+      }
+    }
+  }
