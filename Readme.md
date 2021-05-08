@@ -153,7 +153,29 @@ service:
 
 ### Sample Configuration Explained
 
-In the sample configuration there are number of sane default jq expression set that should help you get started quickly.  Here we will breakdown some of the more advanced expressions to further your understanding
+In the sample configuration there are number of sane default jq expression set that should help you get started quickly.  Here we will breakdown some of the more advanced expressions to further your understanding and hopefully give you an idea of the power jq brings to data collection.
+
+#### Tags
+
+In the tags section there are 4 example expressions that show you different ways to build the key/value payload for attaching tag entries to your service
+
+```
+      - '{"imported": "kubectl-opslevel"}'
+      - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tags"))) | map({(.key | split(".")[2]): .value})'
+      - .metadata.labels
+      - .spec.template.metadata.labels
+```
+
+The first example shows how to hardcode a tag entry.  In this case we are denoting that the imported service came from this tool.
+
+The second example leverages a convention to capture `1..N` tags.  The jq expression is looking for kubernetes annotations using the following format `opslevel.com/tags.<key>: <value>` and here is an example:
+
+```
+  annotations:
+    opslevel.com/tags.hello: world
+```
+
+The third and fourth examples extract the `labels` applied to the kubernetes resource directly into your OpsLevel service's tags
 
 #### Tools
 
