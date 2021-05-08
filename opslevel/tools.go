@@ -25,16 +25,18 @@ const (
 )
 
 type Tool struct {
-	Category        ToolCategory
-	CategoryAlias   graphql.String `json:",omitempty"`
-	DisplayCategory graphql.String `json:",omitempty"`
-	DisplayName     graphql.String
-	Environment     graphql.String  `json:",omitempty"`
-	Id              graphql.ID      `json:",omitempty"`
-	Locked          graphql.Boolean `json:",omitempty"`
-	PlainId         graphql.Int     `json:",omitempty"`
-	Service         Service         `json:",omitempty"`
-	Url             graphql.String
+	Category      ToolCategory
+	CategoryAlias graphql.String `json:",omitempty"`
+	DisplayName   graphql.String
+	Environment   graphql.String `json:",omitempty"`
+	Id            graphql.ID     `json:",omitempty"`
+	Service       Service        `json:",omitempty"`
+	Url           graphql.String
+
+	// TODO: Not sure why these fields don't work during ToolCreateInput
+	//DisplayCategory graphql.String `json:",omitempty"`
+	//Locked          graphql.Boolean `json:",omitempty"`
+	//PlainId graphql.Int `json:",omitempty"`
 }
 
 type ToolCreateInput struct {
