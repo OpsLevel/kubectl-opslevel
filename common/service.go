@@ -73,7 +73,6 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 	service.Product = GetString(parser.Product, data)
 	service.Language = GetString(parser.Language, data)
 	service.Framework = GetString(parser.Framework, data)
-	// TODO: need to treat service.Aliases as a "hash set" to not append duplicates
 	for _, alias := range parser.Aliases {
 		output := alias.Parse(data)
 		if output == nil {
@@ -91,6 +90,7 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 			// TODO: log warnings about a JQ filter that went unused because it returned an invalid type that we dont know how to handle
 		}
 	}
+	service.Aliases = removeDuplicates(service.Aliases)
 	service.Tags = map[string]string{}
 	for _, tag := range parser.Tags {
 		output := tag.Parse(data)
@@ -114,6 +114,19 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 		}
 	}
 	return &service
+}
+
+func removeDuplicates(data []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+
+	for _, entry := range data {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
 }
 
 func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
