@@ -159,6 +159,10 @@ service:
 
 In the sample configuration there are number of sane default jq expression set that should help you get started quickly.  Here we will breakdown some of the more advanced expressions to further your understanding and hopefully give you an idea of the power jq brings to data collection.
 
+#### Lifecycle & Tier & Owner
+
+The `Lifecycle`, `Tier` and `Owner` fields in the configuration are only validated upon `service import` not during `service preview`.  Valid values for these fields need to match the `Alias` for these in your OpsLevel account.  To view the valid aliases you can run the commands `account lifecycles`, `account tiers` and `account teams`.
+
 #### Aliases
 
 In the aliases section there are 3 example expressions that show you different ways to extract aliases for your service.  Do note that this list of aliases does need to be OpsLevel account wide unique.
