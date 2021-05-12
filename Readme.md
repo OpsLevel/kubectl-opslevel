@@ -6,7 +6,6 @@ Table of Contents
    * [Installation](#installation)
          * [MacOS](#macos)
          * [Linux](#linux)
-         * [Docker](#docker)
       * [Validate Install](#validate-install)
    * [Working With The Configuration File](#working-with-the-configuration-file)
       * [Sample Configuration Explained](#sample-configuration-explained)
@@ -46,6 +45,9 @@ chmod +x kubectl-opslevel
 sudo mv kubectl-opslevel /usr/local/bin/kubectl-opslevel
 ```
 
+<!---
+TODO: Implement other methods
+
 #### Docker
 
 ```
@@ -61,9 +63,6 @@ docker run -it --rm -w /mounted -v \$(pwd):/mounted public.ecr.aws/opslevel/kube
 EOF
 chmod +x /usr/local/bin/kubectl-opslevel
 ```
-
-<!---
-TODO: Implement other methods
 
 #### Homebrew
 
