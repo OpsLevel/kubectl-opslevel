@@ -1,6 +1,13 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### Feature
+- Simple reconcile of existing service entries
+
+### Refactor
+- Improve service import log output to explain what steps were success or failed ([#6](https://github.com/OpsLevel/kubectl-opslevel/issues/6))
+- extract opslevel api client library to opslevel-go ([#8](https://github.com/OpsLevel/kubectl-opslevel/issues/8))
+
 
 <a name="v0.1.2"></a>
 ## [v0.1.2] - 2021-05-08
