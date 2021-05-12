@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/opslevel/kubectl-opslevel/opslevel"
+	"github.com/opslevel/opslevel-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
