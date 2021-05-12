@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/kubectl-opslevel/config"
-	"github.com/opslevel/kubectl-opslevel/opslevel"
+	"github.com/opslevel/opslevel-go"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
