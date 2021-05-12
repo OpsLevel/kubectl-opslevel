@@ -31,52 +31,42 @@ func runImport(cmd *cobra.Command, args []string) {
 
 	client := opslevel.NewClient(viper.GetString("apitoken"))
 
+	clientErr := client.Validate()
+	cobra.CheckErr(clientErr)
+
 	services, servicesErr := common.QueryForServices(config)
 	cobra.CheckErr(servicesErr)
 
-	tiers, _ := GetTiers(client)
-	lifecycles, _ := GetLifecycles(client)
-	teams, _ := GetTeams(client)
+	CacheLookupTables(client)
 
 	for _, service := range services {
-		// fmt.Printf("Searching For: %s\n", service.Name)
 		foundService, foundServiceErr := client.GetServiceWithAlias(service.Name)
-		cobra.CheckErr(foundServiceErr)
-		if foundService.Id != nil {
-			// fmt.Printf("Found Existing Service: %s, %s\n", foundService.Name, foundService.Id)
+		if foundServiceErr != nil {
+			log.Error().Msgf("Exception looking up existing service: '%s' \n\tREASON: %s", foundService.Name, foundServiceErr.Error())
 			continue
 		}
-		serviceCreateInput := opslevel.ServiceCreateInput{
-			Name:        service.Name,
-			Product:     service.Product,
-			Description: service.Description,
-			Language:    service.Language,
-			Framework:   service.Framework,
-		}
-		if v, ok := tiers[service.Tier]; ok {
-			serviceCreateInput.Tier = string(v.Alias)
-		}
-		if v, ok := lifecycles[service.Lifecycle]; ok {
-			serviceCreateInput.Lifecycle = string(v.Alias)
-		}
-		if v, ok := teams[service.Owner]; ok {
-			serviceCreateInput.Owner = string(v.Alias)
-		}
-
-		newService, err := client.CreateService(serviceCreateInput)
-		cobra.CheckErr(err)
-		client.CreateAliases(newService.Id, service.Aliases)
-		client.AssignTagsForId(newService.Id, service.Tags)
-		for _, tool := range service.Tools {
-			tool.ServiceId = newService.Id
-			if _, createToolErr := client.CreateTool(tool); createToolErr != nil {
-				cobra.CheckErr(createToolErr)
-				break
+		if foundService.Id != nil {
+			log.Warn().Msgf("Found Existing Service: '%s' ... skipping", foundService.Name)
+			continue
+		} else {
+			newService, newServiceErr := CreateService(client, service)
+			if newServiceErr != nil {
+				log.Error().Msgf("Failed creating service: '%s' \n\tREASON: %v", service.Name, newServiceErr.Error())
+				continue
+			} else {
+				log.Info().Msgf("Created new service: '%s'", newService.Name)
 			}
+			foundService = newService
+			AssignAliases(client, service, foundService)
 		}
+		AssignTags(client, service, foundService)
+		AssignTools(client, service, foundService)
 	}
 	log.Info().Msg("Import Complete")
 }
+
+// TODO: Helpers probably shouldn't be exported
+// Helpers
 
 func GetTiers(client *opslevel.Client) (map[string]opslevel.Tier, error) {
 	tiers := make(map[string]opslevel.Tier)
@@ -112,4 +102,106 @@ func GetTeams(client *opslevel.Client) (map[string]opslevel.Team, error) {
 		teams[string(team.Alias)] = team
 	}
 	return teams, nil
+}
+
+// TODO: this makes this code hard to test
+var (
+	Tiers      map[string]opslevel.Tier
+	Lifecycles map[string]opslevel.Lifecycle
+	Teams      map[string]opslevel.Team
+)
+
+func CacheLookupTables(client *opslevel.Client) {
+	tiers, tiersErr := GetTiers(client)
+	if tiersErr != nil {
+		log.Warn().Msg("Failed to retrive tiers from OpsLevel API - Unable to assign field 'Tier' to services")
+	}
+	Tiers = tiers
+	lifecycles, lifecyclesErr := GetLifecycles(client)
+	if lifecyclesErr != nil {
+		log.Warn().Msg("Failed to retrive lifecycles from OpsLevel API - Unable to assign field 'Lifecycle' to services")
+	}
+	Lifecycles = lifecycles
+	teams, teamsErr := GetTeams(client)
+	if teamsErr != nil {
+		log.Warn().Msg("Failed to retrive teams from OpsLevel API - Unable to assign field 'Owner' to services")
+	}
+	Teams = teams
+}
+
+func CreateService(client *opslevel.Client, registration common.ServiceRegistration) (*opslevel.Service, error) {
+	serviceCreateInput := opslevel.ServiceCreateInput{
+		Name:        registration.Name,
+		Product:     registration.Product,
+		Description: registration.Description,
+		Language:    registration.Language,
+		Framework:   registration.Framework,
+	}
+	if v, ok := Tiers[registration.Tier]; ok {
+		serviceCreateInput.Tier = string(v.Alias)
+	}
+	if v, ok := Lifecycles[registration.Lifecycle]; ok {
+		serviceCreateInput.Lifecycle = string(v.Alias)
+	}
+	if v, ok := Teams[registration.Owner]; ok {
+		serviceCreateInput.Owner = string(v.Alias)
+	}
+	return client.CreateService(serviceCreateInput)
+}
+
+func AssignAliases(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
+	for _, alias := range registration.Aliases {
+		// TODO: check if alias already on service and skip it
+		_, err := client.CreateAlias(opslevel.AliasCreateInput{
+			Alias:   alias,
+			OwnerId: service.Id,
+		})
+		if err != nil {
+			log.Error().Msgf("Failed assigning alias '%s' to service: '%s' \n\tREASON: %v", alias, service.Name, err.Error())
+		} else {
+			log.Info().Msgf("Assigned alias '%s' to service: '%s'", alias, service.Name)
+		}
+	}
+}
+
+func AssignTags(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
+	for tagKey, tagValue := range registration.Tags {
+		// TODO: check if tag already on service and skip it
+		_, err := client.AssignTagForId(service.Id, tagKey, tagValue)
+		if err != nil {
+			log.Error().Msgf("Failed assigning tag '%s = %s' to service: '%s' \n\tREASON: %v", tagKey, tagValue, service.Name, err.Error())
+		} else {
+			log.Info().Msgf("Ensured tag '%s = %s' assigned to service: '%s'", tagKey, tagValue, service.Name)
+		}
+	}
+}
+
+func HasTool(tool opslevel.ToolCreateInput, tools []opslevel.Tool) bool {
+	for _, existingTool := range tools {
+		if existingTool.Category == tool.Category && string(existingTool.DisplayName) == tool.DisplayName && string(existingTool.Url) == tool.Url {
+			return true
+		}
+	}
+	return false
+}
+
+func AssignTools(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
+	tools, toolsErr := client.ListTools(service.Id)
+	if toolsErr != nil {
+		log.Error().Msgf("Failed to retrive existing tools for service '%s' - Will not assign tools to this service \n\tREASON: %s", service.Name, toolsErr.Error())
+		return
+	}
+	for _, tool := range registration.Tools {
+		if HasTool(tool, tools) {
+			log.Info().Msgf("Tool '[%s] %s' already exists on service: '%s' ... skipping", tool.Category, tool.DisplayName, service.Name)
+			continue
+		}
+		tool.ServiceId = service.Id
+		_, err := client.CreateTool(tool)
+		if err != nil {
+			log.Error().Msgf("Failed assigning tool '[%s] %s' to service: '%s' \n\tREASON: %v", tool.Category, tool.DisplayName, service.Name, err.Error())
+		} else {
+			log.Info().Msgf("Ensured tool '[%s] %s' assigned to service: '%s'", tool.Category, tool.DisplayName, service.Name)
+		}
+	}
 }
