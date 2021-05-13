@@ -122,7 +122,7 @@ service:
       language: "python"
       framework: "django"
       aliases:
-      - '"\(.metadata.name)-\(.metadata.namespace)"'
+      - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
       # For more complex data types you can use jq to build json objects or grab them right out of a k8s yaml field
       tags:
       - '{"imported": "kubectl-opslevel"}'
