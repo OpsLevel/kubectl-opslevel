@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/opslevel-go"
@@ -43,16 +41,8 @@ func runImport(cmd *cobra.Command, args []string) {
 	CacheLookupTables(client)
 
 	for _, service := range services {
-		foundService, foundServiceErr := FindService(client, service)
-		if foundServiceErr != nil {
-			log.Error().Msgf("Exception looking up existing service: '%s' \n\tREASON: %s", foundService.Name, foundServiceErr.Error())
-			continue
-		}
-		// TODO: this pattern probably makes it hard to do "deletion" ?
-		if foundService.Id != nil {
-			UpdateService(client, service, foundService)
-			// TODO: Do we reconcile aliases?
-		} else {
+		foundService, needsUpdate := FindService(client, service)
+		if foundService == nil {
 			newService, newServiceErr := CreateService(client, service)
 			if newServiceErr != nil {
 				log.Error().Msgf("Failed creating service: '%s' \n\tREASON: %v", service.Name, newServiceErr.Error())
@@ -61,8 +51,11 @@ func runImport(cmd *cobra.Command, args []string) {
 				log.Info().Msgf("Created new service: '%s'", newService.Name)
 			}
 			foundService = newService
-			AssignAliases(client, service, foundService)
 		}
+		if needsUpdate {
+			UpdateService(client, service, foundService)
+		}
+		AssignAliases(client, service, foundService)
 		AssignTags(client, service, foundService)
 		AssignTools(client, service, foundService)
 	}
@@ -72,15 +65,15 @@ func runImport(cmd *cobra.Command, args []string) {
 // TODO: Helpers probably shouldn't be exported
 // Helpers
 
-func FindService(client *opslevel.Client, registration common.ServiceRegistration) (*opslevel.Service, error) {
+func FindService(client *opslevel.Client, registration common.ServiceRegistration) (*opslevel.Service, bool) {
 	for _, alias := range registration.Aliases {
 		foundService, err := client.GetServiceWithAlias(alias)
-		if err == nil {
-			return foundService, nil
+		if err == nil && foundService.Id != nil {
+			log.Info().Msgf("Found existing service '%s' using alias '%s'", foundService.Name, alias)
+			return foundService, true
 		}
-		log.Info().Msgf("Unable to find an opslevel service for '%s' using alias '%s'", registration.Name, alias)
 	}
-	return nil, fmt.Errorf("Unable to find any service with aliases: %+v", registration.Aliases)
+	return nil, false
 }
 
 func GetTiers(client *opslevel.Client) (map[string]opslevel.Tier, error) {
