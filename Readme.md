@@ -11,7 +11,7 @@ Table of Contents
    * [Working With The Configuration File](#working-with-the-configuration-file)
       * [Sample Configuration Explained](#sample-configuration-explained)
          * [Lifecycle &amp; Tier &amp; Owner](#lifecycle--tier--owner)
-         * [Aliases](#aliases)
+         * [Aliases](#service-aliases)
          * [Tags](#tags)
          * [Tools](#tools)
    * [Preview](#preview)
@@ -193,9 +193,9 @@ In the sample configuration there are number of sane default jq expression set t
 
 #### Lifecycle & Tier & Owner
 
-The `Lifecycle`, `Tier` and `Owner` fields in the configuration are only validated upon `service import` not during `service preview`.  Valid values for these fields need to match the `Alias` for these in your OpsLevel account.  To view the valid aliases you can run the commands `account lifecycles`, `account tiers` and `account teams`.
+The `Lifecycle`, `Tier` and `Owner` fields in the configuration are only validated upon `service import` not during `service preview`.  Valid values for these fields need to match the `Alias` for these resources in your OpsLevel account.  To view the valid aliases for these resources you can run the commands `account lifecycles`, `account tiers` and `account teams`.
 
-#### Aliases
+#### Service Aliases
 
 Aliases on services are very import to get right so that we can effectively look up the service later for reconciliation. Because of that we have only included 1 example which should be fairly unique to most kubernetes setup.  
 
