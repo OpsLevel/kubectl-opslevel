@@ -58,6 +58,7 @@ func runImport(cmd *cobra.Command, args []string) {
 		AssignAliases(client, service, foundService)
 		AssignTags(client, service, foundService)
 		AssignTools(client, service, foundService)
+		log.Info().Msgf("Finished importing data for service: '%s'", foundService.Name)
 	}
 	log.Info().Msg("Import Complete")
 }
