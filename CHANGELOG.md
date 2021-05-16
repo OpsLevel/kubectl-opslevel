@@ -1,6 +1,27 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### Chore
+- update opslevel-go to 0.1.3
+
+### Docs
+- add quickstart to readme
+- remove docker install instructions from the readme
+
+### Feature
+- add a log statement when finished importing data for a given service
+- skip over aliases and tags that already exist on the service
+- Simple reconcile of existing service entries
+- set a more opinionated aliases configuration with a default
+
+### Refactor
+- bump the log statement for skipping a tool down to debug level
+- find services via the aliases list rather then using name
+- improve error output when unable to cache tiers, lifecycle, teams
+- change default log format to be more human readable
+- Improve service import log output to explain what steps were success or failed ([#6](https://github.com/OpsLevel/kubectl-opslevel/issues/6))
+- extract opslevel api client library to opslevel-go ([#8](https://github.com/OpsLevel/kubectl-opslevel/issues/8))
+
 
 <a name="v0.1.2"></a>
 ## [v0.1.2] - 2021-05-08
