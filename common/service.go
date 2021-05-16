@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/opslevel/kubectl-opslevel/config"
+	"github.com/opslevel/kubectl-opslevel/jq"
 	"github.com/opslevel/kubectl-opslevel/k8sutils"
 	"github.com/opslevel/opslevel-go"
 
@@ -176,6 +177,8 @@ func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
 	var parser *ServiceRegistrationParser
 	var services []ServiceRegistration
 	k8sClient := k8sutils.CreateKubernetesClient()
+
+	jq.ValidateInstalled()
 
 	for _, importConfig := range c.Service.Import {
 		parser = NewParser(importConfig.OpslevelConfig)
