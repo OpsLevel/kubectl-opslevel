@@ -11,7 +11,7 @@ Table of Contents
    * [Working With The Configuration File](#working-with-the-configuration-file)
       * [Sample Configuration Explained](#sample-configuration-explained)
          * [Lifecycle &amp; Tier &amp; Owner](#lifecycle--tier--owner)
-         * [Aliases](#service-aliases)
+         * [Service Aliases](#service-aliases)
          * [Tags](#tags)
          * [Tools](#tools)
    * [Preview](#preview)
