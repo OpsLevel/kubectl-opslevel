@@ -193,7 +193,9 @@ func UpdateService(client *opslevel.Client, registration common.ServiceRegistrat
 
 func AssignAliases(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
 	for _, alias := range registration.Aliases {
-		// TODO: check if alias already on service and skip it
+		if service.HasAlias(alias) {
+			continue
+		}
 		_, err := client.CreateAlias(opslevel.AliasCreateInput{
 			Alias:   alias,
 			OwnerId: service.Id,
@@ -208,7 +210,9 @@ func AssignAliases(client *opslevel.Client, registration common.ServiceRegistrat
 
 func AssignTags(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
 	for tagKey, tagValue := range registration.Tags {
-		// TODO: check if tag already on service and skip it
+		if service.HasTag(tagKey, tagValue) {
+			continue
+		}
 		_, err := client.AssignTagForId(service.Id, tagKey, tagValue)
 		if err != nil {
 			log.Error().Msgf("Failed assigning tag '%s = %s' to service: '%s' \n\tREASON: %v", tagKey, tagValue, service.Name, err.Error())
