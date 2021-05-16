@@ -48,6 +48,7 @@ func NewParser(c config.ServiceRegistrationConfig) *ServiceRegistrationParser {
 	parser.Product = NewJQParser(c.Product)
 	parser.Language = NewJQParser(c.Language)
 	parser.Framework = NewJQParser(c.Framework)
+	parser.Aliases = append(parser.Aliases, NewJQParser("\"k8s:\\(.metadata.name)-\\(.metadata.namespace)\""))
 	for _, alias := range c.Aliases {
 		parser.Aliases = append(parser.Aliases, NewJQParser(alias))
 	}
