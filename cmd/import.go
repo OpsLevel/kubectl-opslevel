@@ -186,7 +186,7 @@ func HasTool(tool opslevel.ToolCreateInput, tools []opslevel.Tool) bool {
 }
 
 func AssignTools(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
-	tools, toolsErr := client.ListTools(service.Id)
+	tools, toolsErr := client.GetToolsForService(service.Id)
 	if toolsErr != nil {
 		log.Error().Msgf("Failed to retrive existing tools for service '%s' - Will not assign tools to this service \n\tREASON: %s", service.Name, toolsErr.Error())
 		return
