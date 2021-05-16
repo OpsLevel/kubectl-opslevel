@@ -233,7 +233,7 @@ func AssignTools(client *opslevel.Client, registration common.ServiceRegistratio
 	}
 	for _, tool := range registration.Tools {
 		if HasTool(tool, tools) {
-			log.Info().Msgf("Tool '[%s] %s' already exists on service: '%s' ... skipping", tool.Category, tool.DisplayName, service.Name)
+			log.Debug().Msgf("Tool '[%s] %s' already exists on service: '%s' ... skipping", tool.Category, tool.DisplayName, service.Name)
 			continue
 		}
 		tool.ServiceId = service.Id
