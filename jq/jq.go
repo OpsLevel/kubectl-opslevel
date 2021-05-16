@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os/exec"
 	"strings"
 	"time"
@@ -107,6 +108,14 @@ func (jq *JQ) Validate(json []byte) *JQError {
 	}
 	_, err := jq.Run(json)
 	return err
+}
+
+func ValidateInstalled() {
+	_, err := exec.LookPath("jq")
+	if err != nil {
+		log.Fatal(fmt.Errorf("%s\nPlease install 'jq' to use this tool - https://stedolan.github.io/jq/download/", err.Error()))
+		log.Fatal(err)
+	}
 }
 
 func New(filter string) JQ {
