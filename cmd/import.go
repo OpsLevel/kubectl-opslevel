@@ -129,17 +129,17 @@ var (
 func CacheLookupTables(client *opslevel.Client) {
 	tiers, tiersErr := GetTiers(client)
 	if tiersErr != nil {
-		log.Warn().Msg("Failed to retrive tiers from OpsLevel API - Unable to assign field 'Tier' to services")
+		log.Warn().Msgf("Failed to retrive tiers from OpsLevel API - Unable to assign field 'Tier' to services. REASON: %s", tiersErr.Error())
 	}
 	Tiers = tiers
 	lifecycles, lifecyclesErr := GetLifecycles(client)
 	if lifecyclesErr != nil {
-		log.Warn().Msg("Failed to retrive lifecycles from OpsLevel API - Unable to assign field 'Lifecycle' to services")
+		log.Warn().Msgf("Failed to retrive lifecycles from OpsLevel API - Unable to assign field 'Lifecycle' to services. REASON: %s", lifecyclesErr.Error())
 	}
 	Lifecycles = lifecycles
 	teams, teamsErr := GetTeams(client)
 	if teamsErr != nil {
-		log.Warn().Msg("Failed to retrive teams from OpsLevel API - Unable to assign field 'Owner' to services")
+		log.Warn().Msgf("Failed to retrive teams from OpsLevel API - Unable to assign field 'Owner' to services. REASON: %s", teamsErr.Error())
 	}
 	Teams = teams
 }
