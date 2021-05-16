@@ -267,6 +267,8 @@ github.com/onsi/gomega v0.0.0-20170829124025-dcabb60a477c/go.mod h1:C1qb7wdrVGGV
 github.com/onsi/gomega v1.7.0/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
 github.com/opslevel/opslevel-go v0.1.1 h1:NDQCT/DP/Bi9PSI/u/LS494Jyowdrrc7BV5enm+JJ4k=
 github.com/opslevel/opslevel-go v0.1.1/go.mod h1:Ns7xfaf9GH7gIVkJcfceksXQ+48sVUUEMiLcKatmpVc=
+github.com/opslevel/opslevel-go v0.1.3 h1:QtvCfKBWaryYbS5fJNSv7KTUctOqImmPsnvhvGegJRI=
+github.com/opslevel/opslevel-go v0.1.3/go.mod h1:Ns7xfaf9GH7gIVkJcfceksXQ+48sVUUEMiLcKatmpVc=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pelletier/go-toml v1.2.0 h1:T5zMGML61Wp+FlcbWjRDT7yAxhJNAiPPLOFECq181zc=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
