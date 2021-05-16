@@ -74,6 +74,7 @@ func FindService(client *opslevel.Client, registration common.ServiceRegistratio
 			return foundService, true
 		}
 	}
+	// TODO: last ditch effort - search for service with alias == registration.Name ?
 	return nil, false
 }
 
