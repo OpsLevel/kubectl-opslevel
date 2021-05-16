@@ -7,6 +7,7 @@ Table of Contents
          * [MacOS](#macos)
          * [Linux](#linux)
       * [Validate Install](#validate-install)
+   * [Quickstart](#quickstart)
    * [Working With The Configuration File](#working-with-the-configuration-file)
       * [Sample Configuration Explained](#sample-configuration-explained)
          * [Lifecycle &amp; Tier &amp; Owner](#lifecycle--tier--owner)
@@ -97,8 +98,41 @@ kubectl opslevel version
 Example Output:
 
 ```
+4:35PM INF v0.1.1-0-gc52681db6b33
+```
+
+The log format default is more human readable but if you want structured logs you can set the flag `--logFormat=JSON`
+
+```
 {"level":"info","time":1620251466,"message":"v0.1.1-0-gc52681db6b33"}
 ```
+
+## Quickstart
+
+```
+cat << EOF > ./opslevel-k8s.yaml
+service:
+  import:
+  - selector:
+      kind: deployment
+    opslevel:
+      # Fields can be a hardcoded value or jq expressions that generate strings
+      name: .metadata.name
+      product: .metadata.namespace
+      language: "python"
+      framework: "django"
+      aliases:
+      - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
+      # For more complex data types you can use jq to build json objects or grab them right out of a k8s yaml field
+      tags:
+      - '{"imported": "kubectl-opslevel"}'
+      - .spec.template.metadata.labels
+EOF
+kubectl opslevel service preview
+ OL_APITOKEN=XXXX kubectl opslevel service import
+```
+
+You can also run this tool inside your kubernetes cluster as a job to reconcile the data with your OpsLevel account perodically.  Please read our [aliases](#aliases) section as we use these to properly find and reconcile the data so it is important you choose something unique.
 
 ## Working With The Configuration File
 
