@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: db
-  namespace: production
+  namespace: default
   labels:
     app: db
     environment: prod
