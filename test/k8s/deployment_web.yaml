@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: default
+  labels:
+    app: web
+    environment: prod
+  annotations:
+    opslevel.com/description: "Serves up our Website"
+    opslevel.com/owner: "frontend"
+    opslevel.com/lifecycle: "beta"
+    opslevel.com/tier: "tier_2"
+    opslevel.com/product: "Example"
+    opslevel.com/language: "go"
+    opslevel.com/framework: "django"
+    opslevel.com/tools.other.datadog: "https://datadoghq.com"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+      environment: prod
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: web
+        environment: prod
+        version: "1.0"
+    spec:
+      containers:
+        - name: web
+          image: cilium/echoserver
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: 1Mi
+              cpu: "0.1"
+            limits:
+              memory: 50Mi
+              cpu: "0.5"
+          env:
+            - name: PORT
+              value: "8899"
+          ports:
+            - containerPort: 8899
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 8899
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 8899
+            initialDelaySeconds: 20
+            periodSeconds: 60

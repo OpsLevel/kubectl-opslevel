@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: default
+  labels:
+    app: worker
+    environment: prod
+  annotations:
+    opslevel.com/description: "Our Async Worker"
+    opslevel.com/owner: "backend"
+    opslevel.com/lifecycle: "alpha"
+    opslevel.com/tier: "tier_4"
+    opslevel.com/product: "Example"
+    opslevel.com/language: "go"
+    opslevel.com/framework: "viper"
+    opslevel.com/tools.metrics.datadog: "https://datadoghq.com"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker
+      environment: prod
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: worker
+        environment: prod
+        version: "1.0"
+    spec:
+      containers:
+        - name: worker
+          image: cilium/echoserver
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: 1Mi
+              cpu: "0.1"
+            limits:
+              memory: 50Mi
+              cpu: "0.5"
+          env:
+            - name: PORT
+              value: "8899"
+          ports:
+            - containerPort: 8899
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 8899
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 8899
+            initialDelaySeconds: 20
+            periodSeconds: 60
