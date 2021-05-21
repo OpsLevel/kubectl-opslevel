@@ -59,10 +59,34 @@ var teamCmd = &cobra.Command{
 	},
 }
 
+var toolsCmd = &cobra.Command{
+	Use:   "tools",
+	Short: "Lists the valid alias for tools in your account",
+	Long:  `Lists the valid alias for tools in your account`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(opslevel.ToolCategoryAdmin)
+		fmt.Println(opslevel.ToolCategoryCode)
+		fmt.Println(opslevel.ToolCategoryContinuousIntegration)
+		fmt.Println(opslevel.ToolCategoryDeployment)
+		fmt.Println(opslevel.ToolCategoryErrors)
+		fmt.Println(opslevel.ToolCategoryFeatureFlag)
+		fmt.Println(opslevel.ToolCategoryHealthChecks)
+		fmt.Println(opslevel.ToolCategoryIncidents)
+		fmt.Println(opslevel.ToolCategoryLogs)
+		fmt.Println(opslevel.ToolCategoryMetrics)
+		fmt.Println(opslevel.ToolCategoryOrchestrator)
+		fmt.Println(opslevel.ToolCategoryRunbooks)
+		fmt.Println(opslevel.ToolCategoryStatusPage)
+		fmt.Println(opslevel.ToolCategoryWiki)
+		fmt.Println(opslevel.ToolCategoryOther)
+	},
+}
+
 func init() {
 	accountCmd.AddCommand(lifecycleCmd)
 	accountCmd.AddCommand(tierCmd)
 	accountCmd.AddCommand(teamCmd)
+	accountCmd.AddCommand(toolsCmd)
 	rootCmd.AddCommand(accountCmd)
 
 	// TODO: should this be a global flag?
