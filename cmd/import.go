@@ -227,32 +227,18 @@ func AssignTags(client *opslevel.Client, registration common.ServiceRegistration
 	}
 }
 
-func HasTool(tool opslevel.ToolCreateInput, tools []opslevel.Tool) bool {
-	for _, existingTool := range tools {
-		if existingTool.Category == tool.Category && string(existingTool.DisplayName) == tool.DisplayName && string(existingTool.Url) == tool.Url {
-			return true
-		}
-	}
-	return false
-}
-
 func AssignTools(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
-	tools, toolsErr := client.GetToolsForService(service.Id)
-	if toolsErr != nil {
-		log.Error().Msgf("Failed to retrive existing tools for service '%s' - Will not assign tools to this service \n\tREASON: %s", service.Name, toolsErr.Error())
-		return
-	}
 	for _, tool := range registration.Tools {
-		if HasTool(tool, tools) {
-			log.Debug().Msgf("Tool '[%s] %s' already exists on service: '%s' ... skipping", tool.Category, tool.DisplayName, service.Name)
+		if service.HasTool(tool.Category, tool.DisplayName, tool.Environment) {
+			log.Debug().Msgf("Tool '{Category: %s, Environment: %s, Name: %s}' already exists on service: '%s' ... skipping", tool.Category, tool.Environment, tool.DisplayName, service.Name)
 			continue
 		}
 		tool.ServiceId = service.Id
 		_, err := client.CreateTool(tool)
 		if err != nil {
-			log.Error().Msgf("Failed assigning tool '[%s] %s' to service: '%s' \n\tREASON: %v", tool.Category, tool.DisplayName, service.Name, err.Error())
+			log.Error().Msgf("Failed assigning tool '{Category: %s, Environment: %s, Name: %s}' to service: '%s' \n\tREASON: %v", tool.Category, tool.Environment, tool.DisplayName, service.Name, err.Error())
 		} else {
-			log.Info().Msgf("Ensured tool '[%s] %s' assigned to service: '%s'", tool.Category, tool.DisplayName, service.Name)
+			log.Info().Msgf("Ensured tool '{Category: %s, Environment: %s, Name: %s}' assigned to service: '%s'", tool.Category, tool.Environment, tool.DisplayName, service.Name)
 		}
 	}
 }

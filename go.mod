@@ -20,3 +20,5 @@ require (
 	k8s.io/klog/v2 v2.4.0
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009 // indirect
 )
+// Uncomment for local development
+// replace github.com/opslevel/opslevel-go => ../opslevel-go
