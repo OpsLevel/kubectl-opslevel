@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/opslevel-go"
@@ -33,6 +36,13 @@ func runImport(cmd *cobra.Command, args []string) {
 	client := opslevel.NewClient(viper.GetString("apitoken"))
 
 	clientErr := client.Validate()
+	if clientErr != nil {
+		if strings.Contains(clientErr.Error(), "Please provide a valid OpsLevel API token") {
+			cobra.CheckErr(fmt.Errorf("%s via 'export OL_APITOKEN=XXX' or '--api-token=XXX'", clientErr.Error()))
+		} else {
+			cobra.CheckErr(clientErr)
+		}
+	}
 	cobra.CheckErr(clientErr)
 
 	services, servicesErr := common.QueryForServices(config)
