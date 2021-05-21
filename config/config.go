@@ -49,6 +49,18 @@ func New() (*Config, error) {
 	return c, nil
 }
 
+func Simple() (*Config, error) {
+	c := &Config{}
+	v := viper.New()
+	v.SetConfigType("yaml")
+	v.ReadConfig(bytes.NewBuffer([]byte(ConfigSimple)))
+	v.Unmarshal(&c)
+	if err := defaults.Set(c); err != nil {
+		return c, err
+	}
+	return c, nil
+}
+
 func Default() (*Config, error) {
 	c := &Config{}
 	v := viper.New()
