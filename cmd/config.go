@@ -7,6 +7,7 @@ import (
 
 	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var configCmd = &cobra.Command{
@@ -33,7 +34,13 @@ var configSampleCmd = &cobra.Command{
 	Short: "Print a sample config file",
 	Long:  "Print a sample config file which could be used",
 	Run: func(cmd *cobra.Command, args []string) {
-		conf, err := config.Default()
+		var conf *config.Config
+		var err error
+		if viper.GetBool("simple") == true {
+			conf, err = config.Simple()
+		} else {
+			conf, err = config.Default()
+		}
 		cobra.CheckErr(err)
 		output, err2 := yaml.Marshal(conf)
 		cobra.CheckErr(err2)
@@ -47,4 +54,7 @@ func init() {
 		configViewCmd,
 		configSampleCmd,
 	)
+
+	configSampleCmd.Flags().Bool("simple", false, "Adjust the sample config to a bit simpler")
+	viper.BindPFlags(configSampleCmd.Flags())
 }

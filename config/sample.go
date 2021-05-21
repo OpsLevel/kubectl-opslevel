@@ -1,5 +1,20 @@
 package config
 
+var ConfigSimple = `#Simple Opslevel CLI Config
+service:
+  import:
+  - selector:
+      kind: deployment
+    opslevel:
+      name: .metadata.name
+      owner: .metadata.namespace
+      aliases:
+      - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
+      tags:
+      - '{"imported": "kubectl-opslevel"}'
+      - .spec.template.metadata.labels
+`
+
 var ConfigSample = `#Sample Opslevel CLI Config
 service:
   import:
