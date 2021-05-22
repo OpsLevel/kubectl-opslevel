@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/opslevel-go"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var accountCmd = &cobra.Command{
@@ -19,7 +19,7 @@ var lifecycleCmd = &cobra.Command{
 	Short: "Lists the valid alias for lifecycles in your account",
 	Long:  `Lists the valid alias for lifecycles in your account`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client := opslevel.NewClient(viper.GetString("apitoken"))
+		client := common.NewClient()
 		list, err := client.ListLifecycles()
 		if err == nil {
 			for _, item := range list {
@@ -34,7 +34,7 @@ var tierCmd = &cobra.Command{
 	Short: "Lists the valid alias for tiers in your account",
 	Long:  `Lists the valid alias for tiers in your account`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client := opslevel.NewClient(viper.GetString("apitoken"))
+		client := common.NewClient()
 		list, err := client.ListTiers()
 		if err == nil {
 			for _, item := range list {
@@ -49,7 +49,7 @@ var teamCmd = &cobra.Command{
 	Short: "Lists the valid alias for teams in your account",
 	Long:  `Lists the valid alias for teams in your account`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client := opslevel.NewClient(viper.GetString("apitoken"))
+		client := common.NewClient()
 		list, err := client.ListTeams()
 		if err == nil {
 			for _, item := range list {
