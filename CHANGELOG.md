@@ -1,6 +1,30 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+
+<a name="v0.2.0"></a>
+## [v0.2.0] - 2021-05-22
+### Chore
+- upgrade to opslevel-go 0.2.0
+- add badges to readme
+- set MIT license
+
+### Docs
+- added "beta" status callout in readme
+- add terminalizer demo file and gif
+- add quick description to beginning of readme after badges
+
+### Feature
+- add ability to list aliases for tool categories `account tools`
+- add a more simple sample configuration using the command with an additional flag `config sample —simple`
+- enrich output during client validation when 401 unauthorized
+
+### Refactor
+- move HasTool check to opslevel-go and validate existance with environment not url to allow for updating the url of a tool
+
+
+<a name="v0.1.3"></a>
+## [v0.1.3] - 2021-05-16
 ### Chore
 - update opslevel-go to 0.1.3
 
@@ -9,6 +33,7 @@
 - remove docker install instructions from the readme
 
 ### Feature
+- validate jq is installed and on the path - if not log a message
 - add a log statement when finished importing data for a given service
 - skip over aliases and tags that already exist on the service
 - Simple reconcile of existing service entries
@@ -51,7 +76,9 @@
 <a name="v0.0.1"></a>
 ## v0.0.1 - 2021-03-25
 
-[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.2.0...HEAD
+[v0.2.0]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.1.3...v0.2.0
+[v0.1.3]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.1.2...v0.1.3
 [v0.1.2]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.1.0...v0.1.1
 [v0.1.0]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.0.1...v0.1.0
