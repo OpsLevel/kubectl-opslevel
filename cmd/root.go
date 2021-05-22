@@ -28,6 +28,10 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "./opslevel-k8s.yaml", "")
 	rootCmd.PersistentFlags().String("logFormat", "TEXT", "overrides environment variable 'OL_LOGFORMAT' (options [\"JSON\", \"TEXT\"])")
 	rootCmd.PersistentFlags().String("logLevel", "INFO", "overrides environment variable 'OL_LOGLEVEL' (options [\"ERROR\", \"WARN\", \"INFO\", \"DEBUG\"])")
+	rootCmd.PersistentFlags().String("api-token", "", "The OpsLevel API Token. Overrides environment variable 'OL_APITOKEN'")
+
+	viper.BindPFlags(rootCmd.PersistentFlags())
+	viper.BindPFlag("apitoken", rootCmd.PersistentFlags().Lookup("api-token"))
 	cobra.OnInitialize(initConfig)
 }
 
@@ -54,10 +58,8 @@ func readConfig() {
 		viper.AddConfigPath(".")
 		viper.AddConfigPath(home)
 	}
-
 	viper.SetEnvPrefix("OL")
 	viper.AutomaticEnv()
-	viper.BindPFlags(rootCmd.Flags())
 	viper.ReadInConfig()
 }
 

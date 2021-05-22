@@ -20,9 +20,6 @@ var importCmd = &cobra.Command{
 
 func init() {
 	serviceCmd.AddCommand(importCmd)
-
-	// TODO: should this be a global flag?
-	importCmd.Flags().String("api-token", "", "The OpsLevel API Token. Overrides environment variable 'OL_APITOKEN'")
 }
 
 func runImport(cmd *cobra.Command, args []string) {

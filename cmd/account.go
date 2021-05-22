@@ -88,9 +88,4 @@ func init() {
 	accountCmd.AddCommand(teamCmd)
 	accountCmd.AddCommand(toolsCmd)
 	rootCmd.AddCommand(accountCmd)
-
-	// TODO: should this be a global flag?
-	lifecycleCmd.Flags().String("api-token", "", "The OpsLevel API Token. Overrides environment variable 'OL_APITOKEN'")
-	tierCmd.Flags().String("api-token", "", "The OpsLevel API Token. Overrides environment variable 'OL_APITOKEN'")
-	teamCmd.Flags().String("api-token", "", "The OpsLevel API Token. Overrides environment variable 'OL_APITOKEN'")
 }
