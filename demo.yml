@@ -18,12 +18,12 @@ config:
   # Explicitly set the number of columns
   # or use `auto` to take the current
   # number of columns of your shell
-  cols: 168
+  cols: 150
   
   # Explicitly set the number of rows
   # or use `auto` to take the current
   # number of rows of your shell
-  rows: 53
+  rows: 32
   
   # Amount of times to repeat GIF
   # If value is -1, play once
@@ -49,12 +49,12 @@ config:
   # To hide the title use the value null
   # Don't forget to add a backgroundColor style with a null as type
   frameBox:
-    type: floating
-    title: Terminalizer
+    type: solid
+    title: null
     style:
       border: 0px black solid
       # boxShadow: none
-      # margin: 0px
+      margin: 0px
   
   # Add a watermark image to the rendered gif
   # You need to specify an absolute path for
@@ -112,7 +112,7 @@ config:
 # Records, feel free to edit them
 records:
   - delay: 30
-    content: "\e[?1034h\e[0;35m●\e[0m kubectl-opslevel \e[0;34mmain\e[0m\e[0;34m\e[0m \e[0;31m\e[0m\e[0;36m❱\e[0m "
+    content: "\e[0;35m●\e[0m\e[0;34m\e[0m\e[0;34m\e[0m\e[0;31m\e[0m\e[0;36m❱\e[0m "
   - delay: 30
     content: k
   - delay: 30
@@ -220,8 +220,60 @@ records:
   - delay: 30
     content: "\r\n"
   - delay: 30
-    content: "\e[0;35m●\e[0m kubectl-opslevel \e[0;34mmain\e[0m\e[0;34m\e[0m \e[0;31m\e[0m\e[0;36m❱\e[0m "
+    content: "\e[?1034h\e[0;35m●\e[0m\e[0;31m\e[0m\e[0;31m\e[0m\e[0;31m\e[0m\e[0;36m❱\e[0m "
   - delay: 30
+    content: c
+  - delay: 30
+    content: a
+  - delay: 30
+    content: t
+  - delay: 30
+    content: ' '
+  - delay: 30
+    content: .
+  - delay: 30
+    content: /
+  - delay: 30
+    content: o
+  - delay: 30
+    content: p
+  - delay: 30
+    content: s
+  - delay: 30
+    content: l
+  - delay: 30
+    content: e
+  - delay: 30
+    content: v
+  - delay: 30
+    content: e
+  - delay: 30
+    content: l
+  - delay: 30
+    content: '-'
+  - delay: 30
+    content: k
+  - delay: 30
+    content: '8'
+  - delay: 30
+    content: s
+  - delay: 30
+    content: .
+  - delay: 30
+    content: 'y'
+  - delay: 30
+    content: a
+  - delay: 30
+    content: m
+  - delay: 30
+    content: l
+  - delay: 30
+    content: "\r\n"
+  - delay: 100
+    content: "service:\r\n  import:\r\n  - selector:\r\n      kind: deployment\r\n      namespace: \"default\"\r\n      labels: {}\r\n    opslevel:\r\n      name: .metadata.name\r\n      description: .metadata.annotations.\"opslevel.com/description\"\r\n      owner: .metadata.annotations.\"opslevel.com/owner\"\r\n      lifecycle: .metadata.annotations.\"opslevel.com/lifecycle\"\r\n      tier: .metadata.annotations.\"opslevel.com/tier\"\r\n      product: .metadata.annotations.\"opslevel.com/product\"\r\n      language: .metadata.annotations.\"opslevel.com/language\"\r\n      framework: .metadata.annotations.\"opslevel.com/framework\"\r\n      aliases:\r\n      - '\"k8s:\\(.metadata.name)-\\(.metadata.namespace)\"'\r\n      tags:\r\n      - '{\"imported\": \"kubectl-opslevel\"}'\r\n      - '.metadata.annotations | to_entries |  map(select(.key | startswith(\"opslevel.com/tags\")))\r\n        | map({(.key | split(\".\")[2]): .value})'\r\n      - .metadata.labels\r\n      - .spec.template.metadata.labels\r\n      tools:\r\n      - '{\"category\": \"other\", \"displayName\": \"my-cool-tool\", \"url\": .metadata.annotations.\"example.com/my-cool-tool\"}\r\n        | if .url then . else empty end'\r\n      - '.metadata.annotations | to_entries |  map(select(.key | startswith(\"opslevel.com/tools\")))\r\n        | map({\"category\": .key | split(\".\")[2], \"displayName\": .key | split(\".\")[3],\r\n        \"url\": .value})'\r\n"
+  - delay: 30
+    content: "\e[0;35m●\e[0m\e[0;31m\e[0m\e[0;31m\e[0m\e[0;31m\e[0m\e[0;36m❱\e[0m "
+  - delay: 1500
     content: k
   - delay: 30
     content: u
@@ -292,7 +344,7 @@ records:
   - delay: 2000
     content: "[\r\n    {\r\n        \"Name\": \"db\",\r\n        \"Description\": \"Our Database - Handle With Care!\",\r\n        \"Owner\": \"infrastructure\",\r\n        \"Lifecycle\": \"generally_available\",\r\n        \"Tier\": \"tier_1\",\r\n        \"Product\": \"Example\",\r\n        \"Language\": \"c++\",\r\n        \"Framework\": \"postgres\",\r\n        \"Aliases\": [\r\n            \"k8s:db-default\"\r\n        ],\r\n        \"Tags\": {\r\n            \"app\": \"worker\",\r\n            \"environment\": \"prod\",\r\n            \"imported\": \"kubectl-opslevel\",\r\n            \"version\": \"1.0\"\r\n        },\r\n        \"Tools\": [\r\n            {\r\n                \"category\": \"other\",\r\n                \"displayName\": \"url\",\r\n                \"url\": \"https://example.com\"\r\n            }\r\n        ]\r\n    },\r\n    {\r\n        \"Name\": \"web\",\r\n        \"Description\": \"Serves up our Website\",\r\n        \"Owner\": \"frontend\",\r\n        \"Lifecycle\": \"beta\",\r\n        \"Tier\": \"tier_2\",\r\n        \"Product\": \"Example\",\r\n        \"Language\": \"go\",\r\n        \"Framework\": \"django\",\r\n        \"Aliases\": [\r\n            \"k8s:web-default\"\r\n        ],\r\n        \"Tags\": {\r\n            \"app\": \"web\",\r\n            \"environment\": \"prod\",\r\n            \"imported\": \"kubectl-opslevel\",\r\n            \"version\": \"1.0\"\r\n        },\r\n        \"Tools\": [\r\n            {\r\n                \"category\": \"other\",\r\n                \"displayName\": \"datadog\",\r\n                \"url\": \"https://datadoghq.com\"\r\n            }\r\n        ]\r\n    },\r\n    {\r\n        \"Name\": \"worker\",\r\n        \"Description\": \"Our Async Worker\",\r\n        \"Owner\": \"backend\",\r\n        \"Lifecycle\": \"alpha\",\r\n        \"Tier\": \"tier_4\",\r\n        \"Product\": \"Example\",\r\n        \"Language\": \"go\",\r\n        \"Framework\": \"viper\",\r\n        \"Aliases\": [\r\n            \"k8s:worker-default\"\r\n        ],\r\n        \"Tags\": {\r\n            \"app\": \"worker\",\r\n            \"environment\": \"prod\",\r\n            \"imported\": \"kubectl-opslevel\",\r\n            \"version\": \"1.0\"\r\n        },\r\n        \"Tools\": [\r\n            {\r\n                \"category\": \"metrics\",\r\n                \"displayName\": \"datadog\",\r\n                \"url\": \"https://datadoghq.com\"\r\n            }\r\n        ]\r\n    }\r\n]\r\n"
   - delay: 30
-    content: "\e[0;35m●\e[0m kubectl-opslevel \e[0;34mmain\e[0m\e[0;34m\e[0m \e[0;31m1\e[0m\e[0;36m❱\e[0m "
+    content: "\e[0;35m●\e[0m\e[0;34m\e[0m\e[0;34m\e[0m\e[0;31m\e[0m\e[0;36m❱\e[0m "
   - delay: 4000
     content: e
   - delay: 30
@@ -336,7 +388,7 @@ records:
   - delay: 200
     content: "\r\n"
   - delay: 30
-    content: "\e[0;35m●\e[0m kubectl-opslevel \e[0;34mmain\e[0m\e[0;34m\e[0m \e[0;31m\e[0m\e[0;36m❱\e[0m "
+    content: "\e[0;35m●\e[0m\e[0;34m\e[0m\e[0;34m\e[0m\e[0;31m\e[0m\e[0;36m❱\e[0m "
   - delay: 30
     content: k
   - delay: 30
@@ -444,7 +496,7 @@ records:
   - delay: 423
     content: "\e[90m3:01PM\e[0m \e[32mINF\e[0m Ensured tool '{Category: metrics, Environment: , Name: datadog}' assigned to service: 'worker'\r\n\e[90m3:01PM\e[0m \e[32mINF\e[0m Finished importing data for service: 'worker'\r\n\e[90m3:01PM\e[0m \e[32mINF\e[0m Import Complete\r\n"
   - delay: 30
-    content: "\e[0;35m●\e[0m kubectl-opslevel \e[0;34mmain\e[0m\e[0;34m\e[0m \e[0;31m\e[0m\e[0;36m❱\e[0m "
+    content: "\e[0;35m●\e[0m\e[0;34m\e[0m\e[0;34m\e[0m\e[0;31m\e[0m\e[0;36m❱\e[0m "
   - delay: 30
     content: H
   - delay: 30
