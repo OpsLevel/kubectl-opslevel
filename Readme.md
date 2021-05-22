@@ -17,7 +17,7 @@
 
 `kubectl-opslevel` is a command line tool that enables you to import & reconcile services to your [OpsLevel account](https://www.opslevel.com/) from your kubernetes clusters.  Here it is in action:
 
-<!-- Insert Gif -->
+![](demo.gif)
 
 Table of Contents
 =================
