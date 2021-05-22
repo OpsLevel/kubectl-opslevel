@@ -19,6 +19,9 @@
 
 ![](demo.gif)
 
+
+<blockquote>This tool is still in beta.  It's sufficently stable for production use and has successfully imported & reconciled multiple OpsLevel accounts</blockquote>
+
 Table of Contents
 =================
 
