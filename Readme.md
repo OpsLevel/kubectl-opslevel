@@ -15,7 +15,7 @@
         <img src="https://badgen.net/badge/Dependabot/enabled/green?icon=dependabot" /></a>
 </p>
 
-`kubectl-opslevel` is a command line tool that enables you to import & reconcile services to your [OpsLevel account](https://www.opslevel.com/) from your Kubernetes clusters.  You can also run this tool inside your kubernetes cluster as a job to reconcile the data with your OpsLevel account perodically.  If you opt for this please read our [service aliases](#aliases) section as we use these to properly find and reconcile the data so it is important you choose something unique.
+`kubectl-opslevel` is a command line tool that enables you to import & reconcile services with [OpsLevel](https://www.opslevel.com/) from your Kubernetes clusters.  You can also run this tool inside your kubernetes cluster as a job to reconcile the data with OpsLevel perodically.  If you opt for this please read our [service aliases](#aliases) section as we use these to properly find and reconcile the data so it is important you choose something unique.
 
 ### Quickstart
 
@@ -24,7 +24,7 @@
 kubectl opslevel config sample > opslevel-k8s.yaml
 
 # Like Terraform, generate a preview of data from your Kubernetes cluster
-# NOTE: this step does not validate any of the data with your Opslevel
+# NOTE: this step does not validate any of the data with OpsLevel
 kubectl opslevel service preview
 
 # Import (and reconcile) the found data with your OpsLevel account
@@ -209,7 +209,7 @@ The example concatenates togeather the resource name and namespace with a prefix
 
 #### Lifecycle & Tier & Owner
 
-The `Lifecycle`, `Tier` and `Owner` fields in the configuration are only validated upon `service import` not during `service preview`.  Valid values for these fields need to match the `Alias` for these resources in your OpsLevel account.  To view the valid aliases for these resources you can run the commands `account lifecycles`, `account tiers` and `account teams`.
+The `Lifecycle`, `Tier` and `Owner` fields in the configuration are only validated upon `service import` not during `service preview`.  Valid values for these fields need to match the `Alias` for these resources in OpsLevel.  To view the valid aliases for these resources you can run the commands `account lifecycles`, `account tiers` and `account teams`.
 
 #### Tags
 
@@ -232,7 +232,7 @@ The second example leverages a convention to capture `1..N` tags.  The jq expres
     opslevel.com/tags.hello: world
 ```
 
-The third and fourth examples extract the `labels` applied to the kubernetes resource directly into your OpsLevel service's tags
+The third and fourth examples extract the `labels` applied to the kubernetes resource directly into OpsLevel service's tags
 
 #### Tools
 
@@ -266,15 +266,15 @@ kubectl opslevel service preview -c ./opslevel-k8s.yaml
 
 Once you are happy with the full output you can move onto the actual import process.
 
-*NOTE: this step does not validate any of the data with Opslevel - fields that are references to other things (IE: Tier, Lifecycle, Owner, etc) are not validated at this point and might cause a warning message during import* 
+*NOTE: this step does not validate any of the data with OpsLevel - fields that are references to other things (IE: Tier, Lifecycle, Owner, etc) are not validated at this point and might cause a warning message during import* 
 
 ## Import
 
-Once you are ready to import data into your Opslevel account run the following:
+Once you are ready to import data into OpsLevel run the following:
 *(insert your OpsLevel API Token)*:
 
 ```sh
  OL_APITOKEN=XXXX kubectl opslevel service import -c ./opslevel-k8s.yaml
 ```
 
-This command may take a few minutes to run so please be patient while it works.  In the meantime you can open a browser to your [OpsLevel account](https://app.opslevel.com/) and view the newly generated/updated services.
+This command may take a few minutes to run so please be patient while it works.  In the meantime you can open a browser to [OpsLevel](https://app.opslevel.com/) and view the newly generated/updated services.
