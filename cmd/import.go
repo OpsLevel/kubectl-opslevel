@@ -13,8 +13,8 @@ import (
 // importCmd represents the import command
 var importCmd = &cobra.Command{
 	Use:   "import",
-	Short: "Create service entries from kubernetes data",
-	Long:  `Create service entries from kubernetes data`,
+	Short: "Create or Update service entries in OpsLevel",
+	Long:  `This command will take the data found in your Kubernetes cluster and begin to reconcile it with OpsLevel`,
 	Run:   runImport,
 }
 
@@ -51,7 +51,7 @@ func runImport(cmd *cobra.Command, args []string) {
 		AssignAliases(client, service, foundService)
 		AssignTags(client, service, foundService)
 		AssignTools(client, service, foundService)
-		log.Info().Msgf("Finished importing data for service: '%s'", foundService.Name)
+		log.Info().Msgf("===> Finished processing data for service: '%s'", foundService.Name)
 	}
 	log.Info().Msg("Import Complete")
 }
@@ -63,7 +63,7 @@ func FindService(client *opslevel.Client, registration common.ServiceRegistratio
 	for _, alias := range registration.Aliases {
 		foundService, err := client.GetServiceWithAlias(alias)
 		if err == nil && foundService.Id != nil {
-			log.Info().Msgf("Found existing service '%s' using alias '%s'", foundService.Name, alias)
+			log.Info().Msgf("Reconciling service '%s' found with alias '%s' ...", foundService.Name, alias)
 			return foundService, true
 		}
 	}
@@ -115,19 +115,24 @@ var (
 )
 
 func CacheLookupTables(client *opslevel.Client) {
+	log.Info().Msg("Caching 'Tiers' lookup table from OpsLevel API ...")
 	tiers, tiersErr := GetTiers(client)
 	if tiersErr != nil {
-		log.Warn().Msgf("Failed to retrive tiers from OpsLevel API - Unable to assign field 'Tier' to services. REASON: %s", tiersErr.Error())
+		log.Warn().Msgf("===> Failed to retrive tiers from OpsLevel API - Unable to assign field 'Tier' to services. REASON: %s", tiersErr.Error())
 	}
 	Tiers = tiers
+
+	log.Info().Msg("Caching 'Lifecycles' lookup table from OpsLevel API ...")
 	lifecycles, lifecyclesErr := GetLifecycles(client)
 	if lifecyclesErr != nil {
-		log.Warn().Msgf("Failed to retrive lifecycles from OpsLevel API - Unable to assign field 'Lifecycle' to services. REASON: %s", lifecyclesErr.Error())
+		log.Warn().Msgf("===> Failed to retrive lifecycles from OpsLevel API - Unable to assign field 'Lifecycle' to services. REASON: %s", lifecyclesErr.Error())
 	}
 	Lifecycles = lifecycles
+
+	log.Info().Msg("Caching 'Teams' lookup table from OpsLevel API ...")
 	teams, teamsErr := GetTeams(client)
 	if teamsErr != nil {
-		log.Warn().Msgf("Failed to retrive teams from OpsLevel API - Unable to assign field 'Owner' to services. REASON: %s", teamsErr.Error())
+		log.Warn().Msgf("===> Failed to retrive teams from OpsLevel API - Unable to assign field 'Owner' to services. REASON: %s", teamsErr.Error())
 	}
 	Teams = teams
 }
@@ -171,10 +176,10 @@ func UpdateService(client *opslevel.Client, registration common.ServiceRegistrat
 	}
 	updatedService, updateServiceErr := client.UpdateService(updateServiceInput)
 	if updateServiceErr != nil {
-		log.Error().Msgf("Failed updating service: '%s' \n\tREASON: %v", service.Name, updateServiceErr.Error())
+		log.Error().Msgf("===> Failed updating service: '%s' \n\tREASON: %v", service.Name, updateServiceErr.Error())
 	} else {
 		if diff := cmp.Diff(service, updatedService); diff != "" {
-			log.Info().Msgf("Updated Service '%s' - Diff:\n%s", service.Name, diff)
+			log.Info().Msgf("===> Updated Service '%s' - Diff:\n%s", service.Name, diff)
 		}
 	}
 }
@@ -189,9 +194,9 @@ func AssignAliases(client *opslevel.Client, registration common.ServiceRegistrat
 			OwnerId: service.Id,
 		})
 		if err != nil {
-			log.Error().Msgf("Failed assigning alias '%s' to service: '%s' \n\tREASON: %v", alias, service.Name, err.Error())
+			log.Error().Msgf("===> Failed assigning alias '%s' to service: '%s' \n\tREASON: %v", alias, service.Name, err.Error())
 		} else {
-			log.Info().Msgf("Assigned alias '%s' to service: '%s'", alias, service.Name)
+			log.Info().Msgf("===> Assigned alias '%s' to service: '%s'", alias, service.Name)
 		}
 	}
 }
@@ -203,9 +208,9 @@ func AssignTags(client *opslevel.Client, registration common.ServiceRegistration
 		}
 		_, err := client.AssignTagForId(service.Id, tagKey, tagValue)
 		if err != nil {
-			log.Error().Msgf("Failed assigning tag '%s = %s' to service: '%s' \n\tREASON: %v", tagKey, tagValue, service.Name, err.Error())
+			log.Error().Msgf("===> Failed assigning tag '%s = %s' to service: '%s' \n\tREASON: %v", tagKey, tagValue, service.Name, err.Error())
 		} else {
-			log.Info().Msgf("Ensured tag '%s = %s' assigned to service: '%s'", tagKey, tagValue, service.Name)
+			log.Info().Msgf("===> Ensured tag '%s = %s' assigned to service: '%s'", tagKey, tagValue, service.Name)
 		}
 	}
 }
@@ -213,15 +218,15 @@ func AssignTags(client *opslevel.Client, registration common.ServiceRegistration
 func AssignTools(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
 	for _, tool := range registration.Tools {
 		if service.HasTool(tool.Category, tool.DisplayName, tool.Environment) {
-			log.Debug().Msgf("Tool '{Category: %s, Environment: %s, Name: %s}' already exists on service: '%s' ... skipping", tool.Category, tool.Environment, tool.DisplayName, service.Name)
+			log.Debug().Msgf("===> Tool '{Category: %s, Environment: %s, Name: %s}' already exists on service: '%s' ... skipping", tool.Category, tool.Environment, tool.DisplayName, service.Name)
 			continue
 		}
 		tool.ServiceId = service.Id
 		_, err := client.CreateTool(tool)
 		if err != nil {
-			log.Error().Msgf("Failed assigning tool '{Category: %s, Environment: %s, Name: %s}' to service: '%s' \n\tREASON: %v", tool.Category, tool.Environment, tool.DisplayName, service.Name, err.Error())
+			log.Error().Msgf("===> Failed assigning tool '{Category: %s, Environment: %s, Name: %s}' to service: '%s' \n\tREASON: %v", tool.Category, tool.Environment, tool.DisplayName, service.Name, err.Error())
 		} else {
-			log.Info().Msgf("Ensured tool '{Category: %s, Environment: %s, Name: %s}' assigned to service: '%s'", tool.Category, tool.Environment, tool.DisplayName, service.Name)
+			log.Info().Msgf("===> Ensured tool '{Category: %s, Environment: %s, Name: %s}' assigned to service: '%s'", tool.Category, tool.Environment, tool.DisplayName, service.Name)
 		}
 	}
 }
