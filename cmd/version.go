@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"github.com/rs/zerolog/log"
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -19,5 +20,5 @@ func init() {
 }
 
 func runVersion(cmd *cobra.Command, args []string) {
-	log.Info().Msgf(version)
+	fmt.Println(version)
 }
