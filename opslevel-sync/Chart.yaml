@@ -1,0 +1,19 @@
+apiVersion: v2
+name: opslevel-sync
+type: application
+version: 0.1.0
+appVersion: "0.2.0"
+description: An agent for syncronizing Kubernetes data with OpsLevel
+keywords:
+- monitoring
+- alerting
+- metric
+home: https://www.opslevel.com/
+icon: https://www.opslevel.com/images/OpsLevelLogoText.svg
+sources:
+- https://github.com/OpsLevel/kubectl-opslevel
+maintainers:
+- name: OpsLevel
+  email: support@opslevel.com
+
+

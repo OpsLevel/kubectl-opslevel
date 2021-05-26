@@ -1,0 +1,61 @@
+apitoken: "XXX"
+
+image:
+  repository: public.ecr.aws/OpsLevel/sync
+  tag: "0.2.0"
+  pullPolicy: IfNotPresent
+
+sync:
+  schedule: "0 12 * * 1"
+  # Unfortunately there is no way for us to get this from the local filesystem
+  # so we have to have the user fully replicate the config here
+  config:
+    service:
+      import:
+      - selector:
+          kind: deployment
+          namespace: ""
+          labels: {}
+        opslevel:
+          name: .metadata.name
+          description: .metadata.annotations."opslevel.com/description"
+          owner: .metadata.annotations."opslevel.com/owner"
+          lifecycle: .metadata.annotations."opslevel.com/lifecycle"
+          tier: .metadata.annotations."opslevel.com/tier"
+          product: .metadata.annotations."opslevel.com/product"
+          language: .metadata.annotations."opslevel.com/language"
+          framework: .metadata.annotations."opslevel.com/framework"
+          aliases:
+          - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
+          tags:
+          - '{"imported": "kubectl-opslevel"}'
+          - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tags")))
+            | map({(.key | split(".")[2]): .value})'
+          - .metadata.labels
+          - .spec.template.metadata.labels
+          tools:
+          - '{"category": "other", "displayName": "my-cool-tool", "url": .metadata.annotations."example.com/my-cool-tool"}
+            | if .url then . else empty end'
+          - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tools")))
+            | map({"category": .key | split(".")[2], "displayName": .key | split(".")[3],
+            "url": .value})'
+
+
+serviceAccount:
+  create: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "opslevel-sync"
+  annotations: {}
+
+
+# File Wide Settings
+nameOverride: ""
+fullnameOverride: ""
+labels: {}
+annotations: {}
+securityContext: {}
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

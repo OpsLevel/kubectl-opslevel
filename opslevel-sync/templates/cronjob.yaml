@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sync
+  namespace: opslevel
+  labels:
+    {{- include "opslevel-sync.labels" . | nindent 4 }}
+  {{- with .Values.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  schedule: {{ .Values.sync.schedule }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          serviceAccountName: {{ include "opslevel-sync.serviceAccountName" . }}
+          containers:
+          - name: {{ .Chart.Name }}
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            command:
+              - service
+              - import
+            envFrom:
+            - secretRef:
+                name: api-token
+            resources:
+              {{- toYaml .Values.resources | nindent 14 }}
+            securityContext:
+              {{- toYaml .Values.podSecurityContext | nindent 14 }}
+            volumeMounts:
+            - name: config
+              mountPath: /app
+          volumes:
+          - name: config
+            configMap:
+              name: sync
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
