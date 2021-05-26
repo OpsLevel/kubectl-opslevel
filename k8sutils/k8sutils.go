@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/go-logr/logr"
@@ -32,17 +31,11 @@ type ClientWrapper struct {
 }
 
 func getKubernetesConfig() (*rest.Config, error) {
-	config, err := rest.InClusterConfig()
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	configOverrides := &clientcmd.ConfigOverrides{}
+	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides).ClientConfig()
 	if err != nil {
-		configPath := os.Getenv("KUBECONFIG")
-		if configPath == "" {
-			configPath = os.Getenv("HOME") + "/.kube/config"
-		}
-		config2, err2 := clientcmd.BuildConfigFromFlags("", configPath)
-		if err2 != nil {
-			return nil, err2
-		}
-		return config2, nil
+		return nil, err
 	}
 	return config, nil
 }
