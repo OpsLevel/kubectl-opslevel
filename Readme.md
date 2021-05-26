@@ -19,6 +19,8 @@
 
 ### Quickstart
 
+Follow the [installation](#installation) instructions before running the below commands
+
 ```bash
 # Generate a config file
 kubectl opslevel config sample > opslevel-k8s.yaml
