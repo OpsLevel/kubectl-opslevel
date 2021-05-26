@@ -57,9 +57,5 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the service account to use
 */}}
 {{- define "opslevel-sync.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "opslevel-sync.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
+{{ .Values.serviceAccount.name }}
 {{- end }}

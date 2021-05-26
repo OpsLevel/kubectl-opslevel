@@ -1,8 +1,8 @@
-apitoken: "XXX"
+apitoken: "WsguaBJvd44nT2EwFn1bQQIGq9aK7tNA84FI"
 
 image:
-  repository: public.ecr.aws/OpsLevel/sync
-  tag: "0.2.0"
+  repository: public.ecr.aws/opslevel/sync
+  tag: "v0.2.0-7-g192d3aa49f46"
   pullPolicy: IfNotPresent
 
 sync:
@@ -42,9 +42,6 @@ sync:
 
 
 serviceAccount:
-  create: true
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
   name: "opslevel-sync"
   annotations: {}
 

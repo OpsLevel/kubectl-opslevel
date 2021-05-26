@@ -1,8 +1,7 @@
-apiVersion: batch/v1
+apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: sync
-  namespace: opslevel
   labels:
     {{- include "opslevel-sync.labels" . | nindent 4 }}
   {{- with .Values.annotations }}
@@ -21,7 +20,7 @@ spec:
           - name: {{ .Chart.Name }}
             image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
             imagePullPolicy: {{ .Values.image.pullPolicy }}
-            command:
+            args:
               - service
               - import
             envFrom:
