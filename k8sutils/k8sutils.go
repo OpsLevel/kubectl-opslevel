@@ -48,7 +48,7 @@ func CreateKubernetesClient() ClientWrapper {
 
 	client, err2 := kubernetes.NewForConfig(config)
 	if err2 != nil {
-		log.Fatal().Msgf("Unable to create a kubernetes client: %v", err)
+		log.Fatal().Msgf("Unable to create a kubernetes client: %v", err2)
 	}
 	// Supress k8s client-go
 	klog.SetLogger(logr.Discard())
