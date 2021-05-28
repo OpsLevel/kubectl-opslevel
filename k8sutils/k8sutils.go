@@ -43,7 +43,7 @@ func getKubernetesConfig() (*rest.Config, error) {
 func CreateKubernetesClient() ClientWrapper {
 	config, err := getKubernetesConfig()
 	if err != nil {
-		log.Fatal().Msgf("Unable to create a kubernetes client: %v", err)
+		log.Fatal().Msgf("Unable to load kubernetes config: %v", err)
 	}
 
 	client, err2 := kubernetes.NewForConfig(config)
