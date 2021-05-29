@@ -4,7 +4,7 @@
     <a href="http://golang.org" alt="Made With Go">
         <img src="https://img.shields.io/github/go-mod/go-version/OpsLevel/kubectl-opslevel?filename=src%2Fgo.mod" /></a>
     <a href="https://GitHub.com/OpsLevel/kubectl-opslevel/releases/" alt="Release">
-        <img src="https://img.shields.io/github/v/release/OpsLevel/kubectl-opslevel?include_prereleases" /></a>  
+        <img src="https://img.shields.io/github/v/release/OpsLevel/kubectl-opslevel" /></a>  
     <a href="https://GitHub.com/OpsLevel/kubectl-opslevel/issues/" alt="Issues">
         <img src="https://img.shields.io/github/issues/OpsLevel/kubectl-opslevel.svg" /></a>  
     <a href="https://github.com/OpsLevel/kubectl-opslevel/graphs/contributors" alt="Contributors">
