@@ -21,7 +21,8 @@ type ServiceRegistrationParser struct {
 	Language    JQParser
 	Framework   JQParser
 	Aliases     []JQParser
-	Tags        []JQParser
+	TagAssigns  []JQParser
+	TagCreates  []JQParser
 	Tools       []JQParser
 }
 
@@ -35,7 +36,8 @@ type ServiceRegistration struct {
 	Language    string                     `json:",omitempty"`
 	Framework   string                     `json:",omitempty"`
 	Aliases     []string                   `json:",omitempty"`
-	Tags        map[string]string          `json:",omitempty"`
+	TagAssigns  map[string]string          `json:",omitempty"`
+	TagCreates  map[string]string          `json:",omitempty"`
 	Tools       []opslevel.ToolCreateInput `json:",omitempty"` // This is a concrete class so fields are validated during `service preview`
 }
 
@@ -53,8 +55,11 @@ func NewParser(c config.ServiceRegistrationConfig) *ServiceRegistrationParser {
 	for _, alias := range c.Aliases {
 		parser.Aliases = append(parser.Aliases, NewJQParser(alias))
 	}
-	for _, tag := range c.Tags {
-		parser.Tags = append(parser.Tags, NewJQParser(tag))
+	for _, tag := range c.Tags.Assign {
+		parser.TagAssigns = append(parser.TagAssigns, NewJQParser(tag))
+	}
+	for _, tag := range c.Tags.Create {
+		parser.TagCreates = append(parser.TagCreates, NewJQParser(tag))
 	}
 	for _, tool := range c.Tools {
 		parser.Tools = append(parser.Tools, NewJQParser(tool))
@@ -102,8 +107,9 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 		}
 	}
 	service.Aliases = removeDuplicates(service.Aliases)
-	service.Tags = map[string]string{}
-	for _, tag := range parser.Tags {
+
+	service.TagAssigns = map[string]string{}
+	for _, tag := range parser.TagAssigns {
 		output := tag.Parse(data)
 		if output == nil {
 			continue
@@ -111,19 +117,43 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 		switch output.Type {
 		case StringStringMap:
 			for k, v := range output.StringMap {
-				service.Tags[k] = v
+				service.TagAssigns[k] = v
 			}
 			break
 		case StringStringMapArray:
 			for _, item := range output.StringMapArray {
 				for k, v := range item {
-					service.Tags[k] = v
+					service.TagAssigns[k] = v
 				}
 			}
 			break
 			// TODO: log warnings about a JQ filter that went unused because it returned an invalid type that we dont know how to handle
 		}
 	}
+
+	service.TagCreates = map[string]string{}
+	for _, tag := range parser.TagCreates {
+		output := tag.Parse(data)
+		if output == nil {
+			continue
+		}
+		switch output.Type {
+		case StringStringMap:
+			for k, v := range output.StringMap {
+				service.TagCreates[k] = v
+			}
+			break
+		case StringStringMapArray:
+			for _, item := range output.StringMapArray {
+				for k, v := range item {
+					service.TagCreates[k] = v
+				}
+			}
+			break
+			// TODO: log warnings about a JQ filter that went unused because it returned an invalid type that we dont know how to handle
+		}
+	}
+
 	service.Tools = []opslevel.ToolCreateInput{}
 	for _, tool := range parser.Tools {
 		output := tool.Parse(data)

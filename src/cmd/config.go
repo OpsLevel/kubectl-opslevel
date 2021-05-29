@@ -31,8 +31,11 @@ service:
         aliases: # This are how we identify the services again during reconciliation - please make sure they are very unique
           - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
         tags:
-          - '{"imported": "kubectl-opslevel"}'
-          - .spec.template.metadata.labels
+          assign: # tag with the same key name but with a different value will be updated on the service
+            - '{"imported": "kubectl-opslevel"}'
+            - .metadata.labels
+          create: # tag with the same key name but with a different value with be added to the service
+            - '{"environment": .spec.template.metadata.labels.environment}'
 
 `)
 
@@ -61,11 +64,13 @@ service:
         aliases: # This are how we identify the services again during reconciliation - please make sure they are very unique
           - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
         tags:
-          - '{"imported": "kubectl-opslevel"}'
-          # find annoations with format: opslevel.com/tags.<key name>: <value>
-          - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tags"))) | map({(.key | split(".")[2]): .value})'
-          - .metadata.labels
-          - .spec.template.metadata.labels
+          assign: # tag with the same key name but with a different value will be updated on the service
+            - '{"imported": "kubectl-opslevel"}'
+            # find annoations with format: opslevel.com/tags.<key name>: <value>
+            - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tags"))) | map({(.key | split(".")[2]): .value})'
+            - .metadata.labels
+          create: # tag with the same key name but with a different value with be added to the service
+            - '{"environment": .spec.template.metadata.labels.environment}'
         tools:
           - '{"category": "other", "displayName": "my-cool-tool", "url": .metadata.annotations."example.com/my-cool-tool"} | if .url then . else empty end'
           # find annotations with format: opslevel.com/tools.<category>.<displayname>: <url> 

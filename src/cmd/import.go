@@ -50,6 +50,7 @@ func runImport(cmd *cobra.Command, args []string) {
 		}
 		AssignAliases(client, service, foundService)
 		AssignTags(client, service, foundService)
+		CreateTags(client, service, foundService)
 		AssignTools(client, service, foundService)
 		log.Info().Msgf("===> Finished processing data for service: '%s'", foundService.Name)
 	}
@@ -202,15 +203,31 @@ func AssignAliases(client *opslevel.Client, registration common.ServiceRegistrat
 }
 
 func AssignTags(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
-	for tagKey, tagValue := range registration.Tags {
-		if service.HasTag(tagKey, tagValue) {
-			continue
-		}
+	for tagKey, tagValue := range registration.TagAssigns {
 		_, err := client.AssignTagForId(service.Id, tagKey, tagValue)
 		if err != nil {
 			log.Error().Msgf("===> Failed assigning tag '%s = %s' to service: '%s' \n\tREASON: %v", tagKey, tagValue, service.Name, err.Error())
 		} else {
 			log.Info().Msgf("===> Ensured tag '%s = %s' assigned to service: '%s'", tagKey, tagValue, service.Name)
+		}
+	}
+}
+
+func CreateTags(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
+	for tagKey, tagValue := range registration.TagCreates {
+		if service.HasTag(tagKey, tagValue) {
+			continue
+		}
+		input := opslevel.TagCreateInput{
+			Id:    service.Id,
+			Key:   tagKey,
+			Value: tagValue,
+		}
+		_, err := client.CreateTag(input)
+		if err != nil {
+			log.Error().Msgf("===> Failed creating tag '%s = %s' on service: '%s' \n\tREASON: %v", tagKey, tagValue, service.Name, err.Error())
+		} else {
+			log.Info().Msgf("===> Created tag '%s = %s' on service: '%s'", tagKey, tagValue, service.Name)
 		}
 	}
 }

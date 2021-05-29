@@ -14,6 +14,11 @@ var (
 	ConfigCurrentVersion = "1.0.0"
 )
 
+type TagRegistrationConfig struct {
+	Assign []string // JQ expressions that return a single string or a map[string]string
+	Create []string // JQ expressions that return a single string or a map[string]string
+}
+
 type ServiceRegistrationConfig struct {
 	Name        string `default:".metadata.name"`
 	Description string
@@ -24,7 +29,7 @@ type ServiceRegistrationConfig struct {
 	Language    string
 	Framework   string
 	Aliases     []string // JQ expressions that return a single string or a string[]
-	Tags        []string // JQ expressions that return a single string or a map[string]string
+	Tags        TagRegistrationConfig
 	Tools       []string // JQ expressions that return a single map[string]string or a []map[string]string
 }
 
