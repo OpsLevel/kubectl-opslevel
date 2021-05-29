@@ -29,6 +29,7 @@ jobs:
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
         goversion: "https://dl.google.com/go/go1.13.1.linux-amd64.tar.gz"
+        project_path: "./src"
         binary_name: "kubectl-opslevel"
         ldflags: "-X 'github.com/opslevel/kubectl-opslevel/cmd.version=${{ env.TAG }}'"
         asset_name: kubectl-opslevel-${{ matrix.goos }}-${{ matrix.goarch }}

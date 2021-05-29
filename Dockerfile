@@ -2,10 +2,10 @@ FROM golang:1.16 AS builder
 ARG VERSION=development
 LABEL stage=builder
 WORKDIR /workspace
-COPY go.mod .
-COPY go.sum .
+COPY ./src/go.mod .
+COPY ./src/go.sum .
 RUN go mod download
-COPY . .
+COPY ./src .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./kubectl-opslevel -ldflags="-X 'github.com/opslevel/kubectl-opslevel/cmd.version=${VERSION}'"
 
 
