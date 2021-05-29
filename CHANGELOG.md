@@ -2,6 +2,34 @@
 ## [Unreleased]
 
 
+<a name="v0.3.0.beta1"></a>
+## [v0.3.0.beta1] - 2021-05-29
+### Bugfix
+- support all auth methods for kubeconfig by importing the auth package
+- load kubeconfig using client-go ConfigLoadingRules to support multi file KUBECONFIG settings
+
+### Docs
+- remove 'include_prereleases' from the release badge
+- fix badge link to go.mod
+- add a reminder to install the tool first in the quickstart section
+- rework the readme to have a better flow for new users
+
+### Feature
+- support tags that are updated and tags that are append only
+- Provide a way to exclude a namespace(s) via the selector
+- add publishing of docker image to AWS public OpsLevel ECR
+- support printing out comments as part of the config sample command to help explain aspects about the configuration file
+- support a version field in the configuration file to allow for making backwards incompatible changes
+- improve the `service import` output to include an indentation character for better readability
+- improve the output that surrounds the `service preview` data to better instruct the user what to do next
+
+### Refactor
+- switch final docker image to use ubuntu instead of golang
+- k8sutils resource type handler functions use []byte to reduce code duplication
+- cleanup folder structure to improve docker build caching
+- change version command to just print out the version rather then using a log statement
+
+
 <a name="v0.2.0"></a>
 ## [v0.2.0] - 2021-05-22
 ### Bugfix
@@ -80,7 +108,8 @@
 <a name="v0.0.1"></a>
 ## v0.0.1 - 2021-03-25
 
-[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.3.0.beta1...HEAD
+[v0.3.0.beta1]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.2.0...v0.3.0.beta1
 [v0.2.0]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.1.3...v0.2.0
 [v0.1.3]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.1.2...v0.1.3
 [v0.1.2]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.1.1...v0.1.2
