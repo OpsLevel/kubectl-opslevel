@@ -10,6 +10,51 @@ import (
 	"github.com/spf13/viper"
 )
 
+var configSimple = `#Simple Opslevel CLI Config
+version: "1.0.0"
+service:
+  import:
+  - selector:
+      kind: deployment
+    opslevel:
+      name: .metadata.name
+      owner: .metadata.namespace
+      aliases:
+      - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
+      tags:
+      - '{"imported": "kubectl-opslevel"}'
+      - .spec.template.metadata.labels
+`
+
+var configSample = `#Sample Opslevel CLI Config
+version: "1.0.0"
+service:
+  import:
+  - selector:
+      kind: deployment
+      namespace: ""
+      labels: {}
+    opslevel:
+      name: .metadata.name
+      description: .metadata.annotations."opslevel.com/description"
+      owner: .metadata.annotations."opslevel.com/owner"
+      lifecycle: .metadata.annotations."opslevel.com/lifecycle"
+      tier: .metadata.annotations."opslevel.com/tier"
+      product: .metadata.annotations."opslevel.com/product"
+      language: .metadata.annotations."opslevel.com/language"
+      framework: .metadata.annotations."opslevel.com/framework"
+      aliases:
+      - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
+      tags:
+      - '{"imported": "kubectl-opslevel"}'
+      - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tags"))) | map({(.key | split(".")[2]): .value})'
+      - .metadata.labels
+      - .spec.template.metadata.labels
+      tools:
+      - '{"category": "other", "displayName": "my-cool-tool", "url": .metadata.annotations."example.com/my-cool-tool"} | if .url then . else empty end'
+      - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tools"))) | map({"category": .key | split(".")[2], "displayName": .key | split(".")[3], "url": .value})'
+`
+
 var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Commands for working with the opslevel configuration",
@@ -34,17 +79,11 @@ var configSampleCmd = &cobra.Command{
 	Short: "Print a sample config file",
 	Long:  "Print a sample config file which could be used",
 	Run: func(cmd *cobra.Command, args []string) {
-		var conf *config.Config
-		var err error
 		if viper.GetBool("simple") == true {
-			conf, err = config.Simple()
+			fmt.Println(configSimple)
 		} else {
-			conf, err = config.Default()
+			fmt.Println(configSample)
 		}
-		cobra.CheckErr(err)
-		output, err2 := yaml.Marshal(conf)
-		cobra.CheckErr(err2)
-		fmt.Println(string(output))
 	},
 }
 

@@ -1,7 +1,8 @@
 package config
 
 import (
-	"bytes"
+	"errors"
+	"fmt"
 
 	"github.com/opslevel/kubectl-opslevel/k8sutils"
 
@@ -10,7 +11,7 @@ import (
 )
 
 var (
-	ConfigFileName = "config.yaml"
+	ConfigCurrentVersion = "1.0.0"
 )
 
 type ServiceRegistrationConfig struct {
@@ -37,36 +38,23 @@ type Service struct {
 }
 
 type Config struct {
+	Version string
 	Service Service `json:"service"`
 }
 
+type ConfigVersion struct {
+	Version string
+}
+
 func New() (*Config, error) {
+	v := &ConfigVersion{}
+	viper.Unmarshal(&v)
+	if v.Version != ConfigCurrentVersion {
+		return nil, errors.New(fmt.Sprintf("Supported config version is '%s' but found '%s' | Please update config file or create a new sample with `kubectl opslevel config sample`", ConfigCurrentVersion, v.Version))
+	}
+
 	c := &Config{}
 	viper.Unmarshal(&c)
-	if err := defaults.Set(c); err != nil {
-		return c, err
-	}
-	return c, nil
-}
-
-func Simple() (*Config, error) {
-	c := &Config{}
-	v := viper.New()
-	v.SetConfigType("yaml")
-	v.ReadConfig(bytes.NewBuffer([]byte(ConfigSimple)))
-	v.Unmarshal(&c)
-	if err := defaults.Set(c); err != nil {
-		return c, err
-	}
-	return c, nil
-}
-
-func Default() (*Config, error) {
-	c := &Config{}
-	v := viper.New()
-	v.SetConfigType("yaml")
-	v.ReadConfig(bytes.NewBuffer([]byte(ConfigSample)))
-	v.Unmarshal(&c)
 	if err := defaults.Set(c); err != nil {
 		return c, err
 	}
