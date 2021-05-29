@@ -26,9 +26,14 @@ import (
 	"k8s.io/klog/v2"
 )
 
+type NamespaceSelector struct {
+	Include []string
+	Exclude []string
+}
+
 type KubernetesSelector struct {
 	Kind      string
-	Namespace string
+	Namespace NamespaceSelector
 	Labels    map[string]string
 }
 
@@ -216,40 +221,55 @@ func (c *ClientWrapper) ForEachSecret(namespace string, options metav1.ListOptio
 	return nil
 }
 
-func (c *ClientWrapper) Query(selector KubernetesSelector, handler func(resource []byte) error) error {
-	listOptions := metav1.ListOptions{
-		LabelSelector: selector.LabelSelector(),
+func (c *ClientWrapper) GetAllNamespaces() ([]string, error) {
+	var output []string
+	resources, queryErr := c.client.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
+	if queryErr != nil {
+		return output, queryErr
 	}
-	switch strings.ToLower(selector.Kind) {
+	for _, resource := range resources.Items {
+		output = append(output, resource.Name)
+	}
+	return output, nil
+}
+
+func (c *ClientWrapper) Query(kind string, namespace string, options metav1.ListOptions, handler func(resource []byte) error) error {
+	switch strings.ToLower(kind) {
 	case "deployment":
-		c.ForEachDeployment(selector.Namespace, listOptions, handler)
+		c.ForEachDeployment(namespace, options, handler)
 		break
 	case "statefulset":
-		c.ForEachStatefulSet(selector.Namespace, listOptions, handler)
+		c.ForEachStatefulSet(namespace, options, handler)
 		break
 	case "daemonset":
-		c.ForEachDaemonSet(selector.Namespace, listOptions, handler)
+		c.ForEachDaemonSet(namespace, options, handler)
 		break
 	case "job":
-		c.ForEachJob(selector.Namespace, listOptions, handler)
+		c.ForEachJob(namespace, options, handler)
 		break
 	case "cronjob":
-		c.ForEachCronJob(selector.Namespace, listOptions, handler)
+		c.ForEachCronJob(namespace, options, handler)
 		break
 	case "service":
-		c.ForEachService(selector.Namespace, listOptions, handler)
+		c.ForEachService(namespace, options, handler)
 		break
 	case "ingress":
-		c.ForEachIngress(selector.Namespace, listOptions, handler)
+		c.ForEachIngress(namespace, options, handler)
 		break
 	case "configmap":
-		c.ForEachConfigMap(selector.Namespace, listOptions, handler)
+		c.ForEachConfigMap(namespace, options, handler)
 		break
 	case "secret":
-		c.ForEachSecret(selector.Namespace, listOptions, handler)
+		c.ForEachSecret(namespace, options, handler)
 		break
 	}
 	return nil
+}
+
+func (selector *KubernetesSelector) GetListOptions() metav1.ListOptions {
+	return metav1.ListOptions{
+		LabelSelector: selector.LabelSelector(),
+	}
 }
 
 func (selector *KubernetesSelector) LabelSelector() string {
@@ -258,4 +278,45 @@ func (selector *KubernetesSelector) LabelSelector() string {
 		labels = append(labels, fmt.Sprintf("%s=%s", key, value))
 	}
 	return strings.Join(labels, ",")
+}
+
+// TODO: write a test for this to ensure this continues to work properly
+func (selector *KubernetesSelector) FilterNamespaces(namespaces []string) []string {
+	var output []string
+	include := purge(selector.Namespace.Include)
+	exclude := purge(selector.Namespace.Exclude)
+
+	useInclude := len(include) > 0
+	useExclude := len(exclude) > 0
+
+	for _, namespace := range namespaces {
+		if useInclude && !contains(include, namespace) {
+			continue
+		}
+		if useExclude && contains(exclude, namespace) {
+			continue
+		}
+		output = append(output, namespace)
+	}
+	return output
+}
+
+// removes empty strings from the []string
+func purge(s []string) []string {
+	var r []string
+	for _, str := range s {
+		if str != "" {
+			r = append(r, str)
+		}
+	}
+	return r
+}
+
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+	return false
 }
