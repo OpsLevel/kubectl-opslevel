@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/go-logr/logr"
@@ -16,6 +15,9 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	// This is here because of https://github.com/OpsLevel/kubectl-opslevel/issues/24
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
@@ -32,17 +34,11 @@ type ClientWrapper struct {
 }
 
 func getKubernetesConfig() (*rest.Config, error) {
-	config, err := rest.InClusterConfig()
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	configOverrides := &clientcmd.ConfigOverrides{}
+	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides).ClientConfig()
 	if err != nil {
-		configPath := os.Getenv("KUBECONFIG")
-		if configPath == "" {
-			configPath = os.Getenv("HOME") + "/.kube/config"
-		}
-		config2, err2 := clientcmd.BuildConfigFromFlags("", configPath)
-		if err2 != nil {
-			return nil, err2
-		}
-		return config2, nil
+		return nil, err
 	}
 	return config, nil
 }
@@ -50,12 +46,12 @@ func getKubernetesConfig() (*rest.Config, error) {
 func CreateKubernetesClient() ClientWrapper {
 	config, err := getKubernetesConfig()
 	if err != nil {
-		log.Fatal().Msgf("Unable to create a kubernetes client: %v", err)
+		log.Fatal().Msgf("Unable to load kubernetes config: %v", err)
 	}
 
 	client, err2 := kubernetes.NewForConfig(config)
 	if err2 != nil {
-		log.Fatal().Msgf("Unable to create a kubernetes client: %v", err)
+		log.Fatal().Msgf("Unable to create a kubernetes client: %v", err2)
 	}
 	// Supress k8s client-go
 	klog.SetLogger(logr.Discard())
