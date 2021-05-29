@@ -52,7 +52,7 @@ jobs:
     - name: Build & Push
       run: |
         git fetch --tags --force
-        TAG=$(git describe --tags --long --abbrev=12 --match "v[0-9].*" --always)
+        TAG=$(git describe --tags --match "v[0-9].*" --always)
         IMAGE="kubectl-opslevel:${TAG}"
         docker build -t ${IMAGE} --build-arg VERSION=${TAG}  .
 
