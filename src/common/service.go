@@ -179,15 +179,22 @@ func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
 	k8sClient := k8sutils.CreateKubernetesClient()
 
 	jq.ValidateInstalled()
+	namespaces, namespacesErr := k8sClient.GetAllNamespaces()
+	if namespacesErr != nil {
+		return services, nil
+	}
 
 	for _, importConfig := range c.Service.Import {
+		selector := importConfig.SelectorConfig
 		parser = NewParser(importConfig.OpslevelConfig)
-		process := func(resource []byte) error {
+		processFoundResource := func(resource []byte) error {
 			services = append(services, *parser.Parse(resource))
 			return nil
 		}
-		if err := k8sClient.Query(importConfig.SelectorConfig, process); err != nil {
-			return services, err
+		for _, namespace := range selector.FilterNamespaces(namespaces) {
+			if err := k8sClient.Query(selector.Kind, namespace, selector.GetListOptions(), processFoundResource); err != nil {
+				return services, err
+			}
 		}
 	}
 	return services, nil

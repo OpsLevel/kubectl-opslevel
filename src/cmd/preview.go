@@ -32,11 +32,13 @@ func runPreview(cmd *cobra.Command, args []string) {
 	services, err2 := common.QueryForServices(config)
 	cobra.CheckErr(err2)
 
-	prettyJSON, err := json.MarshalIndent(services, "", "    ")
-	if err != nil {
-		fmt.Printf("[]\n")
+	if len(services) > 0 {
+		prettyJSON, err := json.MarshalIndent(services, "", "    ")
+		if err != nil {
+			fmt.Printf("[]\n")
+		}
+		fmt.Printf("%s\n", string(prettyJSON))
 	}
-	fmt.Printf("%s\n", string(prettyJSON))
 
 	fmt.Println("\nIf you're happy with the above data you can reconcile it with OpsLevel by running:\n\n OL_APITOKEN=XXX kubectl opslevel service import\n\nOtherwise, please adjust the config file and rerun this command")
 }

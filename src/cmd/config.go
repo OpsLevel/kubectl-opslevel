@@ -18,7 +18,12 @@ service:
   import:
     - selector: # This limits what data we look at in Kubernetes
         kind: deployment # supported options ["deployment", "statefulset", "daemonset", "service", "ingress", "job", "cronjob", "configmap", "secret"]
-        namespace: ""
+        namespace: 
+          include: # if set only these namespaces will be inspected
+            - ""
+          exclude: # if set these namespaces will be excluded from inspection
+            - "kube-system"
+            - "local-path-storage"
         labels: {}
       opslevel: # This is how you map your kubernetes data to opslevel service
         name: .metadata.name
@@ -37,7 +42,12 @@ service:
   import:
     - selector: # This limits what data we look at in Kubernetes
         kind: deployment # supported options ["deployment", "statefulset", "daemonset", "service", "ingress", "job", "cronjob", "configmap", "secret"]
-        namespace: ""
+        namespace: 
+          include: # if set only these namespaces will be inspected
+            - ""
+          exclude: # if set these namespaces will be excluded from inspection
+            - "kube-system"
+            - "local-path-storage"
         labels: {}
       opslevel: # This is how you map your kubernetes data to opslevel service
         name: .metadata.name
