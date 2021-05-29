@@ -41,12 +41,30 @@ jobs:
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-2
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
     - name: Build & Push
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
       run: |
         git fetch --tags --force
         TAG=$(git describe --tags --long --abbrev=12 --match "v[0-9].*" --always)
-        IMAGE="docker.pkg.github.com/opslevel/kubectl-opslevel/main:${TAG}"
-        echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
+        IMAGE="kubectl-opslevel:${TAG}"
         docker build -t ${IMAGE} --build-arg VERSION=${TAG}  .
-        docker push ${IMAGE}
+
+        AWS_IMAGE="${ECR_REGISTRY}/kubectl-opslevel:${TAG}"
+        docker tag ${IMAGE} ${AWS_IMAGE}
+        docker push ${AWS_IMAGE}
+
+        echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
+        GITHUB_IMAGE="docker.pkg.github.com/opslevel/kubectl-opslevel/main:${TAG}"
+        docker tag ${IMAGE} ${GITHUB_IMAGE}
+        docker push ${GITHUB_IMAGE}
 
