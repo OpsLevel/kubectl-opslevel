@@ -80,24 +80,26 @@ rm kubectl-opslevel.tar.gz
 sudo mv kubectl-opslevel /usr/local/bin/kubectl-opslevel
 ```
 
-<!---
-TODO: Implement other methods
-
 #### Docker
 
-```
-docker pull public.ecr.aws/opslevel/kubectl-opslevel:latest
-```
+The docker container is hosted on [AWS Public ECR](https://gallery.ecr.aws/e1n4f2i6/kubectl-opslevel)
 
-Then run the following script to inject a shim into your `/usr/local/bin` so you can use the binary like its downloaded natively - it will just be running in a docker container.
+The following downloads the container and creates a shim at `/usr/local/bin` so you can use the binary like its downloaded natively - it will just be running in a docker container. *NOTE: you may need to adjust how your kube config is mounted and set inside the container*
 
 ```
+TOOL_VERSION=$(curl -s https://api.github.com/repos/opslevel/kubectl-opslevel/releases/latest | grep tag_name | cut -d '"' -f 4)
+docker pull public.ecr.aws/e1n4f2i6/kubectl-opslevel:${TOOL_VERSION}
+docker tag public.ecr.aws/e1n4f2i6/kubectl-opslevel:${TOOL_VERSION} kubectl-opslevel:latest 
 cat << EOF > /usr/local/bin/kubectl-opslevel
 #! /bin/sh
-docker run -it --rm -w /mounted -v \$(pwd):/mounted public.ecr.aws/opslevel/kubectl-opslevel:latest \$@
+docker run -it --rm -v \$(pwd):/app -v ${HOME}/.kube:/.kube -e KUBECONFIG=/.kube/config --network=host kubectl-opslevel:latest \$@
 EOF
 chmod +x /usr/local/bin/kubectl-opslevel
 ```
+
+<!---
+TODO: Implement other methods
+
 
 #### Homebrew
 
