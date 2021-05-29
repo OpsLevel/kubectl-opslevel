@@ -140,7 +140,7 @@ v0.1.1-0-gc52681db6b33
 The log format default is more human readable but if you want structured logs you can set the flag `--logFormat=JSON`
 
 ```json
-{"level":"info","time":1620251466,"message":"v0.1.1-0-gc52681db6b33"}
+{"level":"info","time":1620251466,"message":"Ensured tag 'imported = kubectl-opslevel' assigned to service: 'db'"}
 ```
 
 ## The Configuration File Explained
