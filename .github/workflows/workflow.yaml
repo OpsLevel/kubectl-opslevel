@@ -54,7 +54,7 @@ jobs:
         git fetch --tags --force
         TAG=$(git describe --tags --match "v[0-9].*" --always)
         IMAGE="kubectl-opslevel:${TAG}"
-        docker build -t ${IMAGE} --build-arg VERSION=${TAG}  .
+        docker build -t ${IMAGE} --build-arg VERSION=$(git describe --tags --long --abbrev=12 --match "v[0-9].*" --always) .
 
         AWS_IMAGE="public.ecr.aws/e1n4f2i6/kubectl-opslevel:${TAG}"
         docker tag ${IMAGE} ${AWS_IMAGE}
