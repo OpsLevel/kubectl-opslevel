@@ -51,6 +51,7 @@ Table of Contents
       * [Tools](#tools)
    * [Preview](#preview)
    * [Import](#import)
+   * [Deploy](#deploy)
 
 ## Prerequisite
 
@@ -282,3 +283,7 @@ Once you are ready to import data into OpsLevel run the following:
 ```
 
 This command may take a few minutes to run so please be patient while it works.  In the meantime you can open a browser to [OpsLevel](https://app.opslevel.com/) and view the newly generated/updated services.
+
+## Deploy
+
+Once you are happy with how the tool runs locally we do recommend deploying this tool inside your kubernetes cluster so that it can perform reconciliation periodically.  For this we have a [helm chart](https://github.com/OpsLevel/helm-charts) you can use to get started so head over there to get started.
