@@ -9,6 +9,9 @@ build:
       dockerfile: Dockerfile
 
 deploy:
+  kubectl:
+    manifests:
+    - test/k8s/*.yaml
   helm:
     releases:
     - name: localdev
