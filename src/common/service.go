@@ -195,7 +195,7 @@ func removeDuplicates(data []string) []string {
 }
 
 func removeOverlappedKeys(source map[string]string, check map[string]string) map[string]string {
-	output := make(map[string]string)
+	output := make(map[string]string, len(source))
 	for k := range source {
 		if _, value := check[k]; !value {
 			output[k] = source[k]
