@@ -52,6 +52,7 @@ func runImport(cmd *cobra.Command, args []string) {
 		AssignTags(client, service, foundService)
 		CreateTags(client, service, foundService)
 		AssignTools(client, service, foundService)
+		AttachRepositories(client, service, foundService)
 		log.Info().Msgf("===> Finished processing data for service: '%s'", foundService.Name)
 	}
 	log.Info().Msg("Import Complete")
@@ -204,11 +205,14 @@ func AssignAliases(client *opslevel.Client, registration common.ServiceRegistrat
 
 func AssignTags(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
 	for tagKey, tagValue := range registration.TagAssigns {
+		if service.HasTag(tagKey, tagValue) {
+			continue
+		}
 		_, err := client.AssignTagForId(service.Id, tagKey, tagValue)
 		if err != nil {
-			log.Error().Msgf("===> Failed assigning tag '%s = %s' to service: '%s' \n\tREASON: %v", tagKey, tagValue, service.Name, err.Error())
+			log.Error().Msgf("===> Failed updating tag '%s = %s' on service: '%s' \n\tREASON: %v", tagKey, tagValue, service.Name, err.Error())
 		} else {
-			log.Info().Msgf("===> Ensured tag '%s = %s' assigned to service: '%s'", tagKey, tagValue, service.Name)
+			log.Info().Msgf("===> Updated tag '%s = %s' on service: '%s'", tagKey, tagValue, service.Name)
 		}
 	}
 }
@@ -244,6 +248,32 @@ func AssignTools(client *opslevel.Client, registration common.ServiceRegistratio
 			log.Error().Msgf("===> Failed assigning tool '{Category: %s, Environment: %s, Name: %s}' to service: '%s' \n\tREASON: %v", tool.Category, tool.Environment, tool.DisplayName, service.Name, err.Error())
 		} else {
 			log.Info().Msgf("===> Ensured tool '{Category: %s, Environment: %s, Name: %s}' assigned to service: '%s'", tool.Category, tool.Environment, tool.DisplayName, service.Name)
+		}
+	}
+}
+
+func AttachRepositories(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
+	for _, repository := range registration.Repositories {
+		foundRepository, foundRepositoryErr := client.GetRepositoryWithAlias(string(repository.Repository.Alias))
+		if foundRepositoryErr != nil {
+			log.Warn().Msgf("===> Repository with alias: '%s' not found so it cannot be attached to service: '%s' ... skipping", repository.Repository.Alias, service.Name)
+			continue
+		}
+		if foundRepository.HasService(service.Id, repository.BaseDirectory) {
+			// TODO: Update display name if not matched
+			// We will need this to be a TryGet so we can feed the ServiceRepository.ID to the ServiceRepositoryUpdateInput struct
+			// If repository.DisplayName != ""
+			//    update := opslevel.ServiceRepositoryUpdateInput{ id: }
+			//    client.UpdateServiceRepository()
+			log.Debug().Msgf("===> Repository '{Alias: %s, Directory: %s, Name: %s}' already attached to service: '%s' ... skipping", repository.Repository.Alias, repository.BaseDirectory, repository.DisplayName, service.Name)
+			continue
+		}
+		repository.Service = opslevel.IdentifierInput{Id: service.Id}
+		_, err := client.CreateServiceRepository(repository)
+		if err != nil {
+			log.Error().Msgf("===> Failed assigning repository '{Alias: %s}' to service: '%s' \n\tREASON: %v", repository.Repository.Alias, service.Name, err.Error())
+		} else {
+			log.Info().Msgf("===> Attached repository '{Alias: %s}' to service: '%s'", repository.Repository.Alias, service.Name)
 		}
 	}
 }

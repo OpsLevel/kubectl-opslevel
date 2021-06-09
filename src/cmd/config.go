@@ -75,6 +75,12 @@ service:
           - '{"category": "other", "displayName": "my-cool-tool", "url": .metadata.annotations."example.com/my-cool-tool"} | if .url then . else empty end'
           # find annotations with format: opslevel.com/tools.<category>.<displayname>: <url> 
           - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tools"))) | map({"category": .key | split(".")[2], "displayName": .key | split(".")[3], "url": .value})'
+        repositories: # attach repositories to the service using the opslevel repo alias - IE github.com:hashicorp/vault
+          - '{"name": "My Cool Repo", "directory": "/", "repo": .metadata.annotations.repo} | if .repo then . else empty end'
+          # if just the alias is returned as a single string we'll build the name for you and set the directory to "/"
+          - .metadata.annotations.repo
+          # find annotations with format: opslevel.com/repo.<displayname>.<repo.subpath.dots.turned.to.forwardslash>: <opslevel repo alias> 
+          - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/repos"))) | map({"name": .key | split(".")[2], "directory": .key | split(".")[3:] | join("/"), "repo": .value})'
 
 `)
 

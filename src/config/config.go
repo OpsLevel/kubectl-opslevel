@@ -20,17 +20,18 @@ type TagRegistrationConfig struct {
 }
 
 type ServiceRegistrationConfig struct {
-	Name        string `default:".metadata.name"`
-	Description string
-	Owner       string
-	Lifecycle   string
-	Tier        string
-	Product     string
-	Language    string
-	Framework   string
-	Aliases     []string // JQ expressions that return a single string or a string[]
-	Tags        TagRegistrationConfig
-	Tools       []string // JQ expressions that return a single map[string]string or a []map[string]string
+	Name         string `default:".metadata.name"`
+	Description  string
+	Owner        string
+	Lifecycle    string
+	Tier         string
+	Product      string
+	Language     string
+	Framework    string
+	Aliases      []string // JQ expressions that return a single string or a []string
+	Tags         TagRegistrationConfig
+	Tools        []string // JQ expressions that return a single map[string]string or a []map[string]string
+	Repositories []string // JQ expressions that return a single string or []string or map[string]string or a []map[string]string
 }
 
 type Import struct {

@@ -12,33 +12,35 @@ import (
 )
 
 type ServiceRegistrationParser struct {
-	Name        JQParser
-	Description JQParser
-	Owner       JQParser
-	Lifecycle   JQParser
-	Tier        JQParser
-	Product     JQParser
-	Language    JQParser
-	Framework   JQParser
-	Aliases     []JQParser
-	TagAssigns  []JQParser
-	TagCreates  []JQParser
-	Tools       []JQParser
+	Name         JQParser
+	Description  JQParser
+	Owner        JQParser
+	Lifecycle    JQParser
+	Tier         JQParser
+	Product      JQParser
+	Language     JQParser
+	Framework    JQParser
+	Aliases      []JQParser
+	TagAssigns   []JQParser
+	TagCreates   []JQParser
+	Tools        []JQParser
+	Repositories []JQParser
 }
 
 type ServiceRegistration struct {
-	Name        string
-	Description string                     `json:",omitempty"`
-	Owner       string                     `json:",omitempty"`
-	Lifecycle   string                     `json:",omitempty"`
-	Tier        string                     `json:",omitempty"`
-	Product     string                     `json:",omitempty"`
-	Language    string                     `json:",omitempty"`
-	Framework   string                     `json:",omitempty"`
-	Aliases     []string                   `json:",omitempty"`
-	TagAssigns  map[string]string          `json:",omitempty"`
-	TagCreates  map[string]string          `json:",omitempty"`
-	Tools       []opslevel.ToolCreateInput `json:",omitempty"` // This is a concrete class so fields are validated during `service preview`
+	Name         string
+	Description  string                                  `json:",omitempty"`
+	Owner        string                                  `json:",omitempty"`
+	Lifecycle    string                                  `json:",omitempty"`
+	Tier         string                                  `json:",omitempty"`
+	Product      string                                  `json:",omitempty"`
+	Language     string                                  `json:",omitempty"`
+	Framework    string                                  `json:",omitempty"`
+	Aliases      []string                                `json:",omitempty"`
+	TagAssigns   map[string]string                       `json:",omitempty"`
+	TagCreates   map[string]string                       `json:",omitempty"`
+	Tools        []opslevel.ToolCreateInput              `json:",omitempty"` // This is a concrete class so fields are validated during `service preview`
+	Repositories []opslevel.ServiceRepositoryCreateInput `json:",omitempty"` // This is a concrete class so fields are validated during `service preview`
 }
 
 func NewParser(c config.ServiceRegistrationConfig) *ServiceRegistrationParser {
@@ -63,6 +65,9 @@ func NewParser(c config.ServiceRegistrationConfig) *ServiceRegistrationParser {
 	}
 	for _, tool := range c.Tools {
 		parser.Tools = append(parser.Tools, NewJQParser(tool))
+	}
+	for _, repository := range c.Repositories {
+		parser.Repositories = append(parser.Repositories, NewJQParser(repository))
 	}
 	return &parser
 }
@@ -165,19 +170,54 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 		}
 		switch output.Type {
 		case StringStringMap:
-			if tool, err := ConvertToTool(output.StringMap); err == nil {
-				service.Tools = append(service.Tools, *tool)
+			if input, err := ConvertToToolCreateInput(output.StringMap); err == nil {
+				service.Tools = append(service.Tools, *input)
 			}
 			break
 		case StringStringMapArray:
 			for _, item := range output.StringMapArray {
-				if tool, err := ConvertToTool(item); err == nil {
-					service.Tools = append(service.Tools, *tool)
+				if input, err := ConvertToToolCreateInput(item); err == nil {
+					service.Tools = append(service.Tools, *input)
 				}
 			}
 			break
 		}
 	}
+
+	service.Repositories = []opslevel.ServiceRepositoryCreateInput{}
+	for _, repository := range parser.Repositories {
+		output := repository.Parse(data)
+		if output == nil {
+			continue
+		}
+		switch output.Type {
+		case String:
+			if input := ConvertToServiceRepositoryCreateInput(map[string]string{"repo": output.StringObj}); input != nil {
+				service.Repositories = append(service.Repositories, *input)
+			}
+			break
+		case StringArray:
+			for _, item := range output.StringArray {
+				if input := ConvertToServiceRepositoryCreateInput(map[string]string{"repo": item}); input != nil {
+					service.Repositories = append(service.Repositories, *input)
+				}
+			}
+			break
+		case StringStringMap:
+			if input := ConvertToServiceRepositoryCreateInput(output.StringMap); input != nil {
+				service.Repositories = append(service.Repositories, *input)
+			}
+			break
+		case StringStringMapArray:
+			for _, item := range output.StringMapArray {
+				if input := ConvertToServiceRepositoryCreateInput(item); input != nil {
+					service.Repositories = append(service.Repositories, *input)
+				}
+			}
+			break
+		}
+	}
+
 	return &service
 }
 
@@ -204,7 +244,7 @@ func removeOverlappedKeys(source map[string]string, check map[string]string) map
 	return output
 }
 
-func ConvertToTool(data map[string]string) (*opslevel.ToolCreateInput, error) {
+func ConvertToToolCreateInput(data map[string]string) (*opslevel.ToolCreateInput, error) {
 	bytes, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
@@ -214,6 +254,28 @@ func ConvertToTool(data map[string]string) (*opslevel.ToolCreateInput, error) {
 		return nil, unmarshalErr
 	}
 	return tool, nil
+}
+
+func ConvertToServiceRepositoryCreateInput(data map[string]string) *opslevel.ServiceRepositoryCreateInput {
+	var repoAlias string
+	baseDirectory := ""
+	displayName := ""
+	if val, ok := data["repo"]; ok {
+		repoAlias = val
+	} else {
+		return nil
+	}
+	if val, ok := data["directory"]; ok && val != "" {
+		baseDirectory = val
+	}
+	if val, ok := data["name"]; ok {
+		displayName = val
+	}
+	return &opslevel.ServiceRepositoryCreateInput{
+		Repository:    *opslevel.NewIdFromAlias(repoAlias),
+		BaseDirectory: baseDirectory,
+		DisplayName:   displayName,
+	}
 }
 
 func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
