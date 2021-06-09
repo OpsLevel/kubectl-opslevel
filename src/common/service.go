@@ -154,6 +154,9 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 		}
 	}
 
+	// https://github.com/OpsLevel/kubectl-opslevel/issues/41
+	service.TagAssigns = removeOverlappedKeys(service.TagAssigns, service.TagCreates)
+
 	service.Tools = []opslevel.ToolCreateInput{}
 	for _, tool := range parser.Tools {
 		output := tool.Parse(data)
@@ -189,6 +192,16 @@ func removeDuplicates(data []string) []string {
 		}
 	}
 	return list
+}
+
+func removeOverlappedKeys(source map[string]string, check map[string]string) map[string]string {
+	output := make(map[string]string, len(source))
+	for k := range source {
+		if _, value := check[k]; !value {
+			output[k] = source[k]
+		}
+	}
+	return output
 }
 
 func ConvertToTool(data map[string]string) (*opslevel.ToolCreateInput, error) {
