@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/opslevel-go"
@@ -52,6 +54,7 @@ func runImport(cmd *cobra.Command, args []string) {
 		AssignTags(client, service, foundService)
 		CreateTags(client, service, foundService)
 		AssignTools(client, service, foundService)
+		AttachRepositories(client, service, foundService)
 		log.Info().Msgf("===> Finished processing data for service: '%s'", foundService.Name)
 	}
 	log.Info().Msg("Import Complete")
@@ -204,11 +207,14 @@ func AssignAliases(client *opslevel.Client, registration common.ServiceRegistrat
 
 func AssignTags(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
 	for tagKey, tagValue := range registration.TagAssigns {
+		if service.HasTag(tagKey, tagValue) {
+			continue
+		}
 		_, err := client.AssignTagForId(service.Id, tagKey, tagValue)
 		if err != nil {
-			log.Error().Msgf("===> Failed assigning tag '%s = %s' to service: '%s' \n\tREASON: %v", tagKey, tagValue, service.Name, err.Error())
+			log.Error().Msgf("===> Failed updating tag '%s = %s' on service: '%s' \n\tREASON: %v", tagKey, tagValue, service.Name, err.Error())
 		} else {
-			log.Info().Msgf("===> Ensured tag '%s = %s' assigned to service: '%s'", tagKey, tagValue, service.Name)
+			log.Info().Msgf("===> Updated tag '%s = %s' on service: '%s'", tagKey, tagValue, service.Name)
 		}
 	}
 }
@@ -244,6 +250,43 @@ func AssignTools(client *opslevel.Client, registration common.ServiceRegistratio
 			log.Error().Msgf("===> Failed assigning tool '{Category: %s, Environment: %s, Name: %s}' to service: '%s' \n\tREASON: %v", tool.Category, tool.Environment, tool.DisplayName, service.Name, err.Error())
 		} else {
 			log.Info().Msgf("===> Ensured tool '{Category: %s, Environment: %s, Name: %s}' assigned to service: '%s'", tool.Category, tool.Environment, tool.DisplayName, service.Name)
+		}
+	}
+}
+
+func AttachRepositories(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
+	for _, repositoryCreate := range registration.Repositories {
+		repositoryAsString := fmt.Sprintf("{Alias: %s, Directory: %s, Name: %s}", repositoryCreate.Repository.Alias, repositoryCreate.BaseDirectory, repositoryCreate.DisplayName)
+		foundRepository, foundRepositoryErr := client.GetRepositoryWithAlias(string(repositoryCreate.Repository.Alias))
+		if foundRepositoryErr != nil {
+			log.Warn().Msgf("===> Repository with alias: '%s' not found so it cannot be attached to service: '%s' ... skipping", repositoryAsString, service.Name)
+			continue
+		}
+		serviceRepository := foundRepository.GetService(service.Id, repositoryCreate.BaseDirectory)
+		if serviceRepository != nil {
+			if repositoryCreate.DisplayName != "" && serviceRepository.DisplayName != repositoryCreate.DisplayName {
+				repositoryUpdate := opslevel.ServiceRepositoryUpdateInput{
+					Id:          serviceRepository.Id,
+					DisplayName: repositoryCreate.DisplayName,
+				}
+				_, err := client.UpdateServiceRepository(repositoryUpdate)
+				if err != nil {
+					log.Error().Msgf("===> Failed updating repository '%s' on service: '%s' \n\tREASON: %v", repositoryAsString, service.Name, err.Error())
+					continue
+				} else {
+					log.Info().Msgf("===> Updated repository '%s' on service: '%s'", repositoryAsString, service.Name)
+					continue
+				}
+			}
+			log.Debug().Msgf("===> Repository '%s' already attached to service: '%s' ... skipping", repositoryAsString, service.Name)
+			continue
+		}
+		repositoryCreate.Service = opslevel.IdentifierInput{Id: service.Id}
+		_, err := client.CreateServiceRepository(repositoryCreate)
+		if err != nil {
+			log.Error().Msgf("===> Failed assigning repository '$s' to service: '%s' \n\tREASON: %v", repositoryAsString, service.Name, err.Error())
+		} else {
+			log.Info().Msgf("===> Attached repository '%s' to service: '%s'", repositoryAsString, service.Name)
 		}
 	}
 }
