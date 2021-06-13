@@ -2,6 +2,23 @@
 ## [Unreleased]
 
 
+<a name="v0.3.1-beta.1"></a>
+## [v0.3.1-beta.1] - 2021-06-13
+### Bugfix
+- protect against empty alias value
+- protect against empty key or value in tag assign and create lists
+- remove overlapped keys that exist in parsed `tags.assign` if key name also exists in `tags.create`
+- adjust golang binary inside docker container to have same version as when built outside the container
+
+### Docs
+- add install instructions for using docker container
+
+### Feature
+- add ability to reconcile linked service repository display name
+- add ability to assign repositories to services
+- add kubernetes deploy instructions that link to the helm chart
+
+
 <a name="v0.3.0.beta1"></a>
 ## [v0.3.0.beta1] - 2021-05-29
 ### Bugfix
@@ -108,7 +125,8 @@
 <a name="v0.0.1"></a>
 ## v0.0.1 - 2021-03-25
 
-[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.3.0.beta1...HEAD
+[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.3.1-beta.1...HEAD
+[v0.3.1-beta.1]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.3.0.beta1...v0.3.1-beta.1
 [v0.3.0.beta1]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.2.0...v0.3.0.beta1
 [v0.2.0]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.1.3...v0.2.0
 [v0.1.3]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.1.2...v0.1.3
