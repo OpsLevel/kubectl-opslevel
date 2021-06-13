@@ -122,12 +122,18 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 		switch output.Type {
 		case StringStringMap:
 			for k, v := range output.StringMap {
+				if k == "" || v == "" {
+					continue
+				}
 				service.TagAssigns[k] = v
 			}
 			break
 		case StringStringMapArray:
 			for _, item := range output.StringMapArray {
 				for k, v := range item {
+					if k == "" || v == "" {
+						continue
+					}
 					service.TagAssigns[k] = v
 				}
 			}
@@ -145,12 +151,18 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 		switch output.Type {
 		case StringStringMap:
 			for k, v := range output.StringMap {
+				if k == "" || v == "" {
+					continue
+				}
 				service.TagCreates[k] = v
 			}
 			break
 		case StringStringMapArray:
 			for _, item := range output.StringMapArray {
 				for k, v := range item {
+					if k == "" || v == "" {
+						continue
+					}
 					service.TagCreates[k] = v
 				}
 			}
