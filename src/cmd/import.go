@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/opslevel-go"
@@ -253,27 +255,38 @@ func AssignTools(client *opslevel.Client, registration common.ServiceRegistratio
 }
 
 func AttachRepositories(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
-	for _, repository := range registration.Repositories {
-		foundRepository, foundRepositoryErr := client.GetRepositoryWithAlias(string(repository.Repository.Alias))
+	for _, repositoryCreate := range registration.Repositories {
+		repositoryAsString := fmt.Sprintf("{Alias: %s, Directory: %s, Name: %s}", repositoryCreate.Repository.Alias, repositoryCreate.BaseDirectory, repositoryCreate.DisplayName)
+		foundRepository, foundRepositoryErr := client.GetRepositoryWithAlias(string(repositoryCreate.Repository.Alias))
 		if foundRepositoryErr != nil {
-			log.Warn().Msgf("===> Repository with alias: '%s' not found so it cannot be attached to service: '%s' ... skipping", repository.Repository.Alias, service.Name)
+			log.Warn().Msgf("===> Repository with alias: '%s' not found so it cannot be attached to service: '%s' ... skipping", repositoryAsString, service.Name)
 			continue
 		}
-		if foundRepository.HasService(service.Id, repository.BaseDirectory) {
-			// TODO: Update display name if not matched
-			// We will need this to be a TryGet so we can feed the ServiceRepository.ID to the ServiceRepositoryUpdateInput struct
-			// If repository.DisplayName != ""
-			//    update := opslevel.ServiceRepositoryUpdateInput{ id: }
-			//    client.UpdateServiceRepository()
-			log.Debug().Msgf("===> Repository '{Alias: %s, Directory: %s, Name: %s}' already attached to service: '%s' ... skipping", repository.Repository.Alias, repository.BaseDirectory, repository.DisplayName, service.Name)
+		serviceRepository := foundRepository.GetService(service.Id, repositoryCreate.BaseDirectory)
+		if serviceRepository != nil {
+			if repositoryCreate.DisplayName != "" && serviceRepository.DisplayName != repositoryCreate.DisplayName {
+				repositoryUpdate := opslevel.ServiceRepositoryUpdateInput{
+					Id:          serviceRepository.Id,
+					DisplayName: repositoryCreate.DisplayName,
+				}
+				_, err := client.UpdateServiceRepository(repositoryUpdate)
+				if err != nil {
+					log.Error().Msgf("===> Failed updating repository '%s' on service: '%s' \n\tREASON: %v", repositoryAsString, service.Name, err.Error())
+					continue
+				} else {
+					log.Info().Msgf("===> Updated repository '%s' on service: '%s'", repositoryAsString, service.Name)
+					continue
+				}
+			}
+			log.Debug().Msgf("===> Repository '%s' already attached to service: '%s' ... skipping", repositoryAsString, service.Name)
 			continue
 		}
-		repository.Service = opslevel.IdentifierInput{Id: service.Id}
-		_, err := client.CreateServiceRepository(repository)
+		repositoryCreate.Service = opslevel.IdentifierInput{Id: service.Id}
+		_, err := client.CreateServiceRepository(repositoryCreate)
 		if err != nil {
-			log.Error().Msgf("===> Failed assigning repository '{Alias: %s}' to service: '%s' \n\tREASON: %v", repository.Repository.Alias, service.Name, err.Error())
+			log.Error().Msgf("===> Failed assigning repository '$s' to service: '%s' \n\tREASON: %v", repositoryAsString, service.Name, err.Error())
 		} else {
-			log.Info().Msgf("===> Attached repository '{Alias: %s}' to service: '%s'", repository.Repository.Alias, service.Name)
+			log.Info().Msgf("===> Attached repository '%s' to service: '%s'", repositoryAsString, service.Name)
 		}
 	}
 }
