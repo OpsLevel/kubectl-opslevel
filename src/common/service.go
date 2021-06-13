@@ -105,6 +105,9 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 			break
 		case StringArray:
 			for _, item := range output.StringArray {
+				if item == "" {
+					continue
+				}
 				service.Aliases = append(service.Aliases, item)
 			}
 			break
