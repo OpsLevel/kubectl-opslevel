@@ -38,7 +38,7 @@ kubectl opslevel service preview
 
 <blockquote>This tool is still in beta.  It's sufficently stable for production use and has successfully imported & reconciled multiple OpsLevel accounts</blockquote>
 
-Here is the current sample configuration in full
+#### Current Sample Configuration
 
 ```yaml
 version: "1.0.0"
