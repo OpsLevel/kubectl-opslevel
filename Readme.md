@@ -139,4 +139,4 @@ The log format default is more human readable but if you want structured logs yo
 
 ## Documentation
 
-You can read more about the tool and its configuration format in our [documenation](https://www.opslevel.com/docs/integrations/kubernetes/)
+You can read more about the tool and its configuration format in our [documentation](https://www.opslevel.com/docs/integrations/kubernetes/)
