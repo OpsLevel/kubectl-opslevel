@@ -2,7 +2,6 @@ package k8sutils
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -17,6 +16,8 @@ import (
 	// networkingv1 "k8s.io/api/networking/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 
 	// This is here because of https://github.com/OpsLevel/kubectl-opslevel/issues/24
@@ -38,7 +39,8 @@ type KubernetesSelector struct {
 }
 
 type ClientWrapper struct {
-	client kubernetes.Interface
+	client  kubernetes.Interface
+	dynamic dynamic.Interface
 }
 
 func getKubernetesConfig() (*rest.Config, error) {
@@ -57,168 +59,18 @@ func CreateKubernetesClient() ClientWrapper {
 		log.Fatal().Msgf("Unable to load kubernetes config: %v", err)
 	}
 
-	client, err2 := kubernetes.NewForConfig(config)
-	if err2 != nil {
-		log.Fatal().Msgf("Unable to create a kubernetes client: %v", err2)
+	client1, client1Err := kubernetes.NewForConfig(config)
+	if client1Err != nil {
+		log.Fatal().Msgf("Unable to create a kubernetes client: %v", client1Err)
+	}
+
+	client2, client2Err2 := dynamic.NewForConfig(config)
+	if client2Err2 != nil {
+		log.Fatal().Msgf("Unable to create a dynamic kubernetes client: %v", client2Err2)
 	}
 	// Supress k8s client-go
 	klog.SetLogger(logr.Discard())
-	return ClientWrapper{client: client}
-}
-
-// TODO: this feels horriable but i'm not sure of a better way to handle this
-
-func (c *ClientWrapper) ForEachDeployment(namespace string, options metav1.ListOptions, handler func(resource []byte) error) error {
-	resources, queryErr := c.client.AppsV1().Deployments(namespace).List(context.TODO(), options)
-	if queryErr != nil {
-		return queryErr
-	}
-	for _, resource := range resources.Items {
-		bytes, bytesErr := json.Marshal(resource)
-		if bytesErr != nil {
-			return bytesErr
-		}
-		if err := handler(bytes); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *ClientWrapper) ForEachStatefulSet(namespace string, options metav1.ListOptions, handler func(resource []byte) error) error {
-	resources, queryErr := c.client.AppsV1().StatefulSets(namespace).List(context.TODO(), options)
-	if queryErr != nil {
-		return queryErr
-	}
-	for _, resource := range resources.Items {
-		bytes, bytesErr := json.Marshal(resource)
-		if bytesErr != nil {
-			return bytesErr
-		}
-		if err := handler(bytes); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *ClientWrapper) ForEachDaemonSet(namespace string, options metav1.ListOptions, handler func(resource []byte) error) error {
-	resources, queryErr := c.client.AppsV1().DaemonSets(namespace).List(context.TODO(), options)
-	if queryErr != nil {
-		return queryErr
-	}
-	for _, resource := range resources.Items {
-		bytes, bytesErr := json.Marshal(resource)
-		if bytesErr != nil {
-			return bytesErr
-		}
-		if err := handler(bytes); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *ClientWrapper) ForEachJob(namespace string, options metav1.ListOptions, handler func(resource []byte) error) error {
-	resources, queryErr := c.client.BatchV1().Jobs(namespace).List(context.TODO(), options)
-	if queryErr != nil {
-		return queryErr
-	}
-	for _, resource := range resources.Items {
-		bytes, bytesErr := json.Marshal(resource)
-		if bytesErr != nil {
-			return bytesErr
-		}
-		if err := handler(bytes); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *ClientWrapper) ForEachCronJob(namespace string, options metav1.ListOptions, handler func(resource []byte) error) error {
-	resources, queryErr := c.client.BatchV1beta1().CronJobs(namespace).List(context.TODO(), options)
-	if queryErr != nil {
-		return queryErr
-	}
-	for _, resource := range resources.Items {
-		bytes, bytesErr := json.Marshal(resource)
-		if bytesErr != nil {
-			return bytesErr
-		}
-		if err := handler(bytes); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *ClientWrapper) ForEachService(namespace string, options metav1.ListOptions, handler func(resource []byte) error) error {
-	resources, queryErr := c.client.CoreV1().Services(namespace).List(context.TODO(), options)
-	if queryErr != nil {
-		return queryErr
-	}
-	for _, resource := range resources.Items {
-		bytes, bytesErr := json.Marshal(resource)
-		if bytesErr != nil {
-			return bytesErr
-		}
-		if err := handler(bytes); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *ClientWrapper) ForEachIngress(namespace string, options metav1.ListOptions, handler func(resource []byte) error) error {
-	resources, queryErr := c.client.NetworkingV1().Ingresses(namespace).List(context.TODO(), options)
-	if queryErr != nil {
-		return queryErr
-	}
-	for _, resource := range resources.Items {
-		bytes, bytesErr := json.Marshal(resource)
-		if bytesErr != nil {
-			return bytesErr
-		}
-		if err := handler(bytes); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *ClientWrapper) ForEachConfigMap(namespace string, options metav1.ListOptions, handler func(resource []byte) error) error {
-	resources, queryErr := c.client.CoreV1().ConfigMaps(namespace).List(context.TODO(), options)
-	if queryErr != nil {
-		return queryErr
-	}
-	for _, resource := range resources.Items {
-		bytes, bytesErr := json.Marshal(resource)
-		if bytesErr != nil {
-			return bytesErr
-		}
-		if err := handler(bytes); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *ClientWrapper) ForEachSecret(namespace string, options metav1.ListOptions, handler func(resource []byte) error) error {
-	resources, queryErr := c.client.CoreV1().Secrets(namespace).List(context.TODO(), options)
-	if queryErr != nil {
-		return queryErr
-	}
-	for _, resource := range resources.Items {
-		bytes, bytesErr := json.Marshal(resource)
-		if bytesErr != nil {
-			return bytesErr
-		}
-		if err := handler(bytes); err != nil {
-			return err
-		}
-	}
-	return nil
+	return ClientWrapper{client: client1, dynamic: client2}
 }
 
 func (c *ClientWrapper) GetAllNamespaces() ([]string, error) {
@@ -234,35 +86,26 @@ func (c *ClientWrapper) GetAllNamespaces() ([]string, error) {
 }
 
 func (c *ClientWrapper) Query(kind string, namespace string, options metav1.ListOptions, handler func(resource []byte) error) error {
-	switch strings.ToLower(kind) {
-	case "deployment":
-		c.ForEachDeployment(namespace, options, handler)
-		break
-	case "statefulset":
-		c.ForEachStatefulSet(namespace, options, handler)
-		break
-	case "daemonset":
-		c.ForEachDaemonSet(namespace, options, handler)
-		break
-	case "job":
-		c.ForEachJob(namespace, options, handler)
-		break
-	case "cronjob":
-		c.ForEachCronJob(namespace, options, handler)
-		break
-	case "service":
-		c.ForEachService(namespace, options, handler)
-		break
-	case "ingress":
-		c.ForEachIngress(namespace, options, handler)
-		break
-	case "configmap":
-		c.ForEachConfigMap(namespace, options, handler)
-		break
-	case "secret":
-		c.ForEachSecret(namespace, options, handler)
-		break
+	// TODO: Should we help if kind == "deployment" ?
+	gvr, _ := schema.ParseResourceArg(kind)
+	if gvr == nil {
+		return fmt.Errorf("Unable to find kubernetes resource '%s'  Is this a validate resource kind in your cluster `kubectl api-resources`?", kind)
 	}
+
+	resources, queryErr := c.dynamic.Resource(*gvr).Namespace(namespace).List(context.TODO(), options)
+	if queryErr != nil {
+		return queryErr
+	}
+	for _, resource := range resources.Items {
+		bytes, bytesErr := resource.MarshalJSON()
+		if bytesErr != nil {
+			return bytesErr
+		}
+		if err := handler(bytes); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
