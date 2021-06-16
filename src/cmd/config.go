@@ -17,7 +17,7 @@ version: "1.0.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
-        kind: deployment # supported options ["deployment", "statefulset", "daemonset", "service", "ingress", "job", "cronjob", "configmap", "secret"]
+        kind: deployments.v1.apps
         namespace: 
           include: # if set only these namespaces will be inspected
             - ""
@@ -44,7 +44,7 @@ version: "1.0.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
-        kind: deployment # supported options ["deployment", "statefulset", "daemonset", "service", "ingress", "job", "cronjob", "configmap", "secret"]
+        kind: deployments.v1.apps
         namespace: 
           include: # if set only these namespaces will be inspected
             - ""
