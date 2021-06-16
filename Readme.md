@@ -44,14 +44,7 @@ Table of Contents
    * [Prerequisite](#prerequisite)
    * [Installation](#installation)
       * [Validate Install](#validate-install)
-   * [The Configuration File Explained](#the-configuration-file-explained)
-      * [Service Aliases](#service-aliases)
-      * [Lifecycle &amp; Tier &amp; Owner](#lifecycle--tier--owner)
-      * [Tags](#tags)
-      * [Tools](#tools)
-   * [Preview](#preview)
-   * [Import](#import)
-   * [Deploy](#deploy)
+   * [Documentation](#documentation)
 
 ## Prerequisite
 
