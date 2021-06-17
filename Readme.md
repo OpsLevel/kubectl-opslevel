@@ -23,7 +23,7 @@ Follow the [installation](#installation) instructions before running the below c
 
 ```bash
 # Generate a config file
-kubectl opslevel config sample > opslevel-k8s.yaml
+kubectl opslevel config sample > ./opslevel-k8s.yaml
 
 # Like Terraform, generate a preview of data from your Kubernetes cluster
 # NOTE: this step does not validate any of the data with OpsLevel
@@ -33,7 +33,7 @@ kubectl opslevel service preview
  OL_APITOKEN=XXXX kubectl opslevel service import
 ```
 
-![](demo.gif)
+[![asciicast](https://asciinema.org/a/bv6WTcqkGtmC5wXN4VXYr035y.svg)](https://asciinema.org/a/bv6WTcqkGtmC5wXN4VXYr035y)
 
 
 <blockquote>This tool is still in beta.  It's sufficently stable for production use and has successfully imported & reconciled multiple OpsLevel accounts</blockquote>
