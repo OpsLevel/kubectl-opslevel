@@ -17,7 +17,7 @@ version: "1.0.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
-        kind: deployments.v1.apps
+        kind: deployments.v1.apps # uses the values found in kubectl api-resources
         namespace: 
           include: # if set only these namespaces will be inspected
             - ""
@@ -44,7 +44,7 @@ version: "1.0.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
-        kind: deployments.v1.apps
+        kind: deployments.v1.apps # uses the values found in kubectl api-resources
         namespace: 
           include: # if set only these namespaces will be inspected
             - ""
