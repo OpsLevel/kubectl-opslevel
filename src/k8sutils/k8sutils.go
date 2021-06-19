@@ -8,13 +8,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/rs/zerolog/log"
 
-	// commented out because we are just dealing with []byte but we might need them in the future
-	// appsv1 "k8s.io/api/apps/v1"
-	// batchv1 "k8s.io/api/batch/v1"
-	// batchv1beta1 "k8s.io/api/batch/v1beta1"
-	// v1 "k8s.io/api/core/v1"
-	// networkingv1 "k8s.io/api/networking/v1"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
@@ -86,15 +79,27 @@ func (c *ClientWrapper) GetAllNamespaces() ([]string, error) {
 }
 
 func (c *ClientWrapper) Query(kind string, namespace string, options metav1.ListOptions, handler func(resource []byte) error) error {
-	// TODO: Should we help if kind == "deployment" ?
-	gvr, _ := schema.ParseResourceArg(kind)
-	if gvr == nil {
-		return fmt.Errorf("Unable to find kubernetes resource '%s'  Is this a validate resource kind in your cluster `kubectl api-resources`?", kind)
+	// This is still not perfect we need:
+	//   to better isolate the input (seperation of group, version and kind)
+	//   to better map to output of api-resources IE apps/v1 - Deployment
+	//   to validate if the the resource is namespaced
+	//   remove ambigious logic for handling "core" group
+	//   support "kind" rather then pluralized resource names
+	//   More Info found here: https://ymmt2005.hatenablog.com/entry/2020/04/14/An_example_of_using_dynamic_client_of_k8s.io/client-go
+	gvr, gr := schema.ParseResourceArg(kind)
+	if gvr == nil { // Handles parsing something like configmaps.v1 - core resources
+		gvr = &schema.GroupVersionResource{
+			Version:  gr.Group,
+			Resource: gr.Resource,
+		}
+	}
+	if gvr.Group == "core" {
+		gvr.Group = ""
 	}
 
 	resources, queryErr := c.dynamic.Resource(*gvr).Namespace(namespace).List(context.TODO(), options)
 	if queryErr != nil {
-		return queryErr
+		return fmt.Errorf("%s '%s'\n\tNOTE: please use specification `<resource>.<version>.<group>` found in `kubectl api-resources`\n\tIE:  'deployments.v1.apps'", queryErr, kind)
 	}
 	for _, resource := range resources.Items {
 		bytes, bytesErr := resource.MarshalJSON()
