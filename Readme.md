@@ -38,6 +38,53 @@ kubectl opslevel service preview
 
 <blockquote>This tool is still in beta.  It's sufficently stable for production use and has successfully imported & reconciled multiple OpsLevel accounts</blockquote>
 
+#### Current Sample Configuration
+
+```yaml
+version: "1.0.0"
+service:
+  import:
+    - selector: # This limits what data we look at in Kubernetes
+        kind: deployment # supported options ["deployment", "statefulset", "daemonset", "service", "ingress", "job", "cronjob", "configmap", "secret"]
+        namespace: 
+          include: # if set only these namespaces will be inspected
+            - ""
+          exclude: # if set these namespaces will be excluded from inspection
+            - "kube-system"
+            - "local-path-storage"
+        labels: {}
+      opslevel: # This is how you map your kubernetes data to opslevel service
+        name: .metadata.name
+        description: .metadata.annotations."opslevel.com/description"
+        owner: .metadata.annotations."opslevel.com/owner"
+        lifecycle: .metadata.annotations."opslevel.com/lifecycle"
+        tier: .metadata.annotations."opslevel.com/tier"
+        product: .metadata.annotations."opslevel.com/product"
+        language: .metadata.annotations."opslevel.com/language"
+        framework: .metadata.annotations."opslevel.com/framework"
+        aliases: # This are how we identify the services again during reconciliation - please make sure they are very unique
+          - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
+        tags:
+          assign: # tag with the same key name but with a different value will be updated on the service
+            - '{"imported": "kubectl-opslevel"}'
+            # find annoations with format: opslevel.com/tags.<key name>: <value>
+            - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tags"))) | map({(.key | split(".")[2]): .value})'
+            - .metadata.labels
+          create: # tag with the same key name but with a different value with be added to the service
+            - '{"environment": .spec.template.metadata.labels.environment}'
+        tools:
+          - '{"category": "other", "displayName": "my-cool-tool", "url": .metadata.annotations."example.com/my-cool-tool"} | if .url then . else empty end'
+          # find annotations with format: opslevel.com/tools.<category>.<displayname>: <url> 
+          - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tools"))) | map({"category": .key | split(".")[2], "displayName": .key | split(".")[3], "url": .value})'
+        repositories: # attach repositories to the service using the opslevel repo alias - IE github.com:hashicorp/vault
+          - '{"name": "My Cool Repo", "directory": "/", "repo": .metadata.annotations.repo} | if .repo then . else empty end'
+          # if just the alias is returned as a single string we'll build the name for you and set the directory to "/"
+          - .metadata.annotations.repo
+          # find annotations with format: opslevel.com/repo.<displayname>.<repo.subpath.dots.turned.to.forwardslash>: <opslevel repo alias> 
+          - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/repos"))) | map({"name": .key | split(".")[2], "directory": .key | split(".")[3:] | join("/"), "repo": .value})'
+
+```
+
 Table of Contents
 =================
 
