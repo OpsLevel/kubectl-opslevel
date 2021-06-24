@@ -32,8 +32,9 @@ type NamespaceSelector struct {
 type KubernetesSelector struct {
 	ApiVersion string
 	Kind       string
-	Namespace  NamespaceSelector
-	Labels     map[string]string
+	Namespace  NamespaceSelector //Deprecated 1.0.0 -> 1.1.0
+	Labels     map[string]string //Deprecated 1.0.0 -> 1.1.0
+	Excludes   map[string]string
 }
 
 type ClientWrapper struct {
@@ -154,11 +155,54 @@ var (
 
 To read more about this change please see - https://github.com/OpsLevel/kubectl-opslevel/issues/51
 `
+	UPGRADE_NAMESPACE_FILTER_ERROR = `Please upgrade your namespace filters to use our new exclude format
+Here is an example of what we think you should upgrade your selector to - PLEASE VALIDATE THE EXCLUSION LOGIC
+    - selector:
+        apiVersion: "%s"
+        kind: "%s"
+        excludes: # filters out resources if any expression returns truthy
+%s
+
+To read more about this change please see - https://github.com/OpsLevel/kubectl-opslevel/issues/50
+`
+	UPGRADE_LABEL_FILTER_ERROR = `Please upgrade your label filters to use our new exclude format 
+Here is an example of what we think you should upgradeyour selector to - PLEASE VALIDATE THE EXCLUSION LOGIC
+    - selector:
+        apiVersion: %s
+        kind: %s
+        excludes: # filters out resources if any expression returns truthy
+%s
+
+To read more about this change please see - https://github.com/OpsLevel/kubectl-opslevel/issues/50
+`
 )
 
 func (selector *KubernetesSelector) Validate() error {
 	if selector.ApiVersion == "" {
 		return fmt.Errorf(MISSING_API_VERSION_ERROR)
+	}
+	if len(selector.Namespace.Include) > 0 && len(selector.Namespace.Exclude) > 0 {
+		var upgrades []string
+		for _, item := range selector.Namespace.Include {
+			if item == "" {
+				continue
+			}
+			upgrades = append(upgrades, fmt.Sprintf("          - .metadata.namespace != %s\n", item))
+		}
+		for _, item := range selector.Namespace.Exclude {
+			if item == "" {
+				continue
+			}
+			upgrades = append(upgrades, fmt.Sprintf("          - .metadata.namespace == %s\n", item))
+		}
+		return fmt.Errorf(UPGRADE_NAMESPACE_FILTER_ERROR, selector.ApiVersion, selector.Kind, strings.Join(upgrades, ""))
+	}
+	if len(selector.Labels) > 0 {
+		var upgrades []string
+		for key, value := range selector.Labels {
+			upgrades = append(upgrades, fmt.Sprintf("          - .metadata.labels.%s != %s\n", key, value))
+		}
+		return fmt.Errorf(UPGRADE_LABEL_FILTER_ERROR, selector.ApiVersion, selector.Kind, strings.Join(upgrades, ","))
 	}
 	return nil
 }
