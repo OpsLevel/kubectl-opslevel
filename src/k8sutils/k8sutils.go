@@ -147,6 +147,22 @@ func (c *ClientWrapper) GetMapping(selector KubernetesSelector) (*meta.RESTMappi
 	return mapping, nil
 }
 
+var (
+	MISSING_API_VERSION_ERROR = `Please ensure you specify an 'apiVersion' field in your selector! IE:
+    - selector:
+        apiVersion: apps/v1
+
+To read more about this change please see - https://github.com/OpsLevel/kubectl-opslevel/issues/51
+`
+)
+
+func (selector *KubernetesSelector) Validate() error {
+	if selector.ApiVersion == "" {
+		return fmt.Errorf(MISSING_API_VERSION_ERROR)
+	}
+	return nil
+}
+
 func (selector *KubernetesSelector) GetListOptions() metav1.ListOptions {
 	return metav1.ListOptions{
 		LabelSelector: selector.LabelSelector(),

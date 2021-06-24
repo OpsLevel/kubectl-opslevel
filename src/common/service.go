@@ -306,6 +306,9 @@ func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
 
 	for _, importConfig := range c.Service.Import {
 		selector := importConfig.SelectorConfig
+		if selectorErr := selector.Validate(); selectorErr != nil {
+			return services, selectorErr
+		}
 		parser = NewParser(importConfig.OpslevelConfig)
 		processFoundResource := func(resource []byte) error {
 			services = append(services, *parser.Parse(resource))
