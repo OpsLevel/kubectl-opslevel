@@ -8,10 +8,14 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/rs/zerolog/log"
 
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/discovery/cached/memory"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/restmapper"
 
 	// This is here because of https://github.com/OpsLevel/kubectl-opslevel/issues/24
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -26,14 +30,16 @@ type NamespaceSelector struct {
 }
 
 type KubernetesSelector struct {
-	Kind      string
-	Namespace NamespaceSelector
-	Labels    map[string]string
+	ApiVersion string
+	Kind       string
+	Namespace  NamespaceSelector
+	Labels     map[string]string
 }
 
 type ClientWrapper struct {
 	client  kubernetes.Interface
 	dynamic dynamic.Interface
+	mapper  restmapper.DeferredDiscoveryRESTMapper
 }
 
 func getKubernetesConfig() (*rest.Config, error) {
@@ -61,9 +67,16 @@ func CreateKubernetesClient() ClientWrapper {
 	if client2Err2 != nil {
 		log.Fatal().Msgf("Unable to create a dynamic kubernetes client: %v", client2Err2)
 	}
+
+	dc, dcErr := discovery.NewDiscoveryClientForConfig(config)
+	if dcErr != nil {
+		log.Fatal().Msgf("Unable to create a discovery kubernetes client: %v", dcErr)
+	}
+	mapper := restmapper.NewDeferredDiscoveryRESTMapper(memory.NewMemCacheClient(dc))
+
 	// Supress k8s client-go
 	klog.SetLogger(logr.Discard())
-	return ClientWrapper{client: client1, dynamic: client2}
+	return ClientWrapper{client: client1, dynamic: client2, mapper: *mapper}
 }
 
 func (c *ClientWrapper) GetAllNamespaces() ([]string, error) {
@@ -78,28 +91,27 @@ func (c *ClientWrapper) GetAllNamespaces() ([]string, error) {
 	return output, nil
 }
 
-func (c *ClientWrapper) Query(kind string, namespace string, options metav1.ListOptions, handler func(resource []byte) error) error {
-	// This is still not perfect we need:
-	//   to better isolate the input (seperation of group, version and kind)
-	//   to better map to output of api-resources IE apps/v1 - Deployment
-	//   to validate if the the resource is namespaced
-	//   remove ambigious logic for handling "core" group
-	//   support "kind" rather then pluralized resource names
-	//   More Info found here: https://ymmt2005.hatenablog.com/entry/2020/04/14/An_example_of_using_dynamic_client_of_k8s.io/client-go
-	gvr, gr := schema.ParseResourceArg(kind)
-	if gvr == nil { // Handles parsing something like configmaps.v1 - core resources
-		gvr = &schema.GroupVersionResource{
-			Version:  gr.Group,
-			Resource: gr.Resource,
+func (c *ClientWrapper) Query(selector KubernetesSelector, namespaces []string, handler func(resource []byte) error) error {
+	mapping, mappingErr := c.GetMapping(selector)
+	if mappingErr != nil {
+		return mappingErr
+	}
+	options := selector.GetListOptions()
+	dr := c.dynamic.Resource(mapping.Resource)
+	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
+		for _, namespace := range selector.FilterNamespaces(namespaces) {
+			List(dr.Namespace(namespace), options, handler)
 		}
+	} else {
+		List(dr, options, handler)
 	}
-	if gvr.Group == "core" {
-		gvr.Group = ""
-	}
+	return nil
+}
 
-	resources, queryErr := c.dynamic.Resource(*gvr).Namespace(namespace).List(context.TODO(), options)
+func List(client dynamic.ResourceInterface, options metav1.ListOptions, handler func(resource []byte) error) error {
+	resources, queryErr := client.List(context.TODO(), options)
 	if queryErr != nil {
-		return fmt.Errorf("%s '%s'\n\tNOTE: please use specification `<resource>.<version>.<group>` found in `kubectl api-resources`\n\tIE:  'deployments.v1.apps'", queryErr, kind)
+		return fmt.Errorf("%s `%s`", queryErr, "")
 	}
 	for _, resource := range resources.Items {
 		bytes, bytesErr := resource.MarshalJSON()
@@ -112,6 +124,21 @@ func (c *ClientWrapper) Query(kind string, namespace string, options metav1.List
 	}
 
 	return nil
+}
+
+func (c *ClientWrapper) GetMapping(selector KubernetesSelector) (*meta.RESTMapping, error) {
+	gv, gvErr := schema.ParseGroupVersion(selector.ApiVersion)
+	if gvErr != nil {
+		return nil, gvErr
+	}
+	gvk := gv.WithKind(selector.Kind)
+
+	mapping, mappingErr := c.mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+	if mappingErr != nil {
+		return nil, mappingErr
+	}
+
+	return mapping, nil
 }
 
 func (selector *KubernetesSelector) GetListOptions() metav1.ListOptions {
