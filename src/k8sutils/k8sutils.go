@@ -94,16 +94,22 @@ func (c *ClientWrapper) GetAllNamespaces() ([]string, error) {
 func (c *ClientWrapper) Query(selector KubernetesSelector, namespaces []string, handler func(resource []byte) error) error {
 	mapping, mappingErr := c.GetMapping(selector)
 	if mappingErr != nil {
-		return mappingErr
+		return fmt.Errorf("%s \n\t Please ensure you are using a valid `ApiVersion` and `Kind` found in `kubectl api-resources --verbs=\"get,list\"`", mappingErr)
 	}
 	options := selector.GetListOptions()
 	dr := c.dynamic.Resource(mapping.Resource)
 	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
 		for _, namespace := range selector.FilterNamespaces(namespaces) {
-			List(dr.Namespace(namespace), options, handler)
+			listErr := List(dr.Namespace(namespace), options, handler)
+			if listErr != nil {
+				return listErr
+			}
 		}
 	} else {
-		List(dr, options, handler)
+		listErr := List(dr, options, handler)
+		if listErr != nil {
+			return listErr
+		}
 	}
 	return nil
 }

@@ -311,7 +311,10 @@ func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
 			services = append(services, *parser.Parse(resource))
 			return nil
 		}
-		k8sClient.Query(selector, namespaces, processFoundResource)
+		queryErr := k8sClient.Query(selector, namespaces, processFoundResource)
+		if queryErr != nil {
+			return services, queryErr
+		}
 	}
 	return services, nil
 }
