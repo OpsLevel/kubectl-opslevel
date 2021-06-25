@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	ConfigCurrentVersion = "1.0.0"
+	ConfigCurrentVersion = "1.1.0"
 )
 
 type TagRegistrationConfig struct {

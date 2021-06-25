@@ -13,11 +13,12 @@ import (
 
 // Make sure we only use spaces inside of these samples
 var configSimple = []byte(`#Simple Opslevel CLI Config
-version: "1.0.0"
+version: "1.1.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
-        kind: deployment # supported options ["deployment", "statefulset", "daemonset", "service", "ingress", "job", "cronjob", "configmap", "secret"]
+        apiVersion: apps/v1 # only supports resources found in 'kubectl api-resources --verbs="get,list"'
+        kind: Deployment
         namespace: 
           include: # if set only these namespaces will be inspected
             - ""
@@ -40,11 +41,12 @@ service:
 `)
 
 var configSample = []byte(`#Sample Opslevel CLI Config
-version: "1.0.0"
+version: "1.1.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
-        kind: deployment # supported options ["deployment", "statefulset", "daemonset", "service", "ingress", "job", "cronjob", "configmap", "secret"]
+        apiVersion: apps/v1 # only supports resources found in 'kubectl api-resources --verbs="get,list"'
+        kind: Deployment
         namespace: 
           include: # if set only these namespaces will be inspected
             - ""
