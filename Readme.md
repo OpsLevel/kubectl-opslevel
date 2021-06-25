@@ -125,8 +125,8 @@ The following downloads the container and creates a shim at `/usr/local/bin` so 
 
 ```
 TOOL_VERSION=$(curl -s https://api.github.com/repos/opslevel/kubectl-opslevel/releases/latest | grep tag_name | cut -d '"' -f 4)
-docker pull public.ecr.aws/e1n4f2i6/kubectl-opslevel:${TOOL_VERSION}
-docker tag public.ecr.aws/e1n4f2i6/kubectl-opslevel:${TOOL_VERSION} kubectl-opslevel:latest 
+docker pull public.ecr.aws/opslevel/kubectl-opslevel:${TOOL_VERSION}
+docker tag public.ecr.aws/opslevel/kubectl-opslevel:${TOOL_VERSION} kubectl-opslevel:latest 
 cat << EOF > /usr/local/bin/kubectl-opslevel
 #! /bin/sh
 docker run -it --rm -v \$(pwd):/app -v ${HOME}/.kube:/.kube -e KUBECONFIG=/.kube/config --network=host kubectl-opslevel:latest \$@
@@ -171,7 +171,7 @@ kubectl opslevel version
 Example Output:
 
 ```sh
-v0.1.1-0-gc52681db6b33
+v0.4.0.0-g0d8107bdd043
 ```
 
 The log format default is more human readable but if you want structured logs you can set the flag `--logFormat=JSON`
