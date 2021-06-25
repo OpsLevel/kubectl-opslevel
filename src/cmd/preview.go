@@ -27,11 +27,10 @@ func runPreview(cmd *cobra.Command, args []string) {
 	config, err := config.New()
 	cobra.CheckErr(err)
 
-	fmt.Println("The following data was found in your Kubernetes cluster ...")
-
 	services, err2 := common.QueryForServices(config)
 	cobra.CheckErr(err2)
 
+	fmt.Print("The following data was found in your Kubernetes cluster ...\n\n")
 	if len(services) > 0 {
 		prettyJSON, err := json.MarshalIndent(services, "", "    ")
 		if err != nil {

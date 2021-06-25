@@ -34,7 +34,7 @@ type KubernetesSelector struct {
 	Kind       string
 	Namespace  NamespaceSelector //Deprecated 1.0.0 -> 1.1.0
 	Labels     map[string]string //Deprecated 1.0.0 -> 1.1.0
-	Excludes   map[string]string
+	Excludes   []string
 }
 
 type ClientWrapper struct {
@@ -100,7 +100,7 @@ func (c *ClientWrapper) Query(selector KubernetesSelector, namespaces []string, 
 	options := selector.GetListOptions()
 	dr := c.dynamic.Resource(mapping.Resource)
 	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-		for _, namespace := range selector.FilterNamespaces(namespaces) {
+		for _, namespace := range namespaces {
 			listErr := List(dr.Namespace(namespace), options, handler)
 			if listErr != nil {
 				return listErr
@@ -152,6 +152,7 @@ var (
 	MISSING_API_VERSION_ERROR = `Please ensure you specify an 'apiVersion' field in your selector! IE:
     - selector:
         apiVersion: apps/v1
+        kind: Deployment
 
 To read more about this change please see - https://github.com/OpsLevel/kubectl-opslevel/issues/51
 `
@@ -187,20 +188,20 @@ func (selector *KubernetesSelector) Validate() error {
 			if item == "" {
 				continue
 			}
-			upgrades = append(upgrades, fmt.Sprintf("          - .metadata.namespace != %s\n", item))
+			upgrades = append(upgrades, fmt.Sprintf("          - .metadata.namespace != \"%s\"\n", item))
 		}
 		for _, item := range selector.Namespace.Exclude {
 			if item == "" {
 				continue
 			}
-			upgrades = append(upgrades, fmt.Sprintf("          - .metadata.namespace == %s\n", item))
+			upgrades = append(upgrades, fmt.Sprintf("          - .metadata.namespace == \"%s\"\n", item))
 		}
 		return fmt.Errorf(UPGRADE_NAMESPACE_FILTER_ERROR, selector.ApiVersion, selector.Kind, strings.Join(upgrades, ""))
 	}
 	if len(selector.Labels) > 0 {
 		var upgrades []string
 		for key, value := range selector.Labels {
-			upgrades = append(upgrades, fmt.Sprintf("          - .metadata.labels.%s != %s\n", key, value))
+			upgrades = append(upgrades, fmt.Sprintf("          - .metadata.labels.%s != \"%s\"\n", key, value))
 		}
 		return fmt.Errorf(UPGRADE_LABEL_FILTER_ERROR, selector.ApiVersion, selector.Kind, strings.Join(upgrades, ","))
 	}
@@ -219,45 +220,4 @@ func (selector *KubernetesSelector) LabelSelector() string {
 		labels = append(labels, fmt.Sprintf("%s=%s", key, value))
 	}
 	return strings.Join(labels, ",")
-}
-
-// TODO: write a test for this to ensure this continues to work properly
-func (selector *KubernetesSelector) FilterNamespaces(namespaces []string) []string {
-	var output []string
-	include := purge(selector.Namespace.Include)
-	exclude := purge(selector.Namespace.Exclude)
-
-	useInclude := len(include) > 0
-	useExclude := len(exclude) > 0
-
-	for _, namespace := range namespaces {
-		if useInclude && !contains(include, namespace) {
-			continue
-		}
-		if useExclude && contains(exclude, namespace) {
-			continue
-		}
-		output = append(output, namespace)
-	}
-	return output
-}
-
-// removes empty strings from the []string
-func purge(s []string) []string {
-	var r []string
-	for _, str := range s {
-		if str != "" {
-			r = append(r, str)
-		}
-	}
-	return r
-}
-
-func contains(s []string, str string) bool {
-	for _, v := range s {
-		if v == str {
-			return true
-		}
-	}
-	return false
 }
