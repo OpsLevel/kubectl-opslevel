@@ -41,18 +41,15 @@ kubectl opslevel service preview
 #### Current Sample Configuration
 
 ```yaml
-version: "1.0.0"
+version: "1.1.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
-        kind: deployment # supported options ["deployment", "statefulset", "daemonset", "service", "ingress", "job", "cronjob", "configmap", "secret"]
-        namespace: 
-          include: # if set only these namespaces will be inspected
-            - ""
-          exclude: # if set these namespaces will be excluded from inspection
-            - "kube-system"
-            - "local-path-storage"
-        labels: {}
+        apiVersion: apps/v1 # only supports resources found in 'kubectl api-resources --verbs="get,list"'
+        kind: Deployment
+        excludes: # filters out resources if any expression returns truthy
+          - .metadata.namespace == "kube-system"
+          - .metadata.annotations."opslevel.com/ignore"
       opslevel: # This is how you map your kubernetes data to opslevel service
         name: .metadata.name
         description: .metadata.annotations."opslevel.com/description"
@@ -82,7 +79,6 @@ service:
           - .metadata.annotations.repo
           # find annotations with format: opslevel.com/repo.<displayname>.<repo.subpath.dots.turned.to.forwardslash>: <opslevel repo alias> 
           - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/repos"))) | map({"name": .key | split(".")[2], "directory": .key | split(".")[3:] | join("/"), "repo": .value})'
-
 ```
 
 Table of Contents
