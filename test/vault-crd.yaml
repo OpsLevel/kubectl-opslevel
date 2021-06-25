@@ -1,0 +1,94 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: vault.koudingspawn.de
+spec:
+  group: koudingspawn.de
+  scope: Namespaced
+  names:
+    plural: vault
+    singular: vault
+    kind: Vault
+    shortNames:
+      - vt
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                path:
+                  type: string
+                  pattern: '^.*?\/.*?(\/.*?)?$'
+                type:
+                  type: string
+                  enum:
+                    - PKI
+                    - PKIJKS
+                    - CERT
+                    - CERTJKS
+                    - DOCKERCFG
+                    - KEYVALUE
+                    - KEYVALUEV2
+                    - PROPERTIES
+                pkiConfiguration:
+                  type: object
+                  properties:
+                    commonName:
+                      type: string
+                    altNames:
+                      type: string
+                    ipSans:
+                      type: string
+                    ttl:
+                      type: string
+                      pattern: '^[0-9]{1,}[hm]$'
+                jksConfiguration:
+                  type: object
+                  properties:
+                    password:
+                      type: string
+                    alias:
+                      type: string
+                    keyName:
+                      type: string
+                    caAlias:
+                      type: string
+                versionConfiguration:
+                  type: object
+                  properties:
+                    version:
+                      type: integer
+                propertiesConfiguration:
+                  type: object
+                  properties:
+                    context:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                    files:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                dockerCfgConfiguration:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - KEYVALUE
+                        - KEYVALUEV2
+                    version:
+                      type: integer
+                changeAdjustmentCallback:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    name:
+                      type: string
+              required:
+                - type
