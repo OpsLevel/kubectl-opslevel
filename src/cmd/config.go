@@ -19,13 +19,9 @@ service:
     - selector: # This limits what data we look at in Kubernetes
         apiVersion: apps/v1 # only supports resources found in 'kubectl api-resources --verbs="get,list"'
         kind: Deployment
-        namespace: 
-          include: # if set only these namespaces will be inspected
-            - ""
-          exclude: # if set these namespaces will be excluded from inspection
-            - "kube-system"
-            - "local-path-storage"
-        labels: {}
+        excludes: # filters out resources if any expression returns truthy
+          - .metadata.namespace == "kube-system"
+          - .metadata.annotations."opslevel.com/ignore"
       opslevel: # This is how you map your kubernetes data to opslevel service
         name: .metadata.name
         owner: .metadata.namespace
@@ -47,13 +43,9 @@ service:
     - selector: # This limits what data we look at in Kubernetes
         apiVersion: apps/v1 # only supports resources found in 'kubectl api-resources --verbs="get,list"'
         kind: Deployment
-        namespace: 
-          include: # if set only these namespaces will be inspected
-            - ""
-          exclude: # if set these namespaces will be excluded from inspection
-            - "kube-system"
-            - "local-path-storage"
-        labels: {}
+        excludes: # filters out resources if any expression returns truthy
+          - .metadata.namespace == "kube-system"
+          - .metadata.annotations."opslevel.com/ignore"
       opslevel: # This is how you map your kubernetes data to opslevel service
         name: .metadata.name
         description: .metadata.annotations."opslevel.com/description"

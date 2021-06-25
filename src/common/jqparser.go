@@ -21,6 +21,8 @@ const (
 	StringArray
 	StringStringMap
 	StringStringMapArray
+	Bool
+	BoolArray
 	Unknown
 )
 
@@ -31,6 +33,8 @@ type JQResponse struct {
 	StringArray    []string
 	StringMap      map[string]string
 	StringMapArray []map[string]string
+	BoolObj        bool
+	BoolArray      []bool
 }
 
 func NewJQParser(filter string) JQParser {
@@ -70,6 +74,7 @@ func (parser *JQParser) Parse(data []byte) *JQResponse {
 }
 
 func (resp *JQResponse) Unmarshal() {
+	//fmt.Printf("Unmarshaling '%s'\n", string(resp.Bytes))
 	if string(resp.Bytes) == "" {
 		resp.Type = Empty
 		return
@@ -100,6 +105,18 @@ func (resp *JQResponse) Unmarshal() {
 	stringMapArrayErr := json.Unmarshal(resp.Bytes, &resp.StringMapArray)
 	if stringMapArrayErr == nil {
 		resp.Type = StringStringMapArray
+		return
+	}
+
+	boolObjErr := json.Unmarshal(resp.Bytes, &resp.BoolObj)
+	if boolObjErr == nil {
+		resp.Type = Bool
+		return
+	}
+
+	boolArrayErr := json.Unmarshal(resp.Bytes, &resp.BoolArray)
+	if boolArrayErr == nil {
+		resp.Type = BoolArray
 		return
 	}
 

@@ -11,6 +11,10 @@ import (
 	_ "github.com/rs/zerolog/log"
 )
 
+type SelectorParser struct {
+	Excludes []JQParser
+}
+
 type ServiceRegistrationParser struct {
 	Name         JQParser
 	Description  JQParser
@@ -43,7 +47,38 @@ type ServiceRegistration struct {
 	Repositories []opslevel.ServiceRepositoryCreateInput `json:",omitempty"` // This is a concrete class so fields are validated during `service preview`
 }
 
-func NewParser(c config.ServiceRegistrationConfig) *ServiceRegistrationParser {
+func NewSelectorParser(s k8sutils.KubernetesSelector) *SelectorParser {
+	parser := SelectorParser{}
+	for _, exclude := range s.Excludes {
+		parser.Excludes = append(parser.Excludes, NewJQParser(exclude))
+	}
+	return &parser
+}
+
+// returns false if any Exclude parser returns truthy
+func (parser *SelectorParser) Parse(data []byte) bool {
+	for _, exclude := range parser.Excludes {
+		output := exclude.Parse(data)
+		if output == nil {
+			continue
+		}
+		switch output.Type {
+		case Bool:
+			if output.BoolObj {
+				return false
+			}
+		case BoolArray:
+			for _, value := range output.BoolArray {
+				if value {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
+func NewServiceParser(c config.ServiceRegistrationConfig) *ServiceRegistrationParser {
 	parser := ServiceRegistrationParser{}
 	parser.Name = NewJQParser(c.Name)
 	parser.Description = NewJQParser(c.Description)
@@ -102,7 +137,6 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 		switch output.Type {
 		case String:
 			service.Aliases = append(service.Aliases, output.StringObj)
-			break
 		case StringArray:
 			for _, item := range output.StringArray {
 				if item == "" {
@@ -110,7 +144,6 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 				}
 				service.Aliases = append(service.Aliases, item)
 			}
-			break
 			// TODO: log warnings about a JQ filter that went unused because it returned an invalid type that we dont know how to handle
 		}
 	}
@@ -130,7 +163,6 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 				}
 				service.TagAssigns[k] = v
 			}
-			break
 		case StringStringMapArray:
 			for _, item := range output.StringMapArray {
 				for k, v := range item {
@@ -140,7 +172,6 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 					service.TagAssigns[k] = v
 				}
 			}
-			break
 			// TODO: log warnings about a JQ filter that went unused because it returned an invalid type that we dont know how to handle
 		}
 	}
@@ -159,7 +190,6 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 				}
 				service.TagCreates[k] = v
 			}
-			break
 		case StringStringMapArray:
 			for _, item := range output.StringMapArray {
 				for k, v := range item {
@@ -169,7 +199,6 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 					service.TagCreates[k] = v
 				}
 			}
-			break
 			// TODO: log warnings about a JQ filter that went unused because it returned an invalid type that we dont know how to handle
 		}
 	}
@@ -188,14 +217,12 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 			if input, err := ConvertToToolCreateInput(output.StringMap); err == nil {
 				service.Tools = append(service.Tools, *input)
 			}
-			break
 		case StringStringMapArray:
 			for _, item := range output.StringMapArray {
 				if input, err := ConvertToToolCreateInput(item); err == nil {
 					service.Tools = append(service.Tools, *input)
 				}
 			}
-			break
 		}
 	}
 
@@ -210,26 +237,22 @@ func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration
 			if input := ConvertToServiceRepositoryCreateInput(map[string]string{"repo": output.StringObj}); input != nil {
 				service.Repositories = append(service.Repositories, *input)
 			}
-			break
 		case StringArray:
 			for _, item := range output.StringArray {
 				if input := ConvertToServiceRepositoryCreateInput(map[string]string{"repo": item}); input != nil {
 					service.Repositories = append(service.Repositories, *input)
 				}
 			}
-			break
 		case StringStringMap:
 			if input := ConvertToServiceRepositoryCreateInput(output.StringMap); input != nil {
 				service.Repositories = append(service.Repositories, *input)
 			}
-			break
 		case StringStringMapArray:
 			for _, item := range output.StringMapArray {
 				if input := ConvertToServiceRepositoryCreateInput(item); input != nil {
 					service.Repositories = append(service.Repositories, *input)
 				}
 			}
-			break
 		}
 	}
 
@@ -294,7 +317,8 @@ func ConvertToServiceRepositoryCreateInput(data map[string]string) *opslevel.Ser
 }
 
 func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
-	var parser *ServiceRegistrationParser
+	var selectorParser *SelectorParser
+	var serviceParser *ServiceRegistrationParser
 	var services []ServiceRegistration
 	k8sClient := k8sutils.CreateKubernetesClient()
 
@@ -306,9 +330,16 @@ func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
 
 	for _, importConfig := range c.Service.Import {
 		selector := importConfig.SelectorConfig
-		parser = NewParser(importConfig.OpslevelConfig)
+		if selectorErr := selector.Validate(); selectorErr != nil {
+			return services, selectorErr
+		}
+		selectorParser = NewSelectorParser(selector)
+		serviceParser = NewServiceParser(importConfig.OpslevelConfig)
 		processFoundResource := func(resource []byte) error {
-			services = append(services, *parser.Parse(resource))
+			// TODO: handler filtering resources by selector.Excludes
+			if selectorParser.Parse(resource) {
+				services = append(services, *serviceParser.Parse(resource))
+			}
 			return nil
 		}
 		queryErr := k8sClient.Query(selector, namespaces, processFoundResource)
