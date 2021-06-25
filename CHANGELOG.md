@@ -2,6 +2,41 @@
 ## [Unreleased]
 
 
+<a name="0.4.0"></a>
+## [0.4.0] - 2021-06-25
+### Docs
+- update readme to use new opslevel AWS ECR alias
+- update sample configuration file in readme to reflect config version 1.1.0
+- switch demo to asciinema
+- move readme documentation to OpsLevel website
+
+### Feature
+- add ability to filter resources based on jq expressions that return truthy
+- add config validation messages for new selector excludes format
+- add config selector validation to help user upgrade from 1.0.0 -> 1.1.0 with helpful messages
+- support targeting ANY k8s resource in the cluster
+
+### Refactor
+- bump config version to support query any resource kind in the cluster
+
+
+<a name="v0.3.1-beta.1"></a>
+## [v0.3.1-beta.1] - 2021-06-13
+### Bugfix
+- protect against empty alias value
+- protect against empty key or value in tag assign and create lists
+- remove overlapped keys that exist in parsed `tags.assign` if key name also exists in `tags.create`
+- adjust golang binary inside docker container to have same version as when built outside the container
+
+### Docs
+- add install instructions for using docker container
+
+### Feature
+- add ability to reconcile linked service repository display name
+- add ability to assign repositories to services
+- add kubernetes deploy instructions that link to the helm chart
+
+
 <a name="v0.3.0.beta1"></a>
 ## [v0.3.0.beta1] - 2021-05-29
 ### Bugfix
@@ -108,7 +143,9 @@
 <a name="v0.0.1"></a>
 ## v0.0.1 - 2021-03-25
 
-[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.3.0.beta1...HEAD
+[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/0.4.0...HEAD
+[0.4.0]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.3.1-beta.1...0.4.0
+[v0.3.1-beta.1]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.3.0.beta1...v0.3.1-beta.1
 [v0.3.0.beta1]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.2.0...v0.3.0.beta1
 [v0.2.0]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.1.3...v0.2.0
 [v0.1.3]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.1.2...v0.1.3
