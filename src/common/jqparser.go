@@ -155,6 +155,8 @@ func (resp *JQResponseMulti) Unmarshal() {
 	var multi_stringArray [][]string
 	var multi_stringMap []map[string]string
 	var multi_stringMapArray [][]map[string]string
+	var multi_boolObj []bool
+	var multi_boolArray [][]bool
 
 	stringObjErr := json.Unmarshal(resp.Bytes, &multi_stringObj)
 	if stringObjErr == nil {
@@ -184,6 +186,22 @@ func (resp *JQResponseMulti) Unmarshal() {
 	if stringMapArrayErr == nil {
 		for _, item := range multi_stringMapArray {
 			resp.Objects = append(resp.Objects, JQResponse{Type: StringStringMapArray, StringMapArray: item})
+		}
+		return
+	}
+
+	boolObjErr := json.Unmarshal(resp.Bytes, &multi_boolObj)
+	if boolObjErr == nil {
+		for _, item := range multi_boolObj {
+			resp.Objects = append(resp.Objects, JQResponse{Type: Bool, BoolObj: item})
+		}
+		return
+	}
+
+	boolArrayErr := json.Unmarshal(resp.Bytes, &multi_boolArray)
+	if boolArrayErr == nil {
+		for _, item := range multi_boolArray {
+			resp.Objects = append(resp.Objects, JQResponse{Type: BoolArray, BoolArray: item})
 		}
 		return
 	}
