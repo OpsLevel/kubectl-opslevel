@@ -92,30 +92,34 @@ func (c *ClientWrapper) GetAllNamespaces() ([]string, error) {
 	return output, nil
 }
 
-func (c *ClientWrapper) Query(selector KubernetesSelector, namespaces []string, handler func(resource []byte) error) error {
+func (c *ClientWrapper) Query(selector KubernetesSelector, namespaces []string) ([][]byte, error) {
+	var output [][]byte
+	aggregator := func(resource []byte) {
+		output = append(output, resource)
+	}
 	mapping, mappingErr := c.GetMapping(selector)
 	if mappingErr != nil {
-		return fmt.Errorf("%s \n\t Please ensure you are using a valid `ApiVersion` and `Kind` found in `kubectl api-resources --verbs=\"get,list\"`", mappingErr)
+		return output, fmt.Errorf("%s \n\t Please ensure you are using a valid `ApiVersion` and `Kind` found in `kubectl api-resources --verbs=\"get,list\"`", mappingErr)
 	}
 	options := selector.GetListOptions()
 	dr := c.dynamic.Resource(mapping.Resource)
 	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
 		for _, namespace := range namespaces {
-			listErr := List(dr.Namespace(namespace), options, handler)
+			listErr := List(dr.Namespace(namespace), options, aggregator)
 			if listErr != nil {
-				return listErr
+				return output, listErr
 			}
 		}
 	} else {
-		listErr := List(dr, options, handler)
+		listErr := List(dr, options, aggregator)
 		if listErr != nil {
-			return listErr
+			return output, listErr
 		}
 	}
-	return nil
+	return output, nil
 }
 
-func List(client dynamic.ResourceInterface, options metav1.ListOptions, handler func(resource []byte) error) error {
+func List(client dynamic.ResourceInterface, options metav1.ListOptions, aggregator func(resource []byte)) error {
 	resources, queryErr := client.List(context.TODO(), options)
 	if queryErr != nil {
 		return fmt.Errorf("%s `%s`", queryErr, "")
@@ -125,11 +129,8 @@ func List(client dynamic.ResourceInterface, options metav1.ListOptions, handler 
 		if bytesErr != nil {
 			return bytesErr
 		}
-		if err := handler(bytes); err != nil {
-			return err
-		}
+		aggregator(bytes)
 	}
-
 	return nil
 }
 

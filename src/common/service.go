@@ -31,37 +31,6 @@ type ServiceRegistration struct {
 	Repositories []opslevel.ServiceRepositoryCreateInput `json:",omitempty"` // This is a concrete class so fields are validated during `service preview`
 }
 
-func NewSelectorParser(s k8sutils.KubernetesSelector) *SelectorParser {
-	parser := SelectorParser{}
-	for _, exclude := range s.Excludes {
-		parser.Excludes = append(parser.Excludes, NewJQParser(exclude))
-	}
-	return &parser
-}
-
-// returns false if any Exclude parser returns truthy
-func (parser *SelectorParser) Parse(data []byte) bool {
-	for _, exclude := range parser.Excludes {
-		output := exclude.Parse(data)
-		if output == nil {
-			continue
-		}
-		switch output.Type {
-		case Bool:
-			if output.BoolObj {
-				return false
-			}
-		case BoolArray:
-			for _, value := range output.BoolArray {
-				if value {
-					return false
-				}
-			}
-		}
-	}
-	return true
-}
-
 func parseField(filter string, resources []byte) *JQResponseMulti {
 	parser := NewJQParserMulti(filter)
 	return parser.ParseMulti(resources)
@@ -297,7 +266,6 @@ func ConvertToServiceRepositoryCreateInput(data map[string]string) *opslevel.Ser
 }
 
 func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
-	var resources [][]byte
 	var services []ServiceRegistration
 	k8sClient := k8sutils.CreateKubernetesClient()
 
@@ -311,25 +279,59 @@ func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
 		if selectorErr := selector.Validate(); selectorErr != nil {
 			return services, selectorErr
 		}
-		selectorParser := NewSelectorParser(selector)
-		aggregator := func(resource []byte) error {
-			// TODO: handler filtering resources by selector.Excludes
-			if selectorParser.Parse(resource) {
-				resources = append(resources, resource)
-			}
-			return nil
-		}
 
-		queryErr := k8sClient.Query(selector, namespaces, aggregator)
+		resources, queryErr := k8sClient.Query(selector, namespaces)
 		if queryErr != nil {
 			return services, queryErr
 		}
 
-		// resources is now a filtered list of relavant resources we should process
+		resources = filterResources(selector, resources)
+
 		return Parse(importConfig.OpslevelConfig, len(resources), joinResources(resources))
 
 	}
 	return services, nil
+}
+
+func anyIsTrue(resourceIndex int, filters []*JQResponseMulti) bool {
+	filtersCount := len(filters)
+	for filterIndex := 0; filterIndex < filtersCount; filterIndex++ {
+		results := filters[filterIndex].Objects
+		if results == nil {
+			return false
+		}
+		parsedData := results[resourceIndex]
+		switch parsedData.Type {
+		case Bool:
+			if parsedData.BoolObj {
+				return true
+			}
+		case BoolArray:
+			for _, value := range parsedData.BoolArray {
+				if value {
+					return true
+				}
+			}
+		}
+	}
+	return false
+
+}
+
+func filterResources(selector k8sutils.KubernetesSelector, resources [][]byte) [][]byte {
+	var output [][]byte
+	resourceCount := len(resources)
+	// Parse
+	filterResults := parseFieldArray(selector.Excludes, joinResources(resources))
+
+	// Aggregate
+	for resourceIndex := 0; resourceIndex < resourceCount; resourceIndex++ {
+		if anyIsTrue(resourceIndex, filterResults) {
+			continue
+		}
+		output = append(output, resources[resourceIndex])
+	}
+	return output
 }
 
 var StartArray []byte = []byte(`[`)
