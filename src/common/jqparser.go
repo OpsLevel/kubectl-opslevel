@@ -37,15 +37,22 @@ type JQResponse struct {
 	BoolArray      []bool
 }
 
+type JQResponseMulti struct {
+	Bytes   []byte
+	Objects []JQResponse
+}
+
 func NewJQParser(filter string) JQParser {
 	parser := JQParser{JQ: jq.New(filter)}
 	return parser
 }
 
-func (parser *JQParser) doParse(data []byte) *JQResponse {
-	if parser.JQ.Filter() == "" {
-		return &JQResponse{Bytes: []byte("")}
-	}
+func NewJQParserMulti(filter string) JQParser {
+	parser := JQParser{JQ: jq.New(fmt.Sprintf("map(%s)", filter))}
+	return parser
+}
+
+func (parser *JQParser) doParse(data []byte) []byte {
 	var bytes []byte
 	var err *jq.JQError
 	bytes, err = parser.JQ.Run(data)
@@ -55,21 +62,35 @@ func (parser *JQParser) doParse(data []byte) *JQResponse {
 		case jq.BadOptions:
 			return nil
 		case jq.BadFilter:
-			return &JQResponse{Bytes: []byte(fmt.Sprintf("\"%s\"", parser.JQ.Filter()))}
+			return []byte(fmt.Sprintf("\"%s\"", parser.JQ.Filter()))
 		case jq.BadJSON:
 			return nil
 		case jq.BadExcution:
 			return nil
 		}
 	}
-	return &JQResponse{Bytes: bytes}
+	return bytes
 }
 
 func (parser *JQParser) Parse(data []byte) *JQResponse {
-	resp := parser.doParse(data)
-	if resp != nil {
-		resp.Unmarshal()
+	var resp *JQResponse
+	if parser.JQ.Filter() == "" {
+		resp = &JQResponse{Bytes: []byte("")}
+	} else {
+		resp = &JQResponse{Bytes: parser.doParse(data)}
 	}
+	resp.Unmarshal()
+	return resp
+}
+
+func (parser *JQParser) ParseMulti(data []byte) *JQResponseMulti {
+	var resp *JQResponseMulti
+	if parser.JQ.Filter() == "map()" {
+		resp = &JQResponseMulti{Bytes: []byte("[]")}
+	} else {
+		resp = &JQResponseMulti{Bytes: parser.doParse(data)}
+	}
+	resp.Unmarshal()
 	return resp
 }
 
@@ -121,4 +142,51 @@ func (resp *JQResponse) Unmarshal() {
 	}
 
 	resp.Type = Unknown
+}
+
+func (resp *JQResponseMulti) Unmarshal() {
+	//fmt.Printf("Unmarshaling '%s'\n", string(resp.Bytes))
+	if string(resp.Bytes) == "[]" {
+		resp.Objects = nil
+		return
+	}
+
+	var multi_stringObj []string
+	var multi_stringArray [][]string
+	var multi_stringMap []map[string]string
+	var multi_stringMapArray [][]map[string]string
+
+	stringObjErr := json.Unmarshal(resp.Bytes, &multi_stringObj)
+	if stringObjErr == nil {
+		for _, item := range multi_stringObj {
+			resp.Objects = append(resp.Objects, JQResponse{Type: String, StringObj: item})
+		}
+		return
+	}
+
+	stringArrayErr := json.Unmarshal(resp.Bytes, &multi_stringArray)
+	if stringArrayErr == nil {
+		for _, item := range multi_stringArray {
+			resp.Objects = append(resp.Objects, JQResponse{Type: StringArray, StringArray: item})
+		}
+		return
+	}
+
+	stringMapErr := json.Unmarshal(resp.Bytes, &multi_stringMap)
+	if stringMapErr == nil {
+		for _, item := range multi_stringMap {
+			resp.Objects = append(resp.Objects, JQResponse{Type: StringStringMap, StringMap: item})
+		}
+		return
+	}
+
+	stringMapArrayErr := json.Unmarshal(resp.Bytes, &multi_stringMapArray)
+	if stringMapArrayErr == nil {
+		for _, item := range multi_stringMapArray {
+			resp.Objects = append(resp.Objects, JQResponse{Type: StringStringMapArray, StringMapArray: item})
+		}
+		return
+	}
+
+	resp.Objects = nil
 }
