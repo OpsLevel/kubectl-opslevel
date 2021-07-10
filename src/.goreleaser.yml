@@ -1,0 +1,51 @@
+project_name: kubectl-opslevel
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - env:
+      - CGO_ENABLED=0
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
+    ldflags:
+      - '-s -w -X github.com/opslevel/kubectl-opslevel/cmd.version={{.Version}}'
+    goos:
+      - windows
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - '386'
+      - arm
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: '386'
+    binary: '{{ .ProjectName }}'
+archives:
+  - name_template: '{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}'
+    format_overrides:
+      - goos: windows
+        format: zip
+brews:
+  - name: kubectl
+    homepage: "https://www.opslevel.com/"
+    description: "Command line tool that enables you to import & reconcile services with OpsLevel"
+    license: "MIT"
+    folder: Formula
+    dependencies:
+      - name: jq
+    install: |
+      bin.install "kubectl-opslevel"
+    test: |
+      system "#{bin}/kubectl-opslevel version"
+    tap:
+      owner: opslevel
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+checksum:
+  name_template: '{{ .ProjectName }}.sha256'
+  algorithm: sha256
+changelog:
+  skip: true
