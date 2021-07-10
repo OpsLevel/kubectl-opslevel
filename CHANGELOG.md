@@ -2,8 +2,18 @@
 ## [Unreleased]
 
 
-<a name="0.4.0"></a>
-## [0.4.0] - 2021-06-25
+<a name="v0.4.1"></a>
+## [v0.4.1] - 2021-07-10
+### Refactor
+- switch to goreleaser for publishing
+
+### Reverts
+- Revert "Extract Documentation to OpsLevel Website"
+- Extract Documentation to OpsLevel Website
+
+
+<a name="v0.4.0"></a>
+## [v0.4.0] - 2021-06-25
 ### Docs
 - update readme to use new opslevel AWS ECR alias
 - update sample configuration file in readme to reflect config version 1.1.0
@@ -143,8 +153,9 @@
 <a name="v0.0.1"></a>
 ## v0.0.1 - 2021-03-25
 
-[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/0.4.0...HEAD
-[0.4.0]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.3.1-beta.1...0.4.0
+[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.1...HEAD
+[v0.4.1]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.0...v0.4.1
+[v0.4.0]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.3.1-beta.1...v0.4.0
 [v0.3.1-beta.1]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.3.0.beta1...v0.3.1-beta.1
 [v0.3.0.beta1]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.2.0...v0.3.0.beta1
 [v0.2.0]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.1.3...v0.2.0
