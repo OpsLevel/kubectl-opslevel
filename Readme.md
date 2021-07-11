@@ -86,7 +86,6 @@ Table of Contents
 
    * [Prerequisite](#prerequisite)
    * [Installation](#installation)
-      * [Validate Install](#validate-install)
    * [Documentation](#documentation)
 
 ## Prerequisite
@@ -97,66 +96,21 @@ Table of Contents
 
 ## Installation
 
-#### MacOS
-
 ```sh
-TOOL_VERSION=$(curl -s https://api.github.com/repos/opslevel/kubectl-opslevel/releases/latest | grep tag_name | cut -d '"' -f 4)
-curl -Lo kubectl-opslevel.tar.gz https://github.com/opslevel/kubectl-opslevel/releases/download/${TOOL_VERSION}/kubectl-opslevel-darwin-amd64.tar.gz
-tar -xzvf kubectl-opslevel.tar.gz  
-rm kubectl-opslevel.tar.gz
-sudo mv kubectl-opslevel /usr/local/bin/kubectl-opslevel
+brew install opslevel/tap/kubectl
 ```
 
-#### Linux
-
-```sh
-TOOL_VERSION=$(curl -s https://api.github.com/repos/opslevel/kubectl-opslevel/releases/latest | grep tag_name | cut -d '"' -f 4)
-curl -Lo kubectl-opslevel https://github.com/opslevel/kubectl-opslevel/releases/download/${TOOL_VERSION}/kubectl-opslevel-linux-amd64.tar.gz
-tar -xzvf kubectl-opslevel.tar.gz  
-rm kubectl-opslevel.tar.gz
-sudo mv kubectl-opslevel /usr/local/bin/kubectl-opslevel
-```
-
-#### Docker
+## Docker
 
 The docker container is hosted on [AWS Public ECR](https://gallery.ecr.aws/e1n4f2i6/kubectl-opslevel)
-
-The following downloads the container and creates a shim at `/usr/local/bin` so you can use the binary like its downloaded natively - it will just be running in a docker container. *NOTE: you may need to adjust how your kube config is mounted and set inside the container*
-
-```
-TOOL_VERSION=$(curl -s https://api.github.com/repos/opslevel/kubectl-opslevel/releases/latest | grep tag_name | cut -d '"' -f 4)
-docker pull public.ecr.aws/opslevel/kubectl-opslevel:${TOOL_VERSION}
-docker tag public.ecr.aws/opslevel/kubectl-opslevel:${TOOL_VERSION} kubectl-opslevel:latest 
-cat << EOF > /usr/local/bin/kubectl-opslevel
-#! /bin/sh
-docker run -it --rm -v \$(pwd):/app -v ${HOME}/.kube:/.kube -e KUBECONFIG=/.kube/config --network=host kubectl-opslevel:latest \$@
-EOF
-chmod +x /usr/local/bin/kubectl-opslevel
-```
 
 <!---
 TODO: Implement other methods
 
-
-#### Homebrew
-
-
-TODO: Need to Publish to Homebrew
-
-
-```
-brew update && brew install kubectl-opslevel
-```
-
 #### Windows
 
 
-TODO: Chocolately?
-
-
-1. Get `kubectl-opslevel-windows-amd64` from our [releases](https://github.com/opslevel/kubectl-opslevel/releases/latest).
-2. Rename `kubectl-opslevel-windows-amd64` to `kubectl-opslevel.exe` and store it in a preferred path.
-3. Make sure the location you choose is added to your Path environment variable.
+TODO: Scoop
 
 -->
 
