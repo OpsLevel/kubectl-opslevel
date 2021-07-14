@@ -2,6 +2,17 @@
 ## [Unreleased]
 
 
+<a name="v0.4.2"></a>
+## [v0.4.2] - 2021-07-14
+### Docs
+- simplify install instructions to use homebrew
+
+### Feature
+- switch exclude filters to use JQ multiParser to increase performance on filtering resources
+- use new multiParse JQ processing when processing the service fields to increase performance when working with 100’s of resources in Kubernetes
+- implement ability to run JQ statements on arrays of resources to speed up processing when retrieving 100’s of resources from Kubernetes
+
+
 <a name="v0.4.1"></a>
 ## [v0.4.1] - 2021-07-10
 ### Refactor
@@ -153,7 +164,8 @@
 <a name="v0.0.1"></a>
 ## v0.0.1 - 2021-03-25
 
-[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.2...HEAD
+[v0.4.2]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.1...v0.4.2
 [v0.4.1]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.3.1-beta.1...v0.4.0
 [v0.3.1-beta.1]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.3.0.beta1...v0.3.1-beta.1
