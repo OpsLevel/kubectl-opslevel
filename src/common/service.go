@@ -15,22 +15,6 @@ type SelectorParser struct {
 	Excludes []JQParser
 }
 
-type ServiceRegistrationParser struct {
-	Name         JQParser
-	Description  JQParser
-	Owner        JQParser
-	Lifecycle    JQParser
-	Tier         JQParser
-	Product      JQParser
-	Language     JQParser
-	Framework    JQParser
-	Aliases      []JQParser
-	TagAssigns   []JQParser
-	TagCreates   []JQParser
-	Tools        []JQParser
-	Repositories []JQParser
-}
-
 type ServiceRegistration struct {
 	Name         string
 	Description  string                                  `json:",omitempty"`
@@ -47,216 +31,181 @@ type ServiceRegistration struct {
 	Repositories []opslevel.ServiceRepositoryCreateInput `json:",omitempty"` // This is a concrete class so fields are validated during `service preview`
 }
 
-func NewSelectorParser(s k8sutils.KubernetesSelector) *SelectorParser {
-	parser := SelectorParser{}
-	for _, exclude := range s.Excludes {
-		parser.Excludes = append(parser.Excludes, NewJQParser(exclude))
-	}
-	return &parser
+func parseField(filter string, resources []byte) *JQResponseMulti {
+	parser := NewJQParserMulti(filter)
+	return parser.ParseMulti(resources)
 }
 
-// returns false if any Exclude parser returns truthy
-func (parser *SelectorParser) Parse(data []byte) bool {
-	for _, exclude := range parser.Excludes {
-		output := exclude.Parse(data)
-		if output == nil {
+func parseFieldArray(filters []string, resources []byte) []*JQResponseMulti {
+	var output []*JQResponseMulti
+	for _, filter := range filters {
+		output = append(output, parseField(filter, resources))
+	}
+	return output
+}
+
+func aggregateAliases(index int, data []*JQResponseMulti) []string {
+	output := []string{}
+	count := len(data)
+	for i := 0; i < count; i++ {
+		if data[i].Objects == nil {
 			continue
 		}
-		switch output.Type {
-		case Bool:
-			if output.BoolObj {
-				return false
-			}
-		case BoolArray:
-			for _, value := range output.BoolArray {
-				if value {
-					return false
-				}
-			}
-		}
-	}
-	return true
-}
-
-func NewServiceParser(c config.ServiceRegistrationConfig) *ServiceRegistrationParser {
-	parser := ServiceRegistrationParser{}
-	parser.Name = NewJQParser(c.Name)
-	parser.Description = NewJQParser(c.Description)
-	parser.Owner = NewJQParser(c.Owner)
-	parser.Lifecycle = NewJQParser(c.Lifecycle)
-	parser.Tier = NewJQParser(c.Tier)
-	parser.Product = NewJQParser(c.Product)
-	parser.Language = NewJQParser(c.Language)
-	parser.Framework = NewJQParser(c.Framework)
-	parser.Aliases = append(parser.Aliases, NewJQParser("\"k8s:\\(.metadata.name)-\\(.metadata.namespace)\""))
-	for _, alias := range c.Aliases {
-		parser.Aliases = append(parser.Aliases, NewJQParser(alias))
-	}
-	for _, tag := range c.Tags.Assign {
-		parser.TagAssigns = append(parser.TagAssigns, NewJQParser(tag))
-	}
-	for _, tag := range c.Tags.Create {
-		parser.TagCreates = append(parser.TagCreates, NewJQParser(tag))
-	}
-	for _, tool := range c.Tools {
-		parser.Tools = append(parser.Tools, NewJQParser(tool))
-	}
-	for _, repository := range c.Repositories {
-		parser.Repositories = append(parser.Repositories, NewJQParser(repository))
-	}
-	return &parser
-}
-
-func GetString(parser JQParser, data []byte) string {
-	output := parser.Parse(data)
-	if output == nil {
-		return ""
-	}
-	if output.Type == String {
-		return output.StringObj
-	}
-	return ""
-}
-
-func (parser *ServiceRegistrationParser) Parse(data []byte) *ServiceRegistration {
-	service := ServiceRegistration{}
-	service.Name = GetString(parser.Name, data)
-	service.Description = GetString(parser.Description, data)
-	service.Owner = GetString(parser.Owner, data)
-	service.Lifecycle = GetString(parser.Lifecycle, data)
-	service.Tier = GetString(parser.Tier, data)
-	service.Product = GetString(parser.Product, data)
-	service.Language = GetString(parser.Language, data)
-	service.Framework = GetString(parser.Framework, data)
-	// TODO: the following chunks should probably be extracted into named functions for clarity
-	for _, alias := range parser.Aliases {
-		output := alias.Parse(data)
-		if output == nil {
-			continue
-		}
-		switch output.Type {
+		parsedData := data[i].Objects[index]
+		switch parsedData.Type {
 		case String:
-			service.Aliases = append(service.Aliases, output.StringObj)
+			output = append(output, parsedData.StringObj)
 		case StringArray:
-			for _, item := range output.StringArray {
+			for _, item := range parsedData.StringArray {
 				if item == "" {
 					continue
 				}
-				service.Aliases = append(service.Aliases, item)
+				output = append(output, item)
 			}
 			// TODO: log warnings about a JQ filter that went unused because it returned an invalid type that we dont know how to handle
 		}
 	}
-	service.Aliases = removeDuplicates(service.Aliases)
+	return output
+}
 
-	service.TagAssigns = map[string]string{}
-	for _, tag := range parser.TagAssigns {
-		output := tag.Parse(data)
-		if output == nil {
+func aggregateMap(index int, data []*JQResponseMulti) map[string]string {
+	output := map[string]string{}
+	count := len(data)
+	for i := 0; i < count; i++ {
+		if data[i].Objects == nil {
 			continue
 		}
-		switch output.Type {
+		parsedData := data[i].Objects[index]
+		switch parsedData.Type {
 		case StringStringMap:
-			for k, v := range output.StringMap {
+			for k, v := range parsedData.StringMap {
 				if k == "" || v == "" {
 					continue
 				}
-				service.TagAssigns[k] = v
+				output[k] = v
 			}
 		case StringStringMapArray:
-			for _, item := range output.StringMapArray {
+			for _, item := range parsedData.StringMapArray {
 				for k, v := range item {
 					if k == "" || v == "" {
 						continue
 					}
-					service.TagAssigns[k] = v
+					output[k] = v
 				}
 			}
 			// TODO: log warnings about a JQ filter that went unused because it returned an invalid type that we dont know how to handle
 		}
 	}
+	return output
+}
 
-	service.TagCreates = map[string]string{}
-	for _, tag := range parser.TagCreates {
-		output := tag.Parse(data)
-		if output == nil {
+func aggregateTools(index int, data []*JQResponseMulti) []opslevel.ToolCreateInput {
+	output := []opslevel.ToolCreateInput{}
+	count := len(data)
+	for i := 0; i < count; i++ {
+		if data[i].Objects == nil {
 			continue
 		}
-		switch output.Type {
+		parsedData := data[i].Objects[index]
+		switch parsedData.Type {
 		case StringStringMap:
-			for k, v := range output.StringMap {
-				if k == "" || v == "" {
-					continue
-				}
-				service.TagCreates[k] = v
+			if input, err := ConvertToToolCreateInput(parsedData.StringMap); err == nil {
+				output = append(output, *input)
 			}
 		case StringStringMapArray:
-			for _, item := range output.StringMapArray {
-				for k, v := range item {
-					if k == "" || v == "" {
-						continue
-					}
-					service.TagCreates[k] = v
-				}
-			}
-			// TODO: log warnings about a JQ filter that went unused because it returned an invalid type that we dont know how to handle
-		}
-	}
-
-	// https://github.com/OpsLevel/kubectl-opslevel/issues/41
-	service.TagAssigns = removeOverlappedKeys(service.TagAssigns, service.TagCreates)
-
-	service.Tools = []opslevel.ToolCreateInput{}
-	for _, tool := range parser.Tools {
-		output := tool.Parse(data)
-		if output == nil {
-			continue
-		}
-		switch output.Type {
-		case StringStringMap:
-			if input, err := ConvertToToolCreateInput(output.StringMap); err == nil {
-				service.Tools = append(service.Tools, *input)
-			}
-		case StringStringMapArray:
-			for _, item := range output.StringMapArray {
+			for _, item := range parsedData.StringMapArray {
 				if input, err := ConvertToToolCreateInput(item); err == nil {
-					service.Tools = append(service.Tools, *input)
+					output = append(output, *input)
 				}
 			}
 		}
 	}
+	return output
+}
 
-	service.Repositories = []opslevel.ServiceRepositoryCreateInput{}
-	for _, repository := range parser.Repositories {
-		output := repository.Parse(data)
-		if output == nil {
+func aggregateRepositories(index int, data []*JQResponseMulti) []opslevel.ServiceRepositoryCreateInput {
+	output := []opslevel.ServiceRepositoryCreateInput{}
+	count := len(data)
+	for i := 0; i < count; i++ {
+		if data[i].Objects == nil {
 			continue
 		}
-		switch output.Type {
+		parsedData := data[i].Objects[index]
+		switch parsedData.Type {
 		case String:
-			if input := ConvertToServiceRepositoryCreateInput(map[string]string{"repo": output.StringObj}); input != nil {
-				service.Repositories = append(service.Repositories, *input)
+			if parsedData.StringObj == "" {
+				continue
+			}
+			if input := ConvertToServiceRepositoryCreateInput(map[string]string{"repo": parsedData.StringObj}); input != nil {
+				output = append(output, *input)
 			}
 		case StringArray:
-			for _, item := range output.StringArray {
+			for _, item := range parsedData.StringArray {
+				if item == "" {
+					continue
+				}
 				if input := ConvertToServiceRepositoryCreateInput(map[string]string{"repo": item}); input != nil {
-					service.Repositories = append(service.Repositories, *input)
+					output = append(output, *input)
 				}
 			}
 		case StringStringMap:
-			if input := ConvertToServiceRepositoryCreateInput(output.StringMap); input != nil {
-				service.Repositories = append(service.Repositories, *input)
+			if input := ConvertToServiceRepositoryCreateInput(parsedData.StringMap); input != nil {
+				output = append(output, *input)
 			}
 		case StringStringMapArray:
-			for _, item := range output.StringMapArray {
+			for _, item := range parsedData.StringMapArray {
 				if input := ConvertToServiceRepositoryCreateInput(item); input != nil {
-					service.Repositories = append(service.Repositories, *input)
+					output = append(output, *input)
 				}
 			}
 		}
 	}
+	return output
+}
 
-	return &service
+// TODO: bubble up errors
+func Parse(c config.ServiceRegistrationConfig, count int, resources []byte) ([]ServiceRegistration, error) {
+	services := make([]ServiceRegistration, count)
+
+	// Parse
+	Names := parseField(c.Name, resources)
+	Descriptions := parseField(c.Description, resources)
+	Owners := parseField(c.Owner, resources)
+	Lifecycles := parseField(c.Lifecycle, resources)
+	Tiers := parseField(c.Tier, resources)
+	Products := parseField(c.Product, resources)
+	Languages := parseField(c.Language, resources)
+	Frameworks := parseField(c.Framework, resources)
+	Aliases := parseFieldArray(c.Aliases, resources)
+	Aliases = append(Aliases, parseField("\"k8s:\\(.metadata.name)-\\(.metadata.namespace)\"", resources))
+	TagAssigns := parseFieldArray(c.Tags.Assign, resources)
+	TagCreates := parseFieldArray(c.Tags.Create, resources)
+	Tools := parseFieldArray(c.Tools, resources)
+	Repositories := parseFieldArray(c.Repositories, resources)
+
+	// Aggregate
+	for i := 0; i < count; i++ {
+		service := &services[i]
+
+		service.Name = Names.Objects[i].StringObj
+		service.Description = Descriptions.Objects[i].StringObj
+		service.Owner = Owners.Objects[i].StringObj
+		service.Lifecycle = Lifecycles.Objects[i].StringObj
+		service.Tier = Tiers.Objects[i].StringObj
+		service.Product = Products.Objects[i].StringObj
+		service.Language = Languages.Objects[i].StringObj
+		service.Framework = Frameworks.Objects[i].StringObj
+		service.Aliases = aggregateAliases(i, Aliases)
+		service.Aliases = removeDuplicates(service.Aliases)
+		service.TagAssigns = aggregateMap(i, TagAssigns)
+		service.TagCreates = aggregateMap(i, TagCreates)
+		// https://github.com/OpsLevel/kubectl-opslevel/issues/41
+		service.TagAssigns = removeOverlappedKeys(service.TagAssigns, service.TagCreates)
+		service.Tools = aggregateTools(i, Tools)
+		service.Repositories = aggregateRepositories(i, Repositories)
+	}
+
+	return services, nil
 }
 
 func removeDuplicates(data []string) []string {
@@ -317,8 +266,6 @@ func ConvertToServiceRepositoryCreateInput(data map[string]string) *opslevel.Ser
 }
 
 func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
-	var selectorParser *SelectorParser
-	var serviceParser *ServiceRegistrationParser
 	var services []ServiceRegistration
 	k8sClient := k8sutils.CreateKubernetesClient()
 
@@ -327,25 +274,80 @@ func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
 	if namespacesErr != nil {
 		return services, nil
 	}
-
 	for _, importConfig := range c.Service.Import {
 		selector := importConfig.SelectorConfig
 		if selectorErr := selector.Validate(); selectorErr != nil {
 			return services, selectorErr
 		}
-		selectorParser = NewSelectorParser(selector)
-		serviceParser = NewServiceParser(importConfig.OpslevelConfig)
-		processFoundResource := func(resource []byte) error {
-			// TODO: handler filtering resources by selector.Excludes
-			if selectorParser.Parse(resource) {
-				services = append(services, *serviceParser.Parse(resource))
-			}
-			return nil
-		}
-		queryErr := k8sClient.Query(selector, namespaces, processFoundResource)
+
+		resources, queryErr := k8sClient.Query(selector, namespaces)
 		if queryErr != nil {
 			return services, queryErr
 		}
+
+		resources = filterResources(selector, resources)
+
+		return Parse(importConfig.OpslevelConfig, len(resources), joinResources(resources))
+
 	}
 	return services, nil
+}
+
+func anyIsTrue(resourceIndex int, filters []*JQResponseMulti) bool {
+	filtersCount := len(filters)
+	for filterIndex := 0; filterIndex < filtersCount; filterIndex++ {
+		results := filters[filterIndex].Objects
+		if results == nil {
+			return false
+		}
+		parsedData := results[resourceIndex]
+		switch parsedData.Type {
+		case Bool:
+			if parsedData.BoolObj {
+				return true
+			}
+		case BoolArray:
+			for _, value := range parsedData.BoolArray {
+				if value {
+					return true
+				}
+			}
+		}
+	}
+	return false
+
+}
+
+func filterResources(selector k8sutils.KubernetesSelector, resources [][]byte) [][]byte {
+	var output [][]byte
+	resourceCount := len(resources)
+	// Parse
+	filterResults := parseFieldArray(selector.Excludes, joinResources(resources))
+
+	// Aggregate
+	for resourceIndex := 0; resourceIndex < resourceCount; resourceIndex++ {
+		if anyIsTrue(resourceIndex, filterResults) {
+			continue
+		}
+		output = append(output, resources[resourceIndex])
+	}
+	return output
+}
+
+var StartArray []byte = []byte(`[`)
+var EndArray []byte = []byte(`]`)
+var JoinItem []byte = []byte(`,`)
+
+func joinResources(resources [][]byte) []byte {
+	var output []byte
+	output = append(output, StartArray...)
+	count := len(resources) - 1
+	for i, item := range resources {
+		output = append(output, item...)
+		if i < count {
+			output = append(output, JoinItem...)
+		}
+	}
+	output = append(output, EndArray...)
+	return output
 }
