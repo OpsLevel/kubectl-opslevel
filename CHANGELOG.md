@@ -2,6 +2,15 @@
 ## [Unreleased]
 
 
+<a name="v0.4.3"></a>
+## [v0.4.3] - 2021-07-21
+### Bugfix
+- properly handle jq expressions that return ‘empty’ rather then null now that we batch expression operations
+
+### Feature
+- upgrade jq from 1.4 to 1.6 ([#58](https://github.com/OpsLevel/kubectl-opslevel/issues/58))
+
+
 <a name="v0.4.2"></a>
 ## [v0.4.2] - 2021-07-14
 ### Docs
@@ -164,7 +173,8 @@
 <a name="v0.0.1"></a>
 ## v0.0.1 - 2021-03-25
 
-[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.3...HEAD
+[v0.4.3]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.2...v0.4.3
 [v0.4.2]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.1...v0.4.2
 [v0.4.1]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.3.1-beta.1...v0.4.0
