@@ -102,7 +102,7 @@ brew install opslevel/tap/kubectl
 
 ## Docker
 
-The docker container is hosted on [AWS Public ECR](https://gallery.ecr.aws/e1n4f2i6/kubectl-opslevel)
+The docker container is hosted on [AWS Public ECR](https://gallery.ecr.aws/opslevel/kubectl-opslevel)
 
 <!---
 TODO: Implement other methods
