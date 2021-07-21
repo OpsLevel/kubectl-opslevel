@@ -48,7 +48,7 @@ func NewJQParser(filter string) JQParser {
 }
 
 func NewJQParserMulti(filter string) JQParser {
-	parser := JQParser{JQ: jq.New(fmt.Sprintf("map(%s)", filter))}
+	parser := JQParser{JQ: jq.New(fmt.Sprintf("map(%s // null)", filter))}
 	return parser
 }
 
@@ -85,7 +85,7 @@ func (parser *JQParser) Parse(data []byte) *JQResponse {
 
 func (parser *JQParser) ParseMulti(data []byte) *JQResponseMulti {
 	var resp *JQResponseMulti
-	if parser.JQ.Filter() == "map()" {
+	if parser.JQ.Filter() == "map( // null)" {
 		resp = &JQResponseMulti{Bytes: []byte("[]")}
 	} else {
 		resp = &JQResponseMulti{Bytes: parser.doParse(data)}
