@@ -286,9 +286,11 @@ func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
 		}
 
 		resources = filterResources(selector, resources)
-
-		return Parse(importConfig.OpslevelConfig, len(resources), joinResources(resources))
-
+		parsedServices, parseError := Parse(importConfig.OpslevelConfig, len(resources), joinResources(resources))
+		if parseError != nil {
+			return services, parseError
+		}
+		services = append(services, parsedServices...)
 	}
 	return services, nil
 }
