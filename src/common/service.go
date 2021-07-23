@@ -163,6 +163,13 @@ func aggregateRepositories(index int, data []*JQResponseMulti) []opslevel.Servic
 	return output
 }
 
+func GetString(index int, data *JQResponseMulti) string {
+	if index < len(data.Objects) {
+		return data.Objects[index].StringObj
+	}
+	return ""
+}
+
 // TODO: bubble up errors
 func Parse(c config.ServiceRegistrationConfig, count int, resources []byte) ([]ServiceRegistration, error) {
 	services := make([]ServiceRegistration, count)
@@ -187,14 +194,14 @@ func Parse(c config.ServiceRegistrationConfig, count int, resources []byte) ([]S
 	for i := 0; i < count; i++ {
 		service := &services[i]
 
-		service.Name = Names.Objects[i].StringObj
-		service.Description = Descriptions.Objects[i].StringObj
-		service.Owner = Owners.Objects[i].StringObj
-		service.Lifecycle = Lifecycles.Objects[i].StringObj
-		service.Tier = Tiers.Objects[i].StringObj
-		service.Product = Products.Objects[i].StringObj
-		service.Language = Languages.Objects[i].StringObj
-		service.Framework = Frameworks.Objects[i].StringObj
+		service.Name = GetString(i, Names)
+		service.Description = GetString(i, Descriptions)
+		service.Owner = GetString(i, Owners)
+		service.Lifecycle = GetString(i, Lifecycles)
+		service.Tier = GetString(i, Tiers)
+		service.Product = GetString(i, Products)
+		service.Language = GetString(i, Languages)
+		service.Framework = GetString(i, Frameworks)
 		service.Aliases = aggregateAliases(i, Aliases)
 		service.Aliases = removeDuplicates(service.Aliases)
 		service.TagAssigns = aggregateMap(i, TagAssigns)
