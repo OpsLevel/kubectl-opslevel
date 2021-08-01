@@ -279,7 +279,7 @@ func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
 	jq.ValidateInstalled()
 	namespaces, namespacesErr := k8sClient.GetAllNamespaces()
 	if namespacesErr != nil {
-		return services, nil
+		return services, namespacesErr
 	}
 	for _, importConfig := range c.Service.Import {
 		selector := importConfig.SelectorConfig
