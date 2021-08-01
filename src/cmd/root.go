@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -15,9 +14,10 @@ import (
 var cfgFile string
 
 var rootCmd = &cobra.Command{
-	Use:   "kubectl-opslevel",
-	Short: "Opslevel Commandline Tools",
-	Long:  `Opslevel Commandline Tools`,
+	Use:     "kubectl-opslevel",
+	Aliases: []string{"kubectl opslevel"},
+	Short:   "Opslevel Commandline Tools",
+	Long:    `Opslevel Commandline Tools`,
 }
 
 func Execute() {
@@ -50,7 +50,7 @@ func readConfig() {
 			viper.SetConfigFile(cfgFile)
 		}
 	} else {
-		home, err := homedir.Dir()
+		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
 		viper.SetConfigName("opslevel")
