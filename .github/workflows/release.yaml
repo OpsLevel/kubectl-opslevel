@@ -22,6 +22,14 @@ jobs:
           # These secrets will need to be configured for the repository:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Login to Public ECR
+        uses: docker/login-action@v1
+        with:
+          registry: public.ecr.aws
+          username: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        env:
+          AWS_REGION: us-east-1
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -33,35 +41,3 @@ jobs:
           # GitHub sets this automatically
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
-  release-docker:
-    name: Release Docker Image
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - name: Login to Public ECR
-      uses: docker/login-action@v1
-      with:
-        registry: public.ecr.aws
-        username: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      env:
-        AWS_REGION: us-east-1
-    - name: Build & Push
-      run: |
-        git fetch --tags --force
-        TAG=$(git describe --tags --match "v[0-9].*" --always)
-        IMAGE="kubectl-opslevel:${TAG}"
-        docker build -t ${IMAGE} --build-arg VERSION=$(git describe --tags --long --abbrev=12 --match "v[0-9].*" --always) .
-
-        AWS_IMAGE="public.ecr.aws/e1n4f2i6/kubectl-opslevel:${TAG}"
-        docker tag ${IMAGE} ${AWS_IMAGE}
-        docker push ${AWS_IMAGE}
-
-        echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
-        GITHUB_IMAGE="docker.pkg.github.com/opslevel/kubectl-opslevel/main:${TAG}"
-        docker tag ${IMAGE} ${GITHUB_IMAGE}
-        docker push ${GITHUB_IMAGE}
-

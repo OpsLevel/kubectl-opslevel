@@ -28,6 +28,14 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
+dockers:
+  - image_templates:
+    - "public.ecr.aws/opslevel/kubectl-opslevel:here{{ .Tag }}"
+    build_flag_templates:
+    - "--label=org.opencontainers.image.created={{ .Date }}"
+    - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+    - "--label=org.opencontainers.image.version={{ .Tag }}"
+    - "--build-arg=VERSION={{ .Tag }}"
 brews:
   - name: kubectl
     homepage: "https://www.opslevel.com/"
@@ -45,7 +53,17 @@ brews:
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
 checksum:
-  name_template: '{{ .ProjectName }}.sha256'
+  name_template: '{{ .ProjectName }}_SHA256SUMS'
   algorithm: sha256
+signs:
+  - artifacts: checksum
+    args:
+      - "--batch"
+      - "--local-user"
+      - "{{ .Env.GPG_FINGERPRINT }}"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
 changelog:
   skip: true
