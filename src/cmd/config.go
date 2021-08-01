@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 
 	yaml "gopkg.in/yaml.v3"
 
+	"github.com/alecthomas/jsonschema"
 	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -84,6 +86,18 @@ var configCmd = &cobra.Command{
 	Long:  "Commands for working with the opslevel configuration",
 }
 
+var configSchemaCmd = &cobra.Command{
+	Use:   "schema",
+	Short: "Print the jsonschema for configuration file",
+	Long:  "Print the jsonschema for configuration file",
+	Run: func(cmd *cobra.Command, args []string) {
+		schema := jsonschema.Reflect(&config.Config{})
+		jsonBytes, jsonErr := json.MarshalIndent(schema, "", "  ")
+		cobra.CheckErr(jsonErr)
+		fmt.Println(string(jsonBytes))
+	},
+}
+
 var configViewCmd = &cobra.Command{
 	Use:   "view",
 	Short: "Print the final configuration result",
@@ -109,6 +123,7 @@ var configSampleCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(configCmd)
 	configCmd.AddCommand(
+		configSchemaCmd,
 		configViewCmd,
 		configSampleCmd,
 	)

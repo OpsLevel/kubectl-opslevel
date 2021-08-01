@@ -3,6 +3,7 @@ module github.com/opslevel/kubectl-opslevel
 go 1.16
 
 require (
+	github.com/alecthomas/jsonschema v0.0.0-20210526225647-edb03dcab7bc
 	github.com/creasty/defaults v1.5.1
 	github.com/go-logr/logr v0.3.0
 	github.com/google/go-cmp v0.5.5
