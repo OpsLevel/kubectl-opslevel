@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -236,16 +237,12 @@ func AssignAliases(client *opslevel.Client, registration common.ServiceRegistrat
 }
 
 func AssignTags(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
-	for tagKey, tagValue := range registration.TagAssigns {
-		if service.HasTag(tagKey, tagValue) {
-			continue
-		}
-		_, err := client.AssignTagForId(service.Id, tagKey, tagValue)
-		if err != nil {
-			log.Error().Msgf("[%s] Failed updating tag '%s = %s'\n\tREASON: %v", service.Name, tagKey, tagValue, err.Error())
-		} else {
-			log.Info().Msgf("[%s] Updated tag '%s = %s'", service.Name, tagKey, tagValue)
-		}
+	_, err := client.AssignTagsForId(service.Id, registration.TagAssigns)
+	jsonBytes, _ := json.Marshal(registration.TagAssigns)
+	if err != nil {
+		log.Error().Msgf("[%s] Failed assigning tags: %s\n\tREASON: %v", service.Name, string(jsonBytes), err.Error())
+	} else {
+		log.Info().Msgf("[%s] Assigned tags: %s", service.Name, string(jsonBytes))
 	}
 }
 
