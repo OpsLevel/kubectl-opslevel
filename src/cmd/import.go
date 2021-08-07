@@ -35,12 +35,9 @@ func runImport(cmd *cobra.Command, args []string) {
 	client := common.NewClient()
 	CacheLookupTables(client)
 
-	workerCount := concurrency
-	channelBufferCount := workerCount
-
 	done := make(chan bool)
-	queue := make(chan common.ServiceRegistration, channelBufferCount)
-	go createWorkerPool(workerCount, queue, done)
+	queue := make(chan common.ServiceRegistration, concurrency)
+	go createWorkerPool(concurrency, queue, done)
 	go enqueue(services, queue)
 	<-done
 	log.Info().Msg("Import Complete")
