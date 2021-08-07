@@ -86,11 +86,11 @@ func reconcileService(client *opslevel.Client, service common.ServiceRegistratio
 	if needsUpdate {
 		UpdateService(client, service, foundService)
 	}
-	AssignAliases(client, service, foundService)
-	AssignTags(client, service, foundService)
-	CreateTags(client, service, foundService)
-	AssignTools(client, service, foundService)
-	AttachRepositories(client, service, foundService)
+	go AssignAliases(client, service, foundService)
+	go AssignTags(client, service, foundService)
+	go CreateTags(client, service, foundService)
+	go AssignTools(client, service, foundService)
+	go AttachRepositories(client, service, foundService)
 	log.Info().Msgf("[%s] Finished processing data", foundService.Name)
 }
 
