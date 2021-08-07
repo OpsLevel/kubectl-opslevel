@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/kubectl-opslevel/config"
@@ -12,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// importCmd represents the import command
 var importCmd = &cobra.Command{
 	Use:   "import",
 	Short: "Create or Update service entries in OpsLevel",
@@ -28,46 +28,76 @@ func runImport(cmd *cobra.Command, args []string) {
 	config, configErr := config.New()
 	cobra.CheckErr(configErr)
 
-	client := common.NewClient()
-
 	services, servicesErr := common.QueryForServices(config)
 	cobra.CheckErr(servicesErr)
 
+	client := common.NewClient()
 	CacheLookupTables(client)
 
-	for _, service := range services {
-		foundService, needsUpdate := FindService(client, service)
-		if foundService == nil {
-			newService, newServiceErr := CreateService(client, service)
-			if newServiceErr != nil {
-				log.Error().Msgf("Failed creating service: '%s' \n\tREASON: %v", service.Name, newServiceErr.Error())
-				continue
-			} else {
-				log.Info().Msgf("Created new service: '%s'", newService.Name)
-			}
-			foundService = newService
-		}
-		if needsUpdate {
-			UpdateService(client, service, foundService)
-		}
-		AssignAliases(client, service, foundService)
-		AssignTags(client, service, foundService)
-		CreateTags(client, service, foundService)
-		AssignTools(client, service, foundService)
-		AttachRepositories(client, service, foundService)
-		log.Info().Msgf("===> Finished processing data for service: '%s'", foundService.Name)
-	}
+	workerCount := concurrency
+	channelBufferCount := workerCount
+
+	done := make(chan bool)
+	queue := make(chan common.ServiceRegistration, channelBufferCount)
+	go createWorkerPool(workerCount, queue, done)
+	go enqueue(services, queue)
+	<-done
 	log.Info().Msg("Import Complete")
 }
 
 // TODO: Helpers probably shouldn't be exported
 // Helpers
 
+func createWorkerPool(count int, queue chan common.ServiceRegistration, done chan<- bool) {
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(count)
+	for i := 0; i < count; i++ {
+		go func(c *opslevel.Client, q chan common.ServiceRegistration, wg *sync.WaitGroup) {
+			for data := range q {
+				reconcileService(c, data)
+			}
+			wg.Done()
+		}(common.NewClient(), queue, &waitGroup)
+	}
+	waitGroup.Wait()
+	done <- true
+}
+
+func enqueue(services []common.ServiceRegistration, queue chan common.ServiceRegistration) {
+	for _, service := range services {
+		queue <- service
+	}
+	close(queue)
+}
+
+func reconcileService(client *opslevel.Client, service common.ServiceRegistration) {
+	foundService, needsUpdate := FindService(client, service)
+	if foundService == nil {
+		newService, newServiceErr := CreateService(client, service)
+		if newServiceErr != nil {
+			log.Error().Msgf("[%s] Failed creating service\n\tREASON: %v", service.Name, newServiceErr.Error())
+			return
+		} else {
+			log.Info().Msgf("[%s] Created new service", newService.Name)
+		}
+		foundService = newService
+	}
+	if needsUpdate {
+		UpdateService(client, service, foundService)
+	}
+	AssignAliases(client, service, foundService)
+	AssignTags(client, service, foundService)
+	CreateTags(client, service, foundService)
+	AssignTools(client, service, foundService)
+	AttachRepositories(client, service, foundService)
+	log.Info().Msgf("[%s] Finished processing data", foundService.Name)
+}
+
 func FindService(client *opslevel.Client, registration common.ServiceRegistration) (*opslevel.Service, bool) {
 	for _, alias := range registration.Aliases {
 		foundService, err := client.GetServiceWithAlias(alias)
 		if err == nil && foundService.Id != nil {
-			log.Info().Msgf("Reconciling service '%s' found with alias '%s' ...", foundService.Name, alias)
+			log.Info().Msgf("[%s] Reconciling service found with alias '%s' ...", foundService.Name, alias)
 			return foundService, true
 		}
 	}
@@ -180,10 +210,10 @@ func UpdateService(client *opslevel.Client, registration common.ServiceRegistrat
 	}
 	updatedService, updateServiceErr := client.UpdateService(updateServiceInput)
 	if updateServiceErr != nil {
-		log.Error().Msgf("===> Failed updating service: '%s' \n\tREASON: %v", service.Name, updateServiceErr.Error())
+		log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
 	} else {
 		if diff := cmp.Diff(service, updatedService); diff != "" {
-			log.Info().Msgf("===> Updated Service '%s' - Diff:\n%s", service.Name, diff)
+			log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
 		}
 	}
 }
@@ -198,9 +228,9 @@ func AssignAliases(client *opslevel.Client, registration common.ServiceRegistrat
 			OwnerId: service.Id,
 		})
 		if err != nil {
-			log.Error().Msgf("===> Failed assigning alias '%s' to service: '%s' \n\tREASON: %v", alias, service.Name, err.Error())
+			log.Error().Msgf("[%s] Failed assigning alias '%s'\n\tREASON: %v", service.Name, alias, err.Error())
 		} else {
-			log.Info().Msgf("===> Assigned alias '%s' to service: '%s'", alias, service.Name)
+			log.Info().Msgf("[%s] Assigned alias '%s'", service.Name, alias)
 		}
 	}
 }
@@ -212,9 +242,9 @@ func AssignTags(client *opslevel.Client, registration common.ServiceRegistration
 		}
 		_, err := client.AssignTagForId(service.Id, tagKey, tagValue)
 		if err != nil {
-			log.Error().Msgf("===> Failed updating tag '%s = %s' on service: '%s' \n\tREASON: %v", tagKey, tagValue, service.Name, err.Error())
+			log.Error().Msgf("[%s] Failed updating tag '%s = %s'\n\tREASON: %v", service.Name, tagKey, tagValue, err.Error())
 		} else {
-			log.Info().Msgf("===> Updated tag '%s = %s' on service: '%s'", tagKey, tagValue, service.Name)
+			log.Info().Msgf("[%s] Updated tag '%s = %s'", service.Name, tagKey, tagValue)
 		}
 	}
 }
@@ -231,9 +261,9 @@ func CreateTags(client *opslevel.Client, registration common.ServiceRegistration
 		}
 		_, err := client.CreateTag(input)
 		if err != nil {
-			log.Error().Msgf("===> Failed creating tag '%s = %s' on service: '%s' \n\tREASON: %v", tagKey, tagValue, service.Name, err.Error())
+			log.Error().Msgf("[%s] Failed creating tag '%s = %s'\n\tREASON: %v", service.Name, tagKey, tagValue, err.Error())
 		} else {
-			log.Info().Msgf("===> Created tag '%s = %s' on service: '%s'", tagKey, tagValue, service.Name)
+			log.Info().Msgf("[%s] Created tag '%s = %s'", service.Name, tagKey, tagValue)
 		}
 	}
 }
@@ -241,15 +271,15 @@ func CreateTags(client *opslevel.Client, registration common.ServiceRegistration
 func AssignTools(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
 	for _, tool := range registration.Tools {
 		if service.HasTool(tool.Category, tool.DisplayName, tool.Environment) {
-			log.Debug().Msgf("===> Tool '{Category: %s, Environment: %s, Name: %s}' already exists on service: '%s' ... skipping", tool.Category, tool.Environment, tool.DisplayName, service.Name)
+			log.Debug().Msgf("[%s] Tool '{Category: %s, Environment: %s, Name: %s}' already exists on service ... skipping", service.Name, tool.Category, tool.Environment, tool.DisplayName)
 			continue
 		}
 		tool.ServiceId = service.Id
 		_, err := client.CreateTool(tool)
 		if err != nil {
-			log.Error().Msgf("===> Failed assigning tool '{Category: %s, Environment: %s, Name: %s}' to service: '%s' \n\tREASON: %v", tool.Category, tool.Environment, tool.DisplayName, service.Name, err.Error())
+			log.Error().Msgf("[%s] Failed assigning tool '{Category: %s, Environment: %s, Name: %s}'\n\tREASON: %v", service.Name, tool.Category, tool.Environment, tool.DisplayName, err.Error())
 		} else {
-			log.Info().Msgf("===> Ensured tool '{Category: %s, Environment: %s, Name: %s}' assigned to service: '%s'", tool.Category, tool.Environment, tool.DisplayName, service.Name)
+			log.Info().Msgf("[%s] Ensured tool '{Category: %s, Environment: %s, Name: %s}'", service.Name, tool.Category, tool.Environment, tool.DisplayName)
 		}
 	}
 }
@@ -259,7 +289,7 @@ func AttachRepositories(client *opslevel.Client, registration common.ServiceRegi
 		repositoryAsString := fmt.Sprintf("{Alias: %s, Directory: %s, Name: %s}", repositoryCreate.Repository.Alias, repositoryCreate.BaseDirectory, repositoryCreate.DisplayName)
 		foundRepository, foundRepositoryErr := client.GetRepositoryWithAlias(string(repositoryCreate.Repository.Alias))
 		if foundRepositoryErr != nil {
-			log.Warn().Msgf("===> Repository with alias: '%s' not found so it cannot be attached to service: '%s' ... skipping", repositoryAsString, service.Name)
+			log.Warn().Msgf("[%s] Repository with alias: '%s' not found so it cannot be attached to service ... skipping", service.Name, repositoryAsString)
 			continue
 		}
 		serviceRepository := foundRepository.GetService(service.Id, repositoryCreate.BaseDirectory)
@@ -271,22 +301,22 @@ func AttachRepositories(client *opslevel.Client, registration common.ServiceRegi
 				}
 				_, err := client.UpdateServiceRepository(repositoryUpdate)
 				if err != nil {
-					log.Error().Msgf("===> Failed updating repository '%s' on service: '%s' \n\tREASON: %v", repositoryAsString, service.Name, err.Error())
+					log.Error().Msgf("[%s] Failed updating repository '%s'\n\tREASON: %v", service.Name, repositoryAsString, err.Error())
 					continue
 				} else {
-					log.Info().Msgf("===> Updated repository '%s' on service: '%s'", repositoryAsString, service.Name)
+					log.Info().Msgf("[%s] Updated repository '%s'", service.Name, repositoryAsString)
 					continue
 				}
 			}
-			log.Debug().Msgf("===> Repository '%s' already attached to service: '%s' ... skipping", repositoryAsString, service.Name)
+			log.Debug().Msgf("[%s] Repository '%s' already attached to service ... skipping", service.Name, repositoryAsString)
 			continue
 		}
 		repositoryCreate.Service = opslevel.IdentifierInput{Id: service.Id}
 		_, err := client.CreateServiceRepository(repositoryCreate)
 		if err != nil {
-			log.Error().Msgf("===> Failed assigning repository '$s' to service: '%s' \n\tREASON: %v", repositoryAsString, service.Name, err.Error())
+			log.Error().Msgf("[%s] Failed assigning repository '$s'\n\tREASON: %v", service.Name, repositoryAsString, err.Error())
 		} else {
-			log.Info().Msgf("===> Attached repository '%s' to service: '%s'", repositoryAsString, service.Name)
+			log.Info().Msgf("[%s] Attached repository '%s'", service.Name, repositoryAsString)
 		}
 	}
 }

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -9,9 +10,15 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+
+	// https://github.com/golang/go/issues/33803
+	"go.uber.org/automaxprocs/maxprocs"
 )
 
-var cfgFile string
+var (
+	cfgFile     string
+	concurrency int
+)
 
 var rootCmd = &cobra.Command{
 	Use:     "kubectl-opslevel",
@@ -29,6 +36,7 @@ func init() {
 	rootCmd.PersistentFlags().String("logFormat", "TEXT", "overrides environment variable 'OL_LOGFORMAT' (options [\"JSON\", \"TEXT\"])")
 	rootCmd.PersistentFlags().String("logLevel", "INFO", "overrides environment variable 'OL_LOGLEVEL' (options [\"ERROR\", \"WARN\", \"INFO\", \"DEBUG\"])")
 	rootCmd.PersistentFlags().String("api-token", "", "The OpsLevel API Token. Overrides environment variable 'OL_APITOKEN'")
+	rootCmd.PersistentFlags().IntP("workers", "w", -1, "Sets the number of workers for API call processing. The default is == # CPU cores (cgroup aware). Overrides environment variable 'OL_CONCURRENCY'")
 
 	viper.BindPFlags(rootCmd.PersistentFlags())
 	viper.BindPFlag("apitoken", rootCmd.PersistentFlags().Lookup("api-token"))
@@ -38,6 +46,7 @@ func init() {
 func initConfig() {
 	readConfig()
 	setupLogging()
+	setupConcurrency()
 }
 
 func readConfig() {
@@ -84,4 +93,15 @@ func setupLogging() {
 	default:
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
+}
+
+func setupConcurrency() {
+	maxprocs.Set(maxprocs.Logger(log.Debug().Msgf))
+
+	concurrency = viper.GetInt("workers")
+	if concurrency <= 0 {
+		concurrency = runtime.GOMAXPROCS(0)
+	}
+
+	log.Info().Msgf("Worker Concurrency == %v", concurrency)
 }
