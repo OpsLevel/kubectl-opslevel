@@ -15,23 +15,23 @@ var (
 )
 
 type TagRegistrationConfig struct {
-	Assign []string // JQ expressions that return a single string or a map[string]string
-	Create []string // JQ expressions that return a single string or a map[string]string
+	Assign []string `json:"assign"` // JQ expressions that return a single string or a map[string]string
+	Create []string `json:"create"` // JQ expressions that return a single string or a map[string]string
 }
 
 type ServiceRegistrationConfig struct {
-	Name         string `default:".metadata.name"`
-	Description  string
-	Owner        string
-	Lifecycle    string
-	Tier         string
-	Product      string
-	Language     string
-	Framework    string
-	Aliases      []string // JQ expressions that return a single string or a []string
-	Tags         TagRegistrationConfig
-	Tools        []string // JQ expressions that return a single map[string]string or a []map[string]string
-	Repositories []string // JQ expressions that return a single string or []string or map[string]string or a []map[string]string
+	Name         string                `default:".metadata.name" json:"name"`
+	Description  string                `json:"description"`
+	Owner        string                `json:"owner"`
+	Lifecycle    string                `json:"lifecycle"`
+	Tier         string                `json:"tier"`
+	Product      string                `json:"product"`
+	Language     string                `json:"language"`
+	Framework    string                `json:"framework"`
+	Aliases      []string              `json:"aliases"` // JQ expressions that return a single string or a []string
+	Tags         TagRegistrationConfig `json:"tags"`
+	Tools        []string              `json:"tools"`        // JQ expressions that return a single map[string]string or a []map[string]string
+	Repositories []string              `json:"repositories"` // JQ expressions that return a single string or []string or map[string]string or a []map[string]string
 }
 
 type Import struct {
@@ -44,7 +44,7 @@ type Service struct {
 }
 
 type Config struct {
-	Version string
+	Version string  `json:"version"`
 	Service Service `json:"service"`
 }
 

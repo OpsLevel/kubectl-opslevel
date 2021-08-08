@@ -25,16 +25,16 @@ import (
 )
 
 type NamespaceSelector struct {
-	Include []string
-	Exclude []string
+	Include []string `json:"include"`
+	Exclude []string `json:"exclude"`
 }
 
 type KubernetesSelector struct {
-	ApiVersion string
-	Kind       string
-	Namespace  NamespaceSelector //Deprecated 1.0.0 -> 1.1.0
-	Labels     map[string]string //Deprecated 1.0.0 -> 1.1.0
-	Excludes   []string
+	ApiVersion string            `json:"apiVersion"`
+	Kind       string            `json:"kind"`
+	namespace  NamespaceSelector `json:"namespace"` //Deprecated 1.0.0 -> 1.1.0
+	labels     map[string]string `json:"lables"`    //Deprecated 1.0.0 -> 1.1.0
+	Excludes   []string          `json:"excludes"`
 }
 
 type ClientWrapper struct {
@@ -183,15 +183,15 @@ func (selector *KubernetesSelector) Validate() error {
 	if selector.ApiVersion == "" {
 		return fmt.Errorf(MISSING_API_VERSION_ERROR)
 	}
-	if len(selector.Namespace.Include) > 0 && len(selector.Namespace.Exclude) > 0 {
+	if len(selector.namespace.Include) > 0 && len(selector.namespace.Exclude) > 0 {
 		var upgrades []string
-		for _, item := range selector.Namespace.Include {
+		for _, item := range selector.namespace.Include {
 			if item == "" {
 				continue
 			}
 			upgrades = append(upgrades, fmt.Sprintf("          - .metadata.namespace != \"%s\"\n", item))
 		}
-		for _, item := range selector.Namespace.Exclude {
+		for _, item := range selector.namespace.Exclude {
 			if item == "" {
 				continue
 			}
@@ -199,9 +199,9 @@ func (selector *KubernetesSelector) Validate() error {
 		}
 		return fmt.Errorf(UPGRADE_NAMESPACE_FILTER_ERROR, selector.ApiVersion, selector.Kind, strings.Join(upgrades, ""))
 	}
-	if len(selector.Labels) > 0 {
+	if len(selector.labels) > 0 {
 		var upgrades []string
-		for key, value := range selector.Labels {
+		for key, value := range selector.labels {
 			upgrades = append(upgrades, fmt.Sprintf("          - .metadata.labels.%s != \"%s\"\n", key, value))
 		}
 		return fmt.Errorf(UPGRADE_LABEL_FILTER_ERROR, selector.ApiVersion, selector.Kind, strings.Join(upgrades, ","))
@@ -217,7 +217,7 @@ func (selector *KubernetesSelector) GetListOptions() metav1.ListOptions {
 
 func (selector *KubernetesSelector) LabelSelector() string {
 	var labels []string
-	for key, value := range selector.Labels {
+	for key, value := range selector.labels {
 		labels = append(labels, fmt.Sprintf("%s=%s", key, value))
 	}
 	return strings.Join(labels, ",")

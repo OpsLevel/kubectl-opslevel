@@ -134,6 +134,23 @@ The log format default is more human readable but if you want structured logs yo
 {"level":"info","time":1620251466,"message":"Ensured tag 'imported = kubectl-opslevel' assigned to service: 'db'"}
 ```
 
+### JSON-Schema
+
+The tool also has the ability to output a [JSON-Schema](https://json-schema.org/) file for use in IDE's when editing the configuration file.
+You can read more about adding JSON-Schema validate to [VS Code](https://code.visualstudio.com/docs/languages/json#_json-schemas-and-settings)
+
+```sh
+kubectl opslevel config schema > ~/.opslevel-k8s-schema.json
+```
+
+Then add the following to you [VS Code user settings](https://code.visualstudio.com/docs/getstarted/settings)
+
+```json
+    "yaml.schemas": {
+        "~/.opslevel-k8s-schema.json": ["opslevel-k8s.yaml"],
+    }
+```
+
 ## Documentation
 
 You can read more about the tool and its configuration format in our [documentation](https://www.opslevel.com/docs/integrations/kubernetes/)
