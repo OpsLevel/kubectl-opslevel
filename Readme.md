@@ -134,6 +134,21 @@ The log format default is more human readable but if you want structured logs yo
 {"level":"info","time":1620251466,"message":"Ensured tag 'imported = kubectl-opslevel' assigned to service: 'db'"}
 ```
 
+### Enable shell autocompletion
+
+We have the ability to generate autocompletion scripts for the shell's `bash`, `zsh`, `fish` and `powershell`.  To generate 
+the completion script for MacOS zsh:
+
+```sh
+kubectl opslevel completion zsh > /usr/local/share/zsh/site-functions/_kubectl-opslevel
+```
+
+Make sure you have `zsh` completion turned on by having the following as one of the first few lines in your `.zshrc` file
+
+```sh
+echo "autoload -U compinit; compinit" >> ~/.zshrc
+```
+
 ### JSON-Schema
 
 The tool also has the ability to output a [JSON-Schema](https://json-schema.org/) file for use in IDE's when editing the configuration file.
