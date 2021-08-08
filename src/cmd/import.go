@@ -35,6 +35,7 @@ func runImport(cmd *cobra.Command, args []string) {
 	client := common.NewClient()
 	CacheLookupTables(client)
 
+	log.Info().Msgf("Worker Concurrency == %v", concurrency)
 	done := make(chan bool)
 	queue := make(chan common.ServiceRegistration, concurrency)
 	go createWorkerPool(concurrency, queue, done)

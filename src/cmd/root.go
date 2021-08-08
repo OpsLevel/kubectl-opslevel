@@ -102,6 +102,4 @@ func setupConcurrency() {
 	if concurrency <= 0 {
 		concurrency = runtime.GOMAXPROCS(0)
 	}
-
-	log.Info().Msgf("Worker Concurrency == %v", concurrency)
 }
