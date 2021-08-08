@@ -36,7 +36,7 @@ func init() {
 	rootCmd.PersistentFlags().String("logFormat", "TEXT", "overrides environment variable 'OL_LOGFORMAT' (options [\"JSON\", \"TEXT\"])")
 	rootCmd.PersistentFlags().String("logLevel", "INFO", "overrides environment variable 'OL_LOGLEVEL' (options [\"ERROR\", \"WARN\", \"INFO\", \"DEBUG\"])")
 	rootCmd.PersistentFlags().String("api-token", "", "The OpsLevel API Token. Overrides environment variable 'OL_APITOKEN'")
-	rootCmd.PersistentFlags().IntP("workers", "w", -1, "Sets the number of workers for API call processing. The default is == # CPU cores (cgroup aware). Overrides environment variable 'OL_CONCURRENCY'")
+	rootCmd.PersistentFlags().IntP("workers", "w", -1, "Sets the number of workers for API call processing. The default is == # CPU cores (cgroup aware). Overrides environment variable 'OL_WORKERS'")
 
 	viper.BindPFlags(rootCmd.PersistentFlags())
 	viper.BindPFlag("apitoken", rootCmd.PersistentFlags().Lookup("api-token"))
