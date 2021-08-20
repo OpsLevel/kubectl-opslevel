@@ -11,8 +11,8 @@
         <img src="https://img.shields.io/github/contributors/OpsLevel/kubectl-opslevel" /></a>
     <a href="https://github.com/OpsLevel/kubectl-opslevel/pulse" alt="Activity">
         <img src="https://img.shields.io/github/commit-activity/m/OpsLevel/kubectl-opslevel" /></a>
-    <a href="https://dependabot.com/" alt="Dependabot">
-        <img src="https://badgen.net/badge/Dependabot/enabled/green?icon=dependabot" /></a>
+    <a href="https://github.com/OpsLevel/kubectl-opslevel/releases" alt="Downloads">
+        <img src="https://img.shields.io/github/downloads/OpsLevel/kubectl-opslevel/total" /></a>
 </p>
 
 `kubectl-opslevel` is a command line tool that enables you to import & reconcile services with [OpsLevel](https://www.opslevel.com/) from your Kubernetes clusters.  You can also run this tool inside your Kubernetes cluster as a job to reconcile the data with OpsLevel periodically.  If you opt for this please read our [service aliases](#aliases) section as we use these to properly find and reconcile the data so it is important you choose something unique.
