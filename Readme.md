@@ -1,8 +1,8 @@
 <p align="center">
     <a href="https://github.com/OpsLevel/kubectl-opslevel/blob/main/LICENSE" alt="License">
         <img src="https://img.shields.io/github/license/OpsLevel/kubectl-opslevel.svg" /></a>
-    <a href="https://pkg.go.dev/github.com/go-resty/resty/v2">
-        <img src="https://pkg.go.dev/badge/github.com/go-resty/resty" alt="GoDoc"></a>
+    <a href="https://pkg.go.dev/github.com/OpsLevel/kubectl-opslevel">
+        <img src="https://pkg.go.dev/badge/github.com/OpsLevel/kubectl-opslevel" alt="GoDoc"></a>
     <a href="https://goreportcard.com/report/github.com/OpsLevel/kubectl-opslevel" alt="Go Report Card">
         <img src="https://goreportcard.com/badge/github.com/OpsLevel/kubectl-opslevel" /></a>
     <a href="https://GitHub.com/OpsLevel/kubectl-opslevel/releases/" alt="Release">
