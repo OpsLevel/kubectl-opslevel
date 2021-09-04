@@ -10,7 +10,7 @@ import (
 )
 
 func NewClient() *opslevel.Client {
-	client := opslevel.NewClient(viper.GetString("apitoken"))
+	client := opslevel.NewClient(viper.GetString("apitoken"), opslevel.SetURL(viper.GetString("apiurl")))
 
 	clientErr := client.Validate()
 	if clientErr != nil {
