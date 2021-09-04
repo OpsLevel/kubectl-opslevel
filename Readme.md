@@ -1,8 +1,10 @@
 <p align="center">
     <a href="https://github.com/OpsLevel/kubectl-opslevel/blob/main/LICENSE" alt="License">
         <img src="https://img.shields.io/github/license/OpsLevel/kubectl-opslevel.svg" /></a>
-    <a href="http://golang.org" alt="Made With Go">
-        <img src="https://img.shields.io/github/go-mod/go-version/OpsLevel/kubectl-opslevel?filename=src%2Fgo.mod" /></a>
+    <a href="https://pkg.go.dev/github.com/go-resty/resty/v2">
+        <img src="https://pkg.go.dev/badge/github.com/go-resty/resty" alt="GoDoc"></a>
+    <a href="https://goreportcard.com/report/github.com/OpsLevel/kubectl-opslevel" alt="Go Report Card">
+        <img src="https://goreportcard.com/badge/github.com/OpsLevel/kubectl-opslevel" /></a>
     <a href="https://GitHub.com/OpsLevel/kubectl-opslevel/releases/" alt="Release">
         <img src="https://img.shields.io/github/v/release/OpsLevel/kubectl-opslevel" /></a>  
     <a href="https://GitHub.com/OpsLevel/kubectl-opslevel/issues/" alt="Issues">
@@ -15,9 +17,17 @@
         <img src="https://img.shields.io/github/downloads/OpsLevel/kubectl-opslevel/total" /></a>
 </p>
 
+<p align="center">
+ <a href="#quickstart">Quickstart</a> |
+ <a href="#prerequisite">Prerequisite</a> |
+ <a href="#installation">Installation</a> |
+ <a href="https://www.opslevel.com/docs/integrations/kubernetes/">Documentation</a> |
+ <a href="#troubleshooting">Troubleshooting</a>
+</p>
+
 `kubectl-opslevel` is a command line tool that enables you to import & reconcile services with [OpsLevel](https://www.opslevel.com/) from your Kubernetes clusters.  You can also run this tool inside your Kubernetes cluster as a job to reconcile the data with OpsLevel periodically.  If you opt for this please read our [service aliases](#aliases) section as we use these to properly find and reconcile the data so it is important you choose something unique.
 
-### Quickstart
+## Quickstart
 
 Follow the [installation](#installation) instructions before running the below commands
 
@@ -36,9 +46,7 @@ kubectl opslevel service preview
 [![asciicast](https://asciinema.org/a/bv6WTcqkGtmC5wXN4VXYr035y.svg)](https://asciinema.org/a/bv6WTcqkGtmC5wXN4VXYr035y)
 
 
-<blockquote>This tool is still in beta.  It's sufficently stable for production use and has successfully imported & reconciled multiple OpsLevel accounts</blockquote>
-
-#### Current Sample Configuration
+### Current Sample Configuration
 
 ```yaml
 version: "1.1.0"
@@ -81,13 +89,6 @@ service:
           - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/repos"))) | map({"name": .key | split(".")[2], "directory": .key | split(".")[3:] | join("/"), "repo": .value})'
 ```
 
-Table of Contents
-=================
-
-   * [Prerequisite](#prerequisite)
-   * [Installation](#installation)
-   * [Documentation](#documentation)
-
 ## Prerequisite
 
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
@@ -103,16 +104,6 @@ brew install opslevel/tap/kubectl
 ## Docker
 
 The docker container is hosted on [AWS Public ECR](https://gallery.ecr.aws/opslevel/kubectl-opslevel)
-
-<!---
-TODO: Implement other methods
-
-#### Windows
-
-
-TODO: Scoop
-
--->
 
 ### Validate Install
 
@@ -166,6 +157,27 @@ Then add the following to you [VS Code user settings](https://code.visualstudio.
     }
 ```
 
-## Documentation
+## Troubleshooting
 
-You can read more about the tool and its configuration format in our [documentation](https://www.opslevel.com/docs/integrations/kubernetes/)
+### No services output from `service preview`
+
+This can happen for a number of reasons:
+
+  - Kubernetes RBAC permissions do not allow for listing namespaces
+  - Configuration file exclude rules exclude all found resources
+
+### Unable to connect to Kubernetes cluster
+
+Generally speaking if any other command works IE `kubectl get deployment` then any `kubectl opslevel` command should work too.  If this is the not the case then there is likely a special authentication mechanism in place that we are not handling properly.  This should be reported as a bug.
+
+### A field mapped in the configuration file is not in the service data
+
+For the most part `jq` filter failures are bubbled up but in certain edgecases they can fail silently.
+The best way to test a `jq` expression in isoloation is to emit the Kubernetes resource to json IE `kubectl get deployment <name> -o json` 
+and then play around with the expression in [jqplay](https://jqplay.org/)
+
+Generally speaking if we detect a json `null` value we do build any data for that field.
+
+### String interpolation has NULL in it
+
+There is a special edgecase with string interpolation and null values that we cannot handle that is documented [here](/../../issues/36)
