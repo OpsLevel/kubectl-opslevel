@@ -15,7 +15,7 @@ func NewClient() *opslevel.Client {
 	clientErr := client.Validate()
 	if clientErr != nil {
 		if strings.Contains(clientErr.Error(), "Please provide a valid OpsLevel API token") {
-			cobra.CheckErr(fmt.Errorf("%s via 'export OL_APITOKEN=XXX' or '--api-token=XXX'", clientErr.Error()))
+			cobra.CheckErr(fmt.Errorf("%s via 'export OL_APITOKEN=XXX' or '--api-token=XXX' or '--api-token-path=/path/to/token/file'", clientErr.Error()))
 		} else {
 			cobra.CheckErr(clientErr)
 		}
