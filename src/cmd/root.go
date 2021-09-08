@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"runtime"
 	"strings"
@@ -16,8 +17,10 @@ import (
 )
 
 var (
-	cfgFile     string
-	concurrency int
+	apiToken     string
+	apiTokenFile string
+	cfgFile      string
+	concurrency  int
 )
 
 var rootCmd = &cobra.Command{
@@ -35,11 +38,11 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "./opslevel-k8s.yaml", "")
 	rootCmd.PersistentFlags().String("logFormat", "TEXT", "overrides environment variable 'OL_LOGFORMAT' (options [\"JSON\", \"TEXT\"])")
 	rootCmd.PersistentFlags().String("logLevel", "INFO", "overrides environment variable 'OL_LOGLEVEL' (options [\"ERROR\", \"WARN\", \"INFO\", \"DEBUG\"])")
-	rootCmd.PersistentFlags().String("api-token", "", "The OpsLevel API Token. Overrides environment variable 'OL_APITOKEN'")
+	rootCmd.PersistentFlags().StringVar(&apiToken, "api-token", "", "The OpsLevel API Token. Overrides environment variable 'OL_APITOKEN' and the argument 'api-token-path'")
+	rootCmd.PersistentFlags().StringVar(&apiTokenFile, "api-token-path", "", "Absolute path to a file containing the OpsLevel API Token. Overrides environment variable 'OL_APITOKEN'")
 	rootCmd.PersistentFlags().IntP("workers", "w", -1, "Sets the number of workers for API call processing. The default is == # CPU cores (cgroup aware). Overrides environment variable 'OL_WORKERS'")
 
 	viper.BindPFlags(rootCmd.PersistentFlags())
-	viper.BindPFlag("apitoken", rootCmd.PersistentFlags().Lookup("api-token"))
 	cobra.OnInitialize(initConfig)
 }
 
@@ -47,6 +50,7 @@ func initConfig() {
 	readConfig()
 	setupLogging()
 	setupConcurrency()
+	setupAPIToken()
 }
 
 func readConfig() {
@@ -102,4 +106,30 @@ func setupConcurrency() {
 	if concurrency <= 0 {
 		concurrency = runtime.GOMAXPROCS(0)
 	}
+}
+
+// setupAPIToken evaluates several API token sources and sets the preferred token based on precedence.
+//
+// Precedence:
+//   1. --api-token
+//   2. --api-token-path
+//   3. OL_APITOKEN
+//
+func setupAPIToken() {
+	const key = "apitoken"
+
+	if apiToken != "" {
+		viper.Set(key, apiToken)
+		return
+	}
+
+	if apiTokenFile == "" {
+		return
+	}
+
+	b, err := os.ReadFile(apiTokenFile)
+	cobra.CheckErr(fmt.Errorf("Failed to read provided api token file %s: %v", apiTokenFile, err))
+
+	token := strings.TrimSpace(string(b))
+	viper.Set(key, token)
 }
