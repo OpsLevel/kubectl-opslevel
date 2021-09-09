@@ -181,3 +181,20 @@ Generally speaking if we detect a json `null` value we do build any data for tha
 ### String interpolation has NULL in it
 
 There is a special edgecase with string interpolation and null values that we cannot handle that is documented [here](/../../issues/36)
+
+### Unable to list all Namespaces
+
+Sometimes in tight permissions cluster listing of all Namespaces is not allowed.  The tool currently tries to list all Namespaces
+in a cluster to use as a batching mechanism.  This functionality can be skipped by using
+an the explict list `namespaces` in the selector which skips the API call to Kubernetes to list all Namespaces.
+
+```yaml
+service:
+  import:
+    - selector: # This limits what data we look at in Kubernetes
+        apiVersion: apps/v1 # only supports resources found in 'kubectl api-resources --verbs="get,list"'
+        kind: Deployment
+        namespaces:
+          - default
+          - kube-system
+```
