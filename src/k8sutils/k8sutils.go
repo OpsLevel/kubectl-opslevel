@@ -32,9 +32,10 @@ type NamespaceSelector struct {
 type KubernetesSelector struct {
 	ApiVersion string            `json:"apiVersion"`
 	Kind       string            `json:"kind"`
+	Namespaces []string          `json:"namespaces,omitempty"`
 	namespace  NamespaceSelector `json:"namespace"` //Deprecated 1.0.0 -> 1.1.0
 	labels     map[string]string `json:"lables"`    //Deprecated 1.0.0 -> 1.1.0
-	Excludes   []string          `json:"excludes"`
+	Excludes   []string          `json:"excludes,omitempty"`
 }
 
 type ClientWrapper struct {
@@ -80,6 +81,28 @@ func CreateKubernetesClient() ClientWrapper {
 	return ClientWrapper{client: client1, dynamic: client2, mapper: *mapper}
 }
 
+var (
+	namespacesWereCached bool
+	namespacesCache      []string
+)
+
+func (c *ClientWrapper) GetNamespaces(selector KubernetesSelector) ([]string, error) {
+	if len(selector.Namespaces) > 0 {
+		return selector.Namespaces, nil
+	} else {
+		if namespacesWereCached {
+			return namespacesCache, nil
+		}
+		allNamespaces, err := c.GetAllNamespaces()
+		if err != nil {
+			return nil, err
+		}
+		namespacesWereCached = true
+		namespacesCache = allNamespaces
+		return namespacesCache, nil
+	}
+}
+
 func (c *ClientWrapper) GetAllNamespaces() ([]string, error) {
 	var output []string
 	resources, queryErr := c.client.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
@@ -92,10 +115,14 @@ func (c *ClientWrapper) GetAllNamespaces() ([]string, error) {
 	return output, nil
 }
 
-func (c *ClientWrapper) Query(selector KubernetesSelector, namespaces []string) ([][]byte, error) {
+func (c *ClientWrapper) Query(selector KubernetesSelector) ([][]byte, error) {
 	var output [][]byte
 	aggregator := func(resource []byte) {
 		output = append(output, resource)
+	}
+	namespaces, namespacesErr := c.GetNamespaces(selector)
+	if namespacesErr != nil {
+		return output, namespacesErr
 	}
 	mapping, mappingErr := c.GetMapping(selector)
 	if mappingErr != nil {

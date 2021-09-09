@@ -277,17 +277,14 @@ func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
 	k8sClient := k8sutils.CreateKubernetesClient()
 
 	jq.ValidateInstalled()
-	namespaces, namespacesErr := k8sClient.GetAllNamespaces()
-	if namespacesErr != nil {
-		return services, namespacesErr
-	}
+
 	for _, importConfig := range c.Service.Import {
 		selector := importConfig.SelectorConfig
 		if selectorErr := selector.Validate(); selectorErr != nil {
 			return services, selectorErr
 		}
 
-		resources, queryErr := k8sClient.Query(selector, namespaces)
+		resources, queryErr := k8sClient.Query(selector)
 		if queryErr != nil {
 			return services, queryErr
 		}
