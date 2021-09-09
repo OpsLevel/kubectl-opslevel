@@ -40,7 +40,7 @@ func init() {
 	rootCmd.PersistentFlags().String("log-level", "INFO", "overrides environment variable 'OPSLEVEL_LOG_LEVEL' (options [\"ERROR\", \"WARN\", \"INFO\", \"DEBUG\"])")
 	rootCmd.PersistentFlags().StringVar(&apiToken, "api-token", "", "The OpsLevel API Token. Overrides environment variable 'OPSLEVEL_API_TOKEN' and the argument 'api-token-path'")
 	rootCmd.PersistentFlags().StringVar(&apiTokenFile, "api-token-path", "", "Absolute path to a file containing the OpsLevel API Token. Overrides environment variable 'OPSLEVEL_API_TOKEN'")
-	rootCmd.PersistentFlags().String("apiurl", "https://api.opslevel.com/graphql", "The OpsLevel API Url. Overrides environment variable 'OPSLEVEL_API_URL'")
+	rootCmd.PersistentFlags().String("api-url", "https://api.opslevel.com/graphql", "The OpsLevel API Url. Overrides environment variable 'OPSLEVEL_API_URL'")
 	rootCmd.PersistentFlags().IntP("workers", "w", -1, "Sets the number of workers for API call processing. The default is == # CPU cores (cgroup aware). Overrides environment variable 'OL_WORKERS'")
 
 	viper.BindPFlags(rootCmd.PersistentFlags())
@@ -134,7 +134,9 @@ func setupAPIToken() {
 	}
 
 	b, err := os.ReadFile(apiTokenFile)
-	cobra.CheckErr(fmt.Errorf("Failed to read provided api token file %s: %v", apiTokenFile, err))
+	if err != nil {
+		cobra.CheckErr(fmt.Errorf("failed to read provided api token file %s: %v", apiTokenFile, err))
+	}
 
 	token := strings.TrimSpace(string(b))
 	viper.Set(key, token)
