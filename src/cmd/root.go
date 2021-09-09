@@ -40,9 +40,15 @@ func init() {
 	rootCmd.PersistentFlags().String("logLevel", "INFO", "overrides environment variable 'OL_LOGLEVEL' (options [\"ERROR\", \"WARN\", \"INFO\", \"DEBUG\"])")
 	rootCmd.PersistentFlags().StringVar(&apiToken, "api-token", "", "The OpsLevel API Token. Overrides environment variable 'OL_APITOKEN' and the argument 'api-token-path'")
 	rootCmd.PersistentFlags().StringVar(&apiTokenFile, "api-token-path", "", "Absolute path to a file containing the OpsLevel API Token. Overrides environment variable 'OL_APITOKEN'")
+    rootCmd.PersistentFlags().String("apiurl", "https://api.opslevel.com/graphql", "The OpsLevel API Url. Overrides environment variable 'OPSLEVEL_API_URL'")
 	rootCmd.PersistentFlags().IntP("workers", "w", -1, "Sets the number of workers for API call processing. The default is == # CPU cores (cgroup aware). Overrides environment variable 'OL_WORKERS'")
 
 	viper.BindPFlags(rootCmd.PersistentFlags())
+	viper.BindEnv("logFormat", "OPSLEVEL_LOG_FORMAT", "OL_LOG_FORMAT", "OL_LOGFORMAT")
+	viper.BindEnv("logLevel", "OPSLEVEL_LOG_LEVEL", "OL_LOG_LEVEL", "OL_LOGLEVEL")
+	viper.BindEnv("apiurl", "OPSLEVEL_API_URL", "OL_API_URL", "OL_APIURL")
+	viper.BindEnv("apitoken", "OPSLEVEL_API_TOKEN", "OL_API_TOKEN", "OL_APITOKEN")
+	viper.BindEnv("workers", "OPSLEVEL_WORKERS", "OL_WORKERS")
 	cobra.OnInitialize(initConfig)
 }
 
@@ -71,7 +77,7 @@ func readConfig() {
 		viper.AddConfigPath(".")
 		viper.AddConfigPath(home)
 	}
-	viper.SetEnvPrefix("OL")
+	viper.SetEnvPrefix("OPSLEVEL")
 	viper.AutomaticEnv()
 	viper.ReadInConfig()
 }
