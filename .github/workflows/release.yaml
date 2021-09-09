@@ -30,6 +30,8 @@ jobs:
           password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         env:
           AWS_REGION: us-east-1
+      - name: Cache Docker Layers
+        run: docker pull public.ecr.aws/opslevel/kubectl-opslevel:v0.4.6 || true
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
