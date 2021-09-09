@@ -40,7 +40,7 @@ kubectl opslevel config sample > ./opslevel-k8s.yaml
 kubectl opslevel service preview
 
 # Import (and reconcile) the found data with your OpsLevel account
- OL_APITOKEN=XXXX kubectl opslevel service import
+ OPSLEVEL_API_TOKEN=XXXX kubectl opslevel service import
 ```
 
 [![asciicast](https://asciinema.org/a/bv6WTcqkGtmC5wXN4VXYr035y.svg)](https://asciinema.org/a/bv6WTcqkGtmC5wXN4VXYr035y)

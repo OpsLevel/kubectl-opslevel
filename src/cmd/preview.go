@@ -62,7 +62,7 @@ func runPreview(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	fmt.Println("\nIf you're happy with the above data you can reconcile it with OpsLevel by running:\n\n OL_APITOKEN=XXX kubectl opslevel service import\n\nOtherwise, please adjust the config file and rerun this command")
+	fmt.Println("\nIf you're happy with the above data you can reconcile it with OpsLevel by running:\n\n OPSLEVEL_API_TOKEN=XXX kubectl opslevel service import\n\nOtherwise, please adjust the config file and rerun this command")
 }
 
 func sample(data []common.ServiceRegistration, samples int) []common.ServiceRegistration {
