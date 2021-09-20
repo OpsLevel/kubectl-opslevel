@@ -215,11 +215,15 @@ func Parse(c config.ServiceRegistrationConfig, count int, resources []byte) ([]S
 	return services, nil
 }
 
+// Also removes empty string values
 func removeDuplicates(data []string) []string {
 	keys := make(map[string]bool)
 	list := []string{}
 
 	for _, entry := range data {
+		if entry == "" {
+			continue
+		}
 		if _, value := keys[entry]; !value {
 			keys[entry] = true
 			list = append(list, entry)
