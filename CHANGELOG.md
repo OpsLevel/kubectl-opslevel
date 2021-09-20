@@ -2,8 +2,14 @@
 ## [Unreleased]
 
 
-<a name="0.4.7"></a>
-## [0.4.7] - 2021-09-09
+<a name="v0.4.8"></a>
+## [v0.4.8] - 2021-09-20
+### Bugfix
+- skip over aliases that are empty strings as they are not valid to register
+
+
+<a name="v0.4.7"></a>
+## [v0.4.7] - 2021-09-09
 ### Docs
 - improve readme and add a troubleshooting section
 
@@ -222,8 +228,9 @@
 <a name="v0.0.1"></a>
 ## v0.0.1 - 2021-03-25
 
-[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/0.4.7...HEAD
-[0.4.7]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.6...0.4.7
+[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.8...HEAD
+[v0.4.8]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.7...v0.4.8
+[v0.4.7]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.6...v0.4.7
 [v0.4.6]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.5...v0.4.6
 [v0.4.5]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.5-rc.1...v0.4.5
 [v0.4.5-rc.1]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.4...v0.4.5-rc.1
