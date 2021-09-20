@@ -219,7 +219,7 @@ func UpdateService(client *opslevel.Client, registration common.ServiceRegistrat
 
 func AssignAliases(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
 	for _, alias := range registration.Aliases {
-		if service.HasAlias(alias) {
+		if alias == "" || service.HasAlias(alias) {
 			continue
 		}
 		_, err := client.CreateAlias(opslevel.AliasCreateInput{
