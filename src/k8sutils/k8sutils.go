@@ -34,7 +34,7 @@ type KubernetesSelector struct {
 	Kind       string            `json:"kind"`
 	Namespaces []string          `json:"namespaces,omitempty"`
 	namespace  NamespaceSelector `json:"namespace"` //Deprecated 1.0.0 -> 1.1.0
-	labels     map[string]string `json:"lables"`    //Deprecated 1.0.0 -> 1.1.0
+	labels     map[string]string `json:"labels"`    //Deprecated 1.0.0 -> 1.1.0
 	Excludes   []string          `json:"excludes,omitempty"`
 }
 
