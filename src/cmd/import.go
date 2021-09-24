@@ -84,11 +84,10 @@ func reconcileService(client *opslevel.Client, service common.ServiceRegistratio
 	if needsUpdate {
 		UpdateService(client, service, foundService)
 	}
-	go AssignAliases(client, service, foundService)
-	go AssignTags(client, service, foundService)
-	go CreateTags(client, service, foundService)
-	go AssignTools(client, service, foundService)
-	go AttachRepositories(client, service, foundService)
+	go HandleAliases(client, service, foundService)
+	go HandleTags(client, service, foundService)
+	go HandleTools(client, service, foundService)
+	go HandleRepositories(client, service, foundService)
 	log.Info().Msgf("[%s] Finished processing data", foundService.Name)
 }
 
@@ -217,7 +216,7 @@ func UpdateService(client *opslevel.Client, registration common.ServiceRegistrat
 	}
 }
 
-func AssignAliases(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
+func HandleAliases(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
 	for _, alias := range registration.Aliases {
 		if alias == "" || service.HasAlias(alias) {
 			continue
@@ -232,6 +231,11 @@ func AssignAliases(client *opslevel.Client, registration common.ServiceRegistrat
 			log.Info().Msgf("[%s] Assigned alias '%s'", service.Name, alias)
 		}
 	}
+}
+
+func HandleTags(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
+	AssignTags(client, registration, service)
+	CreateTags(client, registration, service)
 }
 
 func AssignTags(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
@@ -263,7 +267,7 @@ func CreateTags(client *opslevel.Client, registration common.ServiceRegistration
 	}
 }
 
-func AssignTools(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
+func HandleTools(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
 	for _, tool := range registration.Tools {
 		if service.HasTool(tool.Category, tool.DisplayName, tool.Environment) {
 			log.Debug().Msgf("[%s] Tool '{Category: %s, Environment: %s, Name: %s}' already exists on service ... skipping", service.Name, tool.Category, tool.Environment, tool.DisplayName)
@@ -279,7 +283,7 @@ func AssignTools(client *opslevel.Client, registration common.ServiceRegistratio
 	}
 }
 
-func AttachRepositories(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
+func HandleRepositories(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
 	for _, repositoryCreate := range registration.Repositories {
 		repositoryAsString := fmt.Sprintf("{Alias: %s, Directory: %s, Name: %s}", repositoryCreate.Repository.Alias, repositoryCreate.BaseDirectory, repositoryCreate.DisplayName)
 		foundRepository, foundRepositoryErr := client.GetRepositoryWithAlias(string(repositoryCreate.Repository.Alias))
