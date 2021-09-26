@@ -184,8 +184,10 @@ func Parse(c config.ServiceRegistrationConfig, count int, resources []byte) ([]S
 	Languages := parseField(c.Language, resources)
 	Frameworks := parseField(c.Framework, resources)
 	Aliases := parseFieldArray(c.Aliases, resources)
-	Aliases = append(Aliases, parseField("\"k8s:\\(.metadata.name)-\\(.metadata.namespace)\"", resources))
-	TagAssigns := parseFieldArray(c.Tags.Assign, resources)
+    if len(Aliases) < 1 {
+		Aliases = append(Aliases, parseField("Auto Added Alias", "\"k8s:\\(.metadata.name)-\\(.metadata.namespace)\"", resources))
+	}
+    TagAssigns := parseFieldArray(c.Tags.Assign, resources)
 	TagCreates := parseFieldArray(c.Tags.Create, resources)
 	Tools := parseFieldArray(c.Tools, resources)
 	Repositories := parseFieldArray(c.Repositories, resources)
