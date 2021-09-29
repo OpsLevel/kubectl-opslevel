@@ -8,7 +8,6 @@ import (
 	"github.com/opslevel/kubectl-opslevel/jq"
 
 	"github.com/rs/zerolog/log"
-	_ "github.com/rs/zerolog/log"
 )
 
 type JQParser struct {

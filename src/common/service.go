@@ -185,7 +185,7 @@ func Parse(field string, c config.ServiceRegistrationConfig, count int, resource
 	Languages := parseField(fmt.Sprintf("%s.language", field), c.Language, resources)
 	Frameworks := parseField(fmt.Sprintf("%s.framework", field), c.Framework, resources)
 	Aliases := parseFieldArray(fmt.Sprintf("%s.aliases", field), c.Aliases, resources)
-    if len(Aliases) < 1 {
+	if len(Aliases) < 1 {
 		Aliases = append(Aliases, parseField("Auto Added Alias", "\"k8s:\\(.metadata.name)-\\(.metadata.namespace)\"", resources))
 	}
 	TagAssigns := parseFieldArray(fmt.Sprintf("%s.tags.assign", field), c.Tags.Assign, resources)
@@ -303,22 +303,6 @@ func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
 		}
 		services = append(services, parsedServices...)
 	}
-
-	// Dedup Service Registrations
-	/*
-		input = services
-		output = []
-		for i in input:
-		wasMerged := false
-		for j in output:
-			if anyOverlaps(i.aliases, j.aliases):
-			j.Merge(i)
-			wasMerged = true
-			break
-		if !wasMerged :
-			output = append(output, i)
-	*/
-
 	return services, nil
 }
 
