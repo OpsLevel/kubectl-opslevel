@@ -239,7 +239,11 @@ func HandleTags(client *opslevel.Client, registration common.ServiceRegistration
 }
 
 func AssignTags(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
-	_, err := client.AssignTagsForId(service.Id, registration.TagAssigns)
+	input := opslevel.TagAssignInput{
+		Id:   service.Id,
+		Tags: registration.TagAssigns,
+	}
+	_, err := client.AssignTags(input)
 	jsonBytes, _ := json.Marshal(registration.TagAssigns)
 	if err != nil {
 		log.Error().Msgf("[%s] Failed assigning tags: %s\n\tREASON: %v", service.Name, string(jsonBytes), err.Error())
@@ -249,20 +253,20 @@ func AssignTags(client *opslevel.Client, registration common.ServiceRegistration
 }
 
 func CreateTags(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
-	for tagKey, tagValue := range registration.TagCreates {
-		if service.HasTag(tagKey, tagValue) {
+	for _, tag := range registration.TagCreates {
+		if service.HasTag(tag.Key, tag.Value) {
 			continue
 		}
 		input := opslevel.TagCreateInput{
 			Id:    service.Id,
-			Key:   tagKey,
-			Value: tagValue,
+			Key:   tag.Key,
+			Value: tag.Value,
 		}
 		_, err := client.CreateTag(input)
 		if err != nil {
-			log.Error().Msgf("[%s] Failed creating tag '%s = %s'\n\tREASON: %v", service.Name, tagKey, tagValue, err.Error())
+			log.Error().Msgf("[%s] Failed creating tag '%s = %s'\n\tREASON: %v", service.Name, tag.Key, tag.Value, err.Error())
 		} else {
-			log.Info().Msgf("[%s] Created tag '%s = %s'", service.Name, tagKey, tagValue)
+			log.Info().Msgf("[%s] Created tag '%s = %s'", service.Name, tag.Key, tag.Value)
 		}
 	}
 }

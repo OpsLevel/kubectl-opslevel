@@ -26,13 +26,55 @@ type ServiceRegistration struct {
 	Language     string                                  `json:",omitempty"`
 	Framework    string                                  `json:",omitempty"`
 	Aliases      []string                                `json:",omitempty"`
-	TagAssigns   map[string]string                       `json:",omitempty"`
-	TagCreates   map[string]string                       `json:",omitempty"`
+	TagAssigns   []opslevel.TagInput                     `json:",omitempty"`
+	TagCreates   []opslevel.TagInput                     `json:",omitempty"`
 	Tools        []opslevel.ToolCreateInput              `json:",omitempty"` // This is a concrete class so fields are validated during `service preview`
 	Repositories []opslevel.ServiceRepositoryCreateInput `json:",omitempty"` // This is a concrete class so fields are validated during `service preview`
 }
 
-func parseField(field string, filter string, resources []byte) *JQResponseMulti {
+func (s *ServiceRegistration) Merge(o ServiceRegistration) {
+	if s.Description == "" {
+		s.Description = o.Description
+	}
+	if s.Owner == "" {
+		s.Owner = o.Owner
+	}
+	if s.Lifecycle == "" {
+		s.Lifecycle = o.Lifecycle
+	}
+	if s.Tier == "" {
+		s.Tier = o.Tier
+	}
+	if s.Product == "" {
+		s.Product = o.Product
+	}
+	if s.Language == "" {
+		s.Language = o.Language
+	}
+	if s.Framework == "" {
+		s.Framework = o.Framework
+	}
+	for _, alias := range o.Aliases {
+		s.Aliases = append(s.Aliases, alias)
+	}
+	s.Aliases = removeDuplicates(s.Aliases)
+	for _, tag := range o.TagAssigns {
+		s.TagAssigns = append(s.TagAssigns, tag)
+	}
+	for _, tag := range o.TagCreates {
+		s.TagCreates = append(s.TagCreates, tag)
+	}
+	s.TagCreates = removeDuplicatesTags(s.TagCreates)
+	s.TagAssigns = removeOverlappedKeys(s.TagAssigns, s.TagCreates)
+	for _, tool := range o.Tools {
+		s.Tools = append(s.Tools, tool)
+	}
+	for _, repo := range o.Repositories {
+		s.Repositories = append(s.Repositories, repo)
+	}
+}
+
+func parseField(filter string, resources []byte) *JQResponseMulti {
 	parser := NewJQParserMulti(filter)
 	return parser.ParseMulti(field, resources)
 }
@@ -45,7 +87,7 @@ func parseFieldArray(field string, filters []string, resources []byte) []*JQResp
 	return output
 }
 
-func aggregateAliases(index int, data []*JQResponseMulti) []string {
+func GetAliases(index int, data []*JQResponseMulti) []string {
 	output := []string{}
 	count := len(data)
 	for i := 0; i < count; i++ {
@@ -66,11 +108,10 @@ func aggregateAliases(index int, data []*JQResponseMulti) []string {
 			// TODO: log warnings about a JQ filter that went unused because it returned an invalid type that we dont know how to handle
 		}
 	}
-	return output
+	return removeDuplicates(output)
 }
 
-func aggregateMap(index int, data []*JQResponseMulti) map[string]string {
-	output := map[string]string{}
+func GetTags(index int, data []*JQResponseMulti) (output []opslevel.TagInput) {
 	count := len(data)
 	for i := 0; i < count; i++ {
 		if data[i].Objects == nil {
@@ -83,7 +124,10 @@ func aggregateMap(index int, data []*JQResponseMulti) map[string]string {
 				if k == "" || v == "" {
 					continue
 				}
-				output[k] = v
+				output = append(output, opslevel.TagInput{
+					Key:   k,
+					Value: v,
+				})
 			}
 		case StringStringMapArray:
 			for _, item := range parsedData.StringMapArray {
@@ -91,7 +135,10 @@ func aggregateMap(index int, data []*JQResponseMulti) map[string]string {
 					if k == "" || v == "" {
 						continue
 					}
-					output[k] = v
+					output = append(output, opslevel.TagInput{
+						Key:   k,
+						Value: v,
+					})
 				}
 			}
 			// TODO: log warnings about a JQ filter that went unused because it returned an invalid type that we dont know how to handle
@@ -100,7 +147,7 @@ func aggregateMap(index int, data []*JQResponseMulti) map[string]string {
 	return output
 }
 
-func aggregateTools(index int, data []*JQResponseMulti) []opslevel.ToolCreateInput {
+func GetTools(index int, data []*JQResponseMulti) []opslevel.ToolCreateInput {
 	output := []opslevel.ToolCreateInput{}
 	count := len(data)
 	for i := 0; i < count; i++ {
@@ -124,7 +171,7 @@ func aggregateTools(index int, data []*JQResponseMulti) []opslevel.ToolCreateInp
 	return output
 }
 
-func aggregateRepositories(index int, data []*JQResponseMulti) []opslevel.ServiceRepositoryCreateInput {
+func GetRepositories(index int, data []*JQResponseMulti) []opslevel.ServiceRepositoryCreateInput {
 	output := []opslevel.ServiceRepositoryCreateInput{}
 	count := len(data)
 	for i := 0; i < count; i++ {
@@ -205,14 +252,13 @@ func Parse(field string, c config.ServiceRegistrationConfig, count int, resource
 		service.Product = GetString(i, Products)
 		service.Language = GetString(i, Languages)
 		service.Framework = GetString(i, Frameworks)
-		service.Aliases = aggregateAliases(i, Aliases)
-		service.Aliases = removeDuplicates(service.Aliases)
-		service.TagAssigns = aggregateMap(i, TagAssigns)
-		service.TagCreates = aggregateMap(i, TagCreates)
-		// https://github.com/OpsLevel/kubectl-opslevel/issues/41
+		service.Aliases = GetAliases(i, Aliases)
+		service.TagAssigns = GetTags(i, TagAssigns)
+		service.TagCreates = GetTags(i, TagCreates)
+		service.TagCreates = removeDuplicatesTags(service.TagCreates)
 		service.TagAssigns = removeOverlappedKeys(service.TagAssigns, service.TagCreates)
-		service.Tools = aggregateTools(i, Tools)
-		service.Repositories = aggregateRepositories(i, Repositories)
+		service.Tools = GetTools(i, Tools)
+		service.Repositories = GetRepositories(i, Repositories)
 	}
 
 	return services, nil
@@ -235,14 +281,36 @@ func removeDuplicates(data []string) []string {
 	return list
 }
 
-func removeOverlappedKeys(source map[string]string, check map[string]string) map[string]string {
-	output := make(map[string]string, len(source))
-	for k := range source {
-		if _, value := check[k]; !value {
-			output[k] = source[k]
+func removeDuplicatesTags(data []opslevel.TagInput) (output []opslevel.TagInput) {
+	keys := make(map[string]bool)
+
+	for _, entry := range data {
+		if entry.Key == "" {
+			continue
+		}
+		if _, value := keys[entry.Key]; !value {
+			keys[entry.Key] = true
+			output = append(output, entry)
 		}
 	}
-	return output
+	return
+}
+
+// https://github.com/OpsLevel/kubectl-opslevel/issues/41
+func removeOverlappedKeys(source []opslevel.TagInput, check []opslevel.TagInput) (output []opslevel.TagInput) {
+	for _, tagAssign := range source {
+		foundMatch := false
+		for _, tagCreate := range check {
+			if tagCreate.Key == tagAssign.Key {
+				foundMatch = true
+				break
+			}
+		}
+		if foundMatch == false {
+			output = append(output, tagAssign)
+		}
+	}
+	return
 }
 
 func ConvertToToolCreateInput(data map[string]string) (*opslevel.ToolCreateInput, error) {
@@ -279,12 +347,9 @@ func ConvertToServiceRepositoryCreateInput(data map[string]string) *opslevel.Ser
 	}
 }
 
-func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
+func getServices(c *config.Config) ([]ServiceRegistration, error) {
 	var services []ServiceRegistration
 	k8sClient := k8sutils.CreateKubernetesClient()
-
-	jq.ValidateInstalled()
-
 	for i, importConfig := range c.Service.Import {
 		selector := importConfig.SelectorConfig
 		if selectorErr := selector.Validate(); selectorErr != nil {
@@ -304,6 +369,45 @@ func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
 		services = append(services, parsedServices...)
 	}
 	return services, nil
+}
+
+func aliasOverlaps(a []string, b []string) bool {
+	for _, i := range a {
+		for _, j := range b {
+			if i == j {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func dedupServices(input []ServiceRegistration) ([]ServiceRegistration, error) {
+	var output []ServiceRegistration
+	for _, source := range input {
+		wasMerged := false
+		for i, dest := range output {
+			if aliasOverlaps(source.Aliases, dest.Aliases) {
+				dest.Merge(source)
+				output[i] = dest
+				wasMerged = true
+				break
+			}
+		}
+		if !wasMerged {
+			output = append(output, source)
+		}
+	}
+	return output, nil
+}
+
+func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
+	jq.ValidateInstalled()
+	services, err := getServices(c)
+	if err != nil {
+		return nil, err
+	}
+	return dedupServices(services)
 }
 
 func anyIsTrue(resourceIndex int, filters []*JQResponseMulti) bool {
