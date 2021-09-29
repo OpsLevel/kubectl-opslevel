@@ -2,6 +2,20 @@
 ## [Unreleased]
 
 
+<a name="v0.4.9"></a>
+## [v0.4.9] - 2021-09-29
+### Bugfix
+- bubble up JQ errors are warning logs to help diagnose problems
+- tag mutations for a service were being run in parallel but should have been serial
+- Deprecated selector "labels" but used incorrect spelling of labels in the json tags
+
+### Feature
+- improve client side service deduplication which prevents a class of bugs with parallel API calls - also makes `service preview` output more representative of actual results
+
+### Refactor
+- only include auto alias `k8s:<name>-<namespace>` if no alias results were found
+
+
 <a name="v0.4.8"></a>
 ## [v0.4.8] - 2021-09-20
 ### Bugfix
@@ -228,7 +242,8 @@
 <a name="v0.0.1"></a>
 ## v0.0.1 - 2021-03-25
 
-[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.8...HEAD
+[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.9...HEAD
+[v0.4.9]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.8...v0.4.9
 [v0.4.8]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.7...v0.4.8
 [v0.4.7]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.6...v0.4.7
 [v0.4.6]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.5...v0.4.6

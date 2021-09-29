@@ -74,7 +74,7 @@ func (s *ServiceRegistration) Merge(o ServiceRegistration) {
 	}
 }
 
-func parseField(filter string, resources []byte) *JQResponseMulti {
+func parseField(field string, filter string, resources []byte) *JQResponseMulti {
 	parser := NewJQParserMulti(filter)
 	return parser.ParseMulti(field, resources)
 }
