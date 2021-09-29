@@ -44,17 +44,17 @@ func (e *JQError) Error() string {
 	case EmptyFilter:
 		return "Empty JQ Filter"
 	case BadOptions:
-		return fmt.Sprintf("Bad JQ Options: `%s`", e.Message)
+		return fmt.Sprintf("Invalid JQ Options %s", e.Message)
 	case BadFilter:
-		return fmt.Sprintf("Bad JQ Filter: `%s`", e.Message)
+		return fmt.Sprintf("Invalid JQ Filter %s", e.Message)
 	case BadJSON:
-		return fmt.Sprintf("Bad Json: `%s`", e.Message)
+		return fmt.Sprintf("Invalid Json %s", e.Message)
 	case BadExcution:
-		return fmt.Sprintf("Bad JQ Execution: `%s`", e.Message)
+		return fmt.Sprintf("Failed JQ Execution %s", strings.TrimSuffix(e.Message, "\n"))
 	case Unknown:
-		return fmt.Sprintf("Unknown JQ Error: `%s`", e.Message)
+		return fmt.Sprintf("Unknown JQ Error %s", e.Message)
 	}
-	panic(fmt.Sprintf("Unknown JQ Error Occured!"))
+	panic(fmt.Sprintf("Unknown JQ Error %s", e.Message))
 }
 
 func (jq *JQ) Filter() string {

@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/kubectl-opslevel/jq"
@@ -31,15 +32,15 @@ type ServiceRegistration struct {
 	Repositories []opslevel.ServiceRepositoryCreateInput `json:",omitempty"` // This is a concrete class so fields are validated during `service preview`
 }
 
-func parseField(filter string, resources []byte) *JQResponseMulti {
+func parseField(field string, filter string, resources []byte) *JQResponseMulti {
 	parser := NewJQParserMulti(filter)
-	return parser.ParseMulti(resources)
+	return parser.ParseMulti(field, resources)
 }
 
-func parseFieldArray(filters []string, resources []byte) []*JQResponseMulti {
+func parseFieldArray(field string, filters []string, resources []byte) []*JQResponseMulti {
 	var output []*JQResponseMulti
-	for _, filter := range filters {
-		output = append(output, parseField(filter, resources))
+	for i, filter := range filters {
+		output = append(output, parseField(fmt.Sprintf("%s[%d]", field, i+1), filter, resources))
 	}
 	return output
 }
@@ -171,26 +172,26 @@ func GetString(index int, data *JQResponseMulti) string {
 }
 
 // TODO: bubble up errors
-func Parse(c config.ServiceRegistrationConfig, count int, resources []byte) ([]ServiceRegistration, error) {
+func Parse(field string, c config.ServiceRegistrationConfig, count int, resources []byte) ([]ServiceRegistration, error) {
 	services := make([]ServiceRegistration, count)
 
 	// Parse
-	Names := parseField(c.Name, resources)
-	Descriptions := parseField(c.Description, resources)
-	Owners := parseField(c.Owner, resources)
-	Lifecycles := parseField(c.Lifecycle, resources)
-	Tiers := parseField(c.Tier, resources)
-	Products := parseField(c.Product, resources)
-	Languages := parseField(c.Language, resources)
-	Frameworks := parseField(c.Framework, resources)
-	Aliases := parseFieldArray(c.Aliases, resources)
+	Names := parseField(fmt.Sprintf("%s.name", field), c.Name, resources)
+	Descriptions := parseField(fmt.Sprintf("%s.description", field), c.Description, resources)
+	Owners := parseField(fmt.Sprintf("%s.owner", field), c.Owner, resources)
+	Lifecycles := parseField(fmt.Sprintf("%s.lifecycle", field), c.Lifecycle, resources)
+	Tiers := parseField(fmt.Sprintf("%s.tier", field), c.Tier, resources)
+	Products := parseField(fmt.Sprintf("%s.product", field), c.Product, resources)
+	Languages := parseField(fmt.Sprintf("%s.language", field), c.Language, resources)
+	Frameworks := parseField(fmt.Sprintf("%s.framework", field), c.Framework, resources)
+	Aliases := parseFieldArray(fmt.Sprintf("%s.aliases", field), c.Aliases, resources)
     if len(Aliases) < 1 {
 		Aliases = append(Aliases, parseField("Auto Added Alias", "\"k8s:\\(.metadata.name)-\\(.metadata.namespace)\"", resources))
 	}
-    TagAssigns := parseFieldArray(c.Tags.Assign, resources)
-	TagCreates := parseFieldArray(c.Tags.Create, resources)
-	Tools := parseFieldArray(c.Tools, resources)
-	Repositories := parseFieldArray(c.Repositories, resources)
+	TagAssigns := parseFieldArray(fmt.Sprintf("%s.tags.assign", field), c.Tags.Assign, resources)
+	TagCreates := parseFieldArray(fmt.Sprintf("%s.tags.create", field), c.Tags.Create, resources)
+	Tools := parseFieldArray(fmt.Sprintf("%s.tools", field), c.Tools, resources)
+	Repositories := parseFieldArray(fmt.Sprintf("%s.repository", field), c.Repositories, resources)
 
 	// Aggregate
 	for i := 0; i < count; i++ {
@@ -284,7 +285,7 @@ func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
 
 	jq.ValidateInstalled()
 
-	for _, importConfig := range c.Service.Import {
+	for i, importConfig := range c.Service.Import {
 		selector := importConfig.SelectorConfig
 		if selectorErr := selector.Validate(); selectorErr != nil {
 			return services, selectorErr
@@ -296,12 +297,28 @@ func QueryForServices(c *config.Config) ([]ServiceRegistration, error) {
 		}
 
 		resources = filterResources(selector, resources)
-		parsedServices, parseError := Parse(importConfig.OpslevelConfig, len(resources), joinResources(resources))
+		parsedServices, parseError := Parse(fmt.Sprintf("service.import[%d]", i+1), importConfig.OpslevelConfig, len(resources), joinResources(resources))
 		if parseError != nil {
 			return services, parseError
 		}
 		services = append(services, parsedServices...)
 	}
+
+	// Dedup Service Registrations
+	/*
+		input = services
+		output = []
+		for i in input:
+		wasMerged := false
+		for j in output:
+			if anyOverlaps(i.aliases, j.aliases):
+			j.Merge(i)
+			wasMerged = true
+			break
+		if !wasMerged :
+			output = append(output, i)
+	*/
+
 	return services, nil
 }
 
@@ -334,7 +351,7 @@ func filterResources(selector k8sutils.KubernetesSelector, resources [][]byte) [
 	var output [][]byte
 	resourceCount := len(resources)
 	// Parse
-	filterResults := parseFieldArray(selector.Excludes, joinResources(resources))
+	filterResults := parseFieldArray("selector.excludes", selector.Excludes, joinResources(resources))
 
 	// Aggregate
 	for resourceIndex := 0; resourceIndex < resourceCount; resourceIndex++ {

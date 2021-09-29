@@ -3,9 +3,11 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/opslevel/kubectl-opslevel/jq"
 
+	"github.com/rs/zerolog/log"
 	_ "github.com/rs/zerolog/log"
 )
 
@@ -48,47 +50,39 @@ func NewJQParser(filter string) JQParser {
 }
 
 func NewJQParserMulti(filter string) JQParser {
-	parser := JQParser{JQ: jq.New(fmt.Sprintf("map(%s // null)", filter))}
+	parser := JQParser{JQ: jq.New(fmt.Sprintf("map((%s) // null)", filter))}
 	return parser
 }
 
-func (parser *JQParser) doParse(data []byte) []byte {
+func (parser *JQParser) doParse(field string, data []byte) []byte {
 	var bytes []byte
 	var err *jq.JQError
 	bytes, err = parser.JQ.Run(data)
 	if err != nil {
-		//fmt.Println(err.Error())
-		switch err.Type {
-		case jq.BadOptions:
-			return nil
-		case jq.BadFilter:
-			return []byte(fmt.Sprintf("\"%s\"", parser.JQ.Filter()))
-		case jq.BadJSON:
-			return nil
-		case jq.BadExcution:
-			return nil
-		}
+		filter := strings.TrimSuffix(strings.TrimPrefix(parser.JQ.Filter(), "map(("), ") // null)")
+		log.Warn().Str("Field", field).Str("Filter", filter).Msgf(strings.ReplaceAll(err.Error(), parser.JQ.Filter(), ""))
+		return nil
 	}
 	return bytes
 }
 
-func (parser *JQParser) Parse(data []byte) *JQResponse {
+func (parser *JQParser) Parse(field string, data []byte) *JQResponse {
 	var resp *JQResponse
 	if parser.JQ.Filter() == "" {
 		resp = &JQResponse{Bytes: []byte("")}
 	} else {
-		resp = &JQResponse{Bytes: parser.doParse(data)}
+		resp = &JQResponse{Bytes: parser.doParse(field, data)}
 	}
 	resp.Unmarshal()
 	return resp
 }
 
-func (parser *JQParser) ParseMulti(data []byte) *JQResponseMulti {
+func (parser *JQParser) ParseMulti(field string, data []byte) *JQResponseMulti {
 	var resp *JQResponseMulti
-	if parser.JQ.Filter() == "map( // null)" {
+	if parser.JQ.Filter() == "map(() // null)" {
 		resp = &JQResponseMulti{Bytes: []byte("[]")}
 	} else {
-		resp = &JQResponseMulti{Bytes: parser.doParse(data)}
+		resp = &JQResponseMulti{Bytes: parser.doParse(field, data)}
 	}
 	resp.Unmarshal()
 	return resp
