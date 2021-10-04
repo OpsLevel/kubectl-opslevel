@@ -9,8 +9,8 @@ require (
 	github.com/google/go-cmp v0.5.5
 	github.com/googleapis/gnostic v0.5.1 // indirect
 	github.com/imdario/mergo v0.3.10 // indirect
-	github.com/opslevel/opslevel-go v0.2.1
-	github.com/rs/zerolog v1.21.0
+	github.com/opslevel/opslevel-go v0.4.0
+	github.com/rs/zerolog v1.25.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
 	go.uber.org/automaxprocs v1.4.0

@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-func NewClient() *opslevel.Client {
-	client := opslevel.NewClient(viper.GetString("api-token"), opslevel.SetURL(viper.GetString("api-url")))
+func NewClient(version string) *opslevel.Client {
+	client := opslevel.NewClient(viper.GetString("api-token"), opslevel.SetURL(viper.GetString("api-url")), opslevel.SetUserAgentExtra(fmt.Sprintf("kubectl-%s", version)))
 
 	clientErr := client.Validate()
 	if clientErr != nil {

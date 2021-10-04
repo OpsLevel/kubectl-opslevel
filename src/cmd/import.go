@@ -32,7 +32,7 @@ func runImport(cmd *cobra.Command, args []string) {
 	services, servicesErr := common.QueryForServices(config)
 	cobra.CheckErr(servicesErr)
 
-	client := common.NewClient()
+	client := common.NewClient(version)
 	CacheLookupTables(client)
 
 	log.Info().Msgf("Worker Concurrency == %v", concurrency)
@@ -56,7 +56,7 @@ func createWorkerPool(count int, queue chan common.ServiceRegistration, done cha
 				reconcileService(c, data)
 			}
 			wg.Done()
-		}(common.NewClient(), queue, &waitGroup)
+		}(common.NewClient(version), queue, &waitGroup)
 	}
 	waitGroup.Wait()
 	done <- true
@@ -191,11 +191,11 @@ func CreateService(client *opslevel.Client, registration common.ServiceRegistrat
 
 func UpdateService(client *opslevel.Client, registration common.ServiceRegistration, service *opslevel.Service) {
 	updateServiceInput := opslevel.ServiceUpdateInput{
-		Id:           service.Id,
-		Product:      registration.Product,
-		Descripition: registration.Description,
-		Language:     registration.Language,
-		Framework:    registration.Framework,
+		Id:          service.Id,
+		Product:     registration.Product,
+		Description: registration.Description,
+		Language:    registration.Language,
+		Framework:   registration.Framework,
 	}
 	if v, ok := Tiers[registration.Tier]; ok {
 		updateServiceInput.Tier = string(v.Alias)
