@@ -41,7 +41,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&apiToken, "api-token", "", "The OpsLevel API Token. Overrides environment variable 'OPSLEVEL_API_TOKEN' and the argument 'api-token-path'")
 	rootCmd.PersistentFlags().StringVar(&apiTokenFile, "api-token-path", "", "Absolute path to a file containing the OpsLevel API Token. Overrides environment variable 'OPSLEVEL_API_TOKEN'")
 	rootCmd.PersistentFlags().String("api-url", "https://api.opslevel.com/graphql", "The OpsLevel API Url. Overrides environment variable 'OPSLEVEL_API_URL'")
-	rootCmd.PersistentFlags().IntP("workers", "w", -1, "Sets the number of workers for API call processing. The default is == # CPU cores (cgroup aware). Overrides environment variable 'OL_WORKERS'")
+	rootCmd.PersistentFlags().IntP("workers", "w", -1, "Sets the number of workers for API call processing. The default is == # CPU cores (cgroup aware). Overrides environment variable 'OPSLEVEL_WORKERS'")
 
 	viper.BindPFlags(rootCmd.PersistentFlags())
 	viper.BindEnv("log-format", "OPSLEVEL_LOG_FORMAT", "OL_LOG_FORMAT", "OL_LOGFORMAT")
