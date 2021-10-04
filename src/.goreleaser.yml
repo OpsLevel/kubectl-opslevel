@@ -66,4 +66,7 @@ signs:
       - "--detach-sign"
       - "${artifact}"
 changelog:
-  skip: true
+  sort: desc
+  filters:
+    exclude:
+      - "^Merge"
