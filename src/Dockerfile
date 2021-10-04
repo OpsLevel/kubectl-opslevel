@@ -1,6 +1,6 @@
 FROM ubuntu:focal AS release
 ENV USER_UID=1001 USER_NAME=opslevel
-ENTRYPOINT ["/usr/local/bin/opslevel"]
+ENTRYPOINT ["/usr/local/bin/kubectl-opslevel"]
 WORKDIR /app
 RUN apt-get update && \
     apt-get install -y curl && \
