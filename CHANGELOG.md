@@ -1,5 +1,16 @@
-<a name="unreleased"></a>
-## [Unreleased]
+
+<a name="v0.5.0"></a>
+## [v0.5.0] - 2021-10-04
+### Bugfix
+- fix docker image build to have latest jq binary installed
+
+### Docs
+- fix documentation of workers environment variable
+- update layout of readme based on enduser feedback
+
+### Refactor
+- upgrade opslevel-go to 0.4.0 and set new graphql custom user agent
+- remove functionality of `account` commands and direct user to our official CLI
 
 
 <a name="v0.4.9"></a>
@@ -242,7 +253,7 @@
 <a name="v0.0.1"></a>
 ## v0.0.1 - 2021-03-25
 
-[Unreleased]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.9...HEAD
+[v0.5.0]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.9...v0.5.0
 [v0.4.9]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.8...v0.4.9
 [v0.4.8]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.7...v0.4.8
 [v0.4.7]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.6...v0.4.7
