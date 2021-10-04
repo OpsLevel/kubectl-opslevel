@@ -32,11 +32,11 @@ jobs:
           AWS_REGION: us-east-1
       - name: Cache Docker Layers
         run: docker pull public.ecr.aws/opslevel/kubectl-opslevel:v0.4.6 || true
-      - name: Write Release Notes
-        run: |
-          curl -L https://github.com/git-chglog/git-chglog/releases/download/v0.15.0/git-chglog_0.15.0_linux_amd64.tar.gz | tar xz -C /usr/local/bin git-chglog
-          chmod 755 /usr/local/bin/git-chglog
-          /usr/local/bin/git-chglog $(git describe --tags $(git rev-list --tags --max-count=1)) > RELEASE_NOTES
+      # - name: Write Release Notes
+      #   run: |
+      #     curl -L https://github.com/git-chglog/git-chglog/releases/download/v0.15.0/git-chglog_0.15.0_linux_amd64.tar.gz | tar xz -C /usr/local/bin git-chglog
+      #     chmod 755 /usr/local/bin/git-chglog
+      #     /usr/local/bin/git-chglog $(git describe --tags $(git rev-list --tags --max-count=1)) > RELEASE_NOTES
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
