@@ -1,10 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-
-	"github.com/opslevel/kubectl-opslevel/common"
-	"github.com/opslevel/opslevel-go"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -18,68 +15,32 @@ var lifecycleCmd = &cobra.Command{
 	Use:   "lifecycles",
 	Short: "Lists the valid alias for lifecycles in your account",
 	Long:  `Lists the valid alias for lifecycles in your account`,
-	Run: func(cmd *cobra.Command, args []string) {
-		client := common.NewClient()
-		list, err := client.ListLifecycles()
-		if err == nil {
-			for _, item := range list {
-				fmt.Println(item.Alias)
-			}
-		}
-	},
+	Run:   movedToCLI,
 }
 
 var tierCmd = &cobra.Command{
 	Use:   "tiers",
 	Short: "Lists the valid alias for tiers in your account",
 	Long:  `Lists the valid alias for tiers in your account`,
-	Run: func(cmd *cobra.Command, args []string) {
-		client := common.NewClient()
-		list, err := client.ListTiers()
-		if err == nil {
-			for _, item := range list {
-				fmt.Println(item.Alias)
-			}
-		}
-	},
+	Run:   movedToCLI,
 }
 
 var teamCmd = &cobra.Command{
 	Use:   "teams",
 	Short: "Lists the valid alias for teams in your account",
 	Long:  `Lists the valid alias for teams in your account`,
-	Run: func(cmd *cobra.Command, args []string) {
-		client := common.NewClient()
-		list, err := client.ListTeams()
-		if err == nil {
-			for _, item := range list {
-				fmt.Println(item.Alias)
-			}
-		}
-	},
+	Run:   movedToCLI,
 }
 
 var toolsCmd = &cobra.Command{
 	Use:   "tools",
 	Short: "Lists the valid alias for tools in your account",
 	Long:  `Lists the valid alias for tools in your account`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(opslevel.ToolCategoryAdmin)
-		fmt.Println(opslevel.ToolCategoryCode)
-		fmt.Println(opslevel.ToolCategoryContinuousIntegration)
-		fmt.Println(opslevel.ToolCategoryDeployment)
-		fmt.Println(opslevel.ToolCategoryErrors)
-		fmt.Println(opslevel.ToolCategoryFeatureFlag)
-		fmt.Println(opslevel.ToolCategoryHealthChecks)
-		fmt.Println(opslevel.ToolCategoryIncidents)
-		fmt.Println(opslevel.ToolCategoryLogs)
-		fmt.Println(opslevel.ToolCategoryMetrics)
-		fmt.Println(opslevel.ToolCategoryOrchestrator)
-		fmt.Println(opslevel.ToolCategoryRunbooks)
-		fmt.Println(opslevel.ToolCategoryStatusPage)
-		fmt.Println(opslevel.ToolCategoryWiki)
-		fmt.Println(opslevel.ToolCategoryOther)
-	},
+	Run:   movedToCLI,
+}
+
+func movedToCLI(cmd *cobra.Command, args []string) {
+	log.Error().Msg("This command has been moved to our CLI. https://www.opslevel.com/docs/api/cli/\nIt will be removed at a future date!")
 }
 
 func init() {
