@@ -1,4 +1,10 @@
 
+<a name="v0.5.1"></a>
+## [v0.5.1] - 2021-10-04
+### Bugfix
+- 0.5.0 docker image didn't run after refactor
+
+
 <a name="v0.5.0"></a>
 ## [v0.5.0] - 2021-10-04
 ### Bugfix
@@ -253,6 +259,7 @@
 <a name="v0.0.1"></a>
 ## v0.0.1 - 2021-03-25
 
+[v0.5.1]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.5.0...v0.5.1
 [v0.5.0]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.9...v0.5.0
 [v0.4.9]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.8...v0.4.9
 [v0.4.8]: https://github.com/OpsLevel/kubectl-opslevel/compare/v0.4.7...v0.4.8
