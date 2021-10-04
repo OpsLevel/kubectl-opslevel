@@ -18,20 +18,60 @@
 </p>
 
 <p align="center">
- <a href="#quickstart">Quickstart</a> |
  <a href="#prerequisite">Prerequisite</a> |
  <a href="#installation">Installation</a> |
+ <a href="#quickstart">Quickstart</a> |
  <a href="https://www.opslevel.com/docs/integrations/kubernetes/">Documentation</a> |
  <a href="#troubleshooting">Troubleshooting</a>
 </p>
 
-`kubectl-opslevel` is a command line tool that enables you to import & reconcile services with [OpsLevel](https://www.opslevel.com/) from your Kubernetes clusters.  You can also run this tool inside your Kubernetes cluster as a job to reconcile the data with OpsLevel periodically.  If you opt for this please read our [service aliases](#aliases) section as we use these to properly find and reconcile the data so it is important you choose something unique.
+`kubectl-opslevel` is a command line tool that enables you to import & reconcile services with [OpsLevel](https://www.opslevel.com/) from your Kubernetes clusters.  You can also run this tool inside your Kubernetes cluster as a job to reconcile the data with OpsLevel periodically using our [Helm Chart](https://github.com/OpsLevel/helm-charts).
+
+## Prerequisite
+
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+- [jq](https://stedolan.github.io/jq/download/)
+- [OpsLevel API Token](https://app.opslevel.com/api_tokens)
+
+## Installation
+
+```sh
+brew install opslevel/tap/kubectl
+```
+
+<!--
+#### Deb
+
+```sh
+sudo apt-get install apt-transport-https
+wget -qO - https://opslevel.github.io/kubectl-opslevel-repo/deb/public.key | sudo apt-key add -
+echo deb https://opslevel.github.io/kubectl-opslevel-repo/deb [CODE_NAME] main | sudo tee -a /etc/apt/sources.list
+sudo apt-get update
+sudo apt-get install kubectl-opslevel
+```
+
+#### RPM
+
+```sh
+cat << EOF > /etc/yum.repos.d/opslevel.repo
+[opslevel]
+name=opslevel cli repository
+baseurl=https://opslevel.github.io/kubectl-opslevel-repo/rpm/releases/$releasever/$basearch/
+gpgcheck=0
+enabled=1
+EOF
+sudo yum -y update
+sudo yum -y install kubectl-opslevel
+```
+-->
+
+## Docker
+
+The docker container is hosted on [AWS Public ECR](https://gallery.ecr.aws/opslevel/kubectl-opslevel)
 
 ## Quickstart
 
-Follow the [installation](#installation) instructions before running the below commands
-
-```bash
+```sh
 # Generate a config file
 kubectl opslevel config sample > ./opslevel-k8s.yaml
 
@@ -87,42 +127,6 @@ service:
           - .metadata.annotations.repo
           # find annotations with format: opslevel.com/repo.<displayname>.<repo.subpath.dots.turned.to.forwardslash>: <opslevel repo alias> 
           - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/repos"))) | map({"name": .key | split(".")[2], "directory": .key | split(".")[3:] | join("/"), "repo": .value})'
-```
-
-## Prerequisite
-
-- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
-- [jq](https://stedolan.github.io/jq/download/)
-- [OpsLevel API Token](https://app.opslevel.com/api_tokens)
-
-## Installation
-
-```sh
-brew install opslevel/tap/kubectl
-```
-
-## Docker
-
-The docker container is hosted on [AWS Public ECR](https://gallery.ecr.aws/opslevel/kubectl-opslevel)
-
-### Validate Install
-
-Once you have the binary on your Path you can validate it works by running:
-
-```sh
-kubectl opslevel version
-```
-
-Example Output:
-
-```sh
-v0.4.0.0-g0d8107bdd043
-```
-
-The log format default is more human readable but if you want structured logs you can set the flag `--logFormat=JSON`
-
-```json
-{"level":"info","time":1620251466,"message":"Ensured tag 'imported = kubectl-opslevel' assigned to service: 'db'"}
 ```
 
 ### Enable shell autocompletion
