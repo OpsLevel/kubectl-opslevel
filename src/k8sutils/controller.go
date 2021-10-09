@@ -19,16 +19,15 @@ import (
 type KubernetesControllerHandler func([]interface{})
 
 type KubernetesController struct {
-	id         string
-	channel    <-chan struct{}
-	factory    dynamicinformer.DynamicSharedInformerFactory
-	queue      *workqueue.Type
-	informer   cache.SharedIndexInformer
-	maxRetries int
-	maxBatch   int
-	OnAdd      KubernetesControllerHandler
-	OnUpdate   KubernetesControllerHandler
-	OnDelete   KubernetesControllerHandler
+	id       string
+	factory  dynamicinformer.DynamicSharedInformerFactory
+	queue    *workqueue.Type
+	informer cache.SharedIndexInformer
+	maxBatch int
+	Channel  chan struct{}
+	OnAdd    KubernetesControllerHandler
+	OnUpdate KubernetesControllerHandler
+	OnDelete KubernetesControllerHandler
 }
 
 type KubernetesEventType string
@@ -125,11 +124,12 @@ func (c *KubernetesController) mainloop() {
 	}
 }
 
-func (c *KubernetesController) Run(workers int, stopChannel <-chan struct{}) {
+func (c *KubernetesController) Start(workers int) {
 	defer runtime.HandleCrash()
 	defer c.queue.ShutDown()
+	c.factory.Start(c.Channel) // Starts all informers
 
-	for _, ready := range c.factory.WaitForCacheSync(stopChannel) {
+	for _, ready := range c.factory.WaitForCacheSync(c.Channel) {
 		if !ready {
 			runtime.HandleError(fmt.Errorf("[%s] Timed out waiting for caches to sync", c.id))
 			return
@@ -141,20 +141,13 @@ func (c *KubernetesController) Run(workers int, stopChannel <-chan struct{}) {
 	}
 	for i := 0; i < workers; i++ {
 		log.Info().Msgf("[%s] Creating worker #%d", c.id, i+1)
-		go wait.Until(c.mainloop, time.Second, stopChannel)
+		go wait.Until(c.mainloop, time.Second, c.Channel)
 	}
 
-	<-stopChannel
+	<-c.Channel
 }
 
-var isInitialized bool = false
-var channel <-chan struct{}
-
 func NewController(gvr schema.GroupVersionResource, resyncInterval time.Duration, maxBatch int) *KubernetesController {
-	if !isInitialized {
-		channel = setupSignalHandler()
-		isInitialized = true
-	}
 	k8sClient := GetOrCreateKubernetesClient()
 	queue := workqueue.New()
 	factory := k8sClient.GetInformerFactory(resyncInterval)
@@ -166,7 +159,7 @@ func NewController(gvr schema.GroupVersionResource, resyncInterval time.Duration
 			item.Key, err = cache.MetaNamespaceKeyFunc(obj)
 			item.Type = KubernetesEventTypeCreate
 			if err == nil {
-				log.Debug().Msgf("Queuing 'Add' event for: %+v", item)
+				log.Debug().Msgf("Queuing event: %+v", item)
 				queue.Add(item)
 			}
 		},
@@ -176,7 +169,7 @@ func NewController(gvr schema.GroupVersionResource, resyncInterval time.Duration
 			item.Key, err = cache.MetaNamespaceKeyFunc(old)
 			item.Type = KubernetesEventTypeUpdate
 			if err == nil {
-				log.Debug().Msgf("Queuing 'Update' event for: %+v", item)
+				log.Debug().Msgf("Queuing event: %+v", item)
 				queue.Add(item)
 			}
 		},
@@ -186,7 +179,7 @@ func NewController(gvr schema.GroupVersionResource, resyncInterval time.Duration
 			item.Key, err = cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 			item.Type = KubernetesEventTypeDelete
 			if err == nil {
-				log.Debug().Msgf("Queuing 'Delete' event for: %+v", item)
+				log.Debug().Msgf("Queuing event: %+v", item)
 				queue.Add(item)
 			}
 		},
@@ -203,13 +196,8 @@ func NewController(gvr schema.GroupVersionResource, resyncInterval time.Duration
 	}
 }
 
-func (c *KubernetesController) Start(workers int) {
-	c.factory.Start(c.channel) // Starts all informers
-	go c.Run(workers, c.channel)
-}
-
 func Start() {
 	log.Info().Msg("Controller is Starting...")
-	<-channel // Block until signals
+	<-setupSignalHandler() // Block until signals
 	log.Info().Msg("Controller is Stopping...")
 }
