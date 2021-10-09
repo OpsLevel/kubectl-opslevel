@@ -52,7 +52,7 @@ func createWorkerPool(count int, queue chan common.ServiceRegistration, done cha
 	for i := 0; i < count; i++ {
 		go func(c *opslevel.Client, q chan common.ServiceRegistration, wg *sync.WaitGroup) {
 			for data := range q {
-				common.ReconcileService(c, &data)
+				common.ReconcileService(c, data)
 			}
 			wg.Done()
 		}(createOpslevelClient(), queue, &waitGroup)

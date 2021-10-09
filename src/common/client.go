@@ -10,25 +10,21 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func ReconcileService(client *opslevel.Client, service *ServiceRegistration) {
-	if service == nil {
+func ReconcileService(client *opslevel.Client, service ServiceRegistration) {
+	if len(service.Aliases) <= 0 {
+		log.Warn().Msgf("[%s] found 0 aliases from kubernetes data", service.Name)
 		return
 	}
-	s := *service
-	if len(s.Aliases) <= 0 {
-		log.Warn().Msgf("[%s] found 0 aliases from kubernetes data", s.Name)
-		return
-	}
-	log.Trace().Msgf("[%s] Parsed Data: \n%s", s.Name, s.toPrettyJson())
-	foundService, needsUpdate := findService(client, s)
+	log.Trace().Msgf("[%s] Parsed Data: \n%s", service.Name, service.toPrettyJson())
+	foundService, needsUpdate := findService(client, service)
 	if foundService == nil {
-		if s.Name == "" {
-			log.Warn().Msgf("unable to create service with an empty name.  aliases = [\"%s\"]", strings.Join(s.Aliases, "\", \""))
+		if service.Name == "" {
+			log.Warn().Msgf("unable to create service with an empty name.  aliases = [\"%s\"]", strings.Join(service.Aliases, "\", \""))
 			return
 		}
-		newService, newServiceErr := createService(client, s)
+		newService, newServiceErr := createService(client, service)
 		if newServiceErr != nil {
-			log.Error().Msgf("[%s] Failed creating service\n\tREASON: %v", s.Name, newServiceErr.Error())
+			log.Error().Msgf("[%s] Failed creating service\n\tREASON: %v", service.Name, newServiceErr.Error())
 			return
 		} else {
 			log.Info().Msgf("[%s] Created new service", newService.Name)
@@ -36,12 +32,12 @@ func ReconcileService(client *opslevel.Client, service *ServiceRegistration) {
 		foundService = newService
 	}
 	if needsUpdate {
-		updateService(client, s, foundService)
+		updateService(client, service, foundService)
 	}
-	go handleAliases(client, s, foundService)
-	go handleTags(client, s, foundService)
-	go handleTools(client, s, foundService)
-	go handleRepositories(client, s, foundService)
+	go handleAliases(client, service, foundService)
+	go handleTags(client, service, foundService)
+	go handleTools(client, service, foundService)
+	go handleRepositories(client, service, foundService)
 	log.Info().Msgf("[%s] Finished processing data", foundService.Name)
 }
 

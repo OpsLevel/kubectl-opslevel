@@ -73,7 +73,7 @@ func runReconcile(cmd *cobra.Command, args []string) {
 		client := createOpslevelClient()
 		for {
 			for service := range reconcileQueue {
-				common.ReconcileService(client, &service)
+				common.ReconcileService(client, service)
 			}
 		}
 	}()
