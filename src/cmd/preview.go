@@ -10,6 +10,7 @@ import (
 
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/kubectl-opslevel/config"
+	"github.com/opslevel/kubectl-opslevel/jq"
 
 	_ "github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -41,7 +42,9 @@ func runPreview(cmd *cobra.Command, args []string) {
 	config, err := config.New()
 	cobra.CheckErr(err)
 
-	services, err2 := common.QueryForServices(config)
+	jq.ValidateInstalled()
+
+	services, err2 := common.GetAllServices(config)
 	cobra.CheckErr(err2)
 	servicesCount := len(services)
 	if samples < 1 {

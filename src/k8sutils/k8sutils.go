@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/rs/zerolog/log"
@@ -14,6 +15,7 @@ import (
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/discovery/cached/memory"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/dynamic/dynamicinformer"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/restmapper"
 
@@ -54,7 +56,13 @@ func getKubernetesConfig() (*rest.Config, error) {
 	return config, nil
 }
 
-func CreateKubernetesClient() ClientWrapper {
+var _k8sClient *ClientWrapper
+
+func GetOrCreateKubernetesClient() *ClientWrapper {
+	if _k8sClient != nil {
+		return _k8sClient
+	}
+
 	config, err := getKubernetesConfig()
 	if err != nil {
 		log.Fatal().Msgf("Unable to load kubernetes config: %v", err)
@@ -78,13 +86,18 @@ func CreateKubernetesClient() ClientWrapper {
 
 	// Supress k8s client-go
 	klog.SetLogger(logr.Discard())
-	return ClientWrapper{client: client1, dynamic: client2, mapper: *mapper}
+	_k8sClient = &ClientWrapper{client: client1, dynamic: client2, mapper: *mapper}
+	return _k8sClient
 }
 
 var (
 	namespacesWereCached bool
 	namespacesCache      []string
 )
+
+func (c *ClientWrapper) GetInformerFactory(resync time.Duration) dynamicinformer.DynamicSharedInformerFactory {
+	return dynamicinformer.NewDynamicSharedInformerFactory(c.dynamic, resync)
+}
 
 func (c *ClientWrapper) GetNamespaces(selector KubernetesSelector) ([]string, error) {
 	if len(selector.Namespaces) > 0 {
@@ -174,6 +187,14 @@ func (c *ClientWrapper) GetMapping(selector KubernetesSelector) (*meta.RESTMappi
 	}
 
 	return mapping, nil
+}
+
+func (c *ClientWrapper) GetGVR(selector KubernetesSelector) (*schema.GroupVersionResource, error) {
+	mapping, err := c.GetMapping(selector)
+	if err != nil {
+		return nil, err
+	}
+	return &mapping.Resource, nil
 }
 
 var (

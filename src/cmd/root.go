@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/opslevel/opslevel-go"
 	"github.com/spf13/cobra"
 
 	"github.com/rs/zerolog"
@@ -100,6 +101,8 @@ func setupLogging() {
 		zerolog.SetGlobalLevel(zerolog.WarnLevel)
 	case logLevel == "debug":
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case logLevel == "trace":
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	default:
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
@@ -140,4 +143,18 @@ func setupAPIToken() {
 
 	token := strings.TrimSpace(string(b))
 	viper.Set(key, token)
+}
+
+func createOpslevelClient() *opslevel.Client {
+	client := opslevel.NewClient(viper.GetString("api-token"), opslevel.SetURL(viper.GetString("api-url")), opslevel.SetUserAgentExtra(fmt.Sprintf("kubectl-%s", version)))
+	clientErr := client.Validate()
+	if clientErr != nil {
+		if strings.Contains(clientErr.Error(), "Please provide a valid OpsLevel API token") {
+			cobra.CheckErr(fmt.Errorf("%s via 'export OPSLEVEL_API_TOKEN=XXX' or '--api-token=XXX' or '--api-token-path=/path/to/token/file'", clientErr.Error()))
+		} else {
+			cobra.CheckErr(clientErr)
+		}
+	}
+	cobra.CheckErr(clientErr)
+	return client
 }
