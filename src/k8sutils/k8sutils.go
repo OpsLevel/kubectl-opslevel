@@ -56,13 +56,7 @@ func getKubernetesConfig() (*rest.Config, error) {
 	return config, nil
 }
 
-var _k8sClient *ClientWrapper
-
-func GetOrCreateKubernetesClient() *ClientWrapper {
-	if _k8sClient != nil {
-		return _k8sClient
-	}
-
+func CreateKubernetesClient() *ClientWrapper {
 	config, err := getKubernetesConfig()
 	if err != nil {
 		log.Fatal().Msgf("Unable to load kubernetes config: %v", err)
@@ -86,8 +80,7 @@ func GetOrCreateKubernetesClient() *ClientWrapper {
 
 	// Supress k8s client-go
 	klog.SetLogger(logr.Discard())
-	_k8sClient = &ClientWrapper{client: client1, dynamic: client2, mapper: *mapper}
-	return _k8sClient
+	return &ClientWrapper{client: client1, dynamic: client2, mapper: *mapper}
 }
 
 var (

@@ -148,7 +148,7 @@ func (c *KubernetesController) Start(workers int) {
 }
 
 func NewController(gvr schema.GroupVersionResource, resyncInterval time.Duration, maxBatch int) *KubernetesController {
-	k8sClient := GetOrCreateKubernetesClient()
+	k8sClient := CreateKubernetesClient()
 	queue := workqueue.New()
 	factory := k8sClient.GetInformerFactory(resyncInterval)
 	informer := factory.ForResource(gvr).Informer()

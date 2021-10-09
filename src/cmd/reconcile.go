@@ -38,7 +38,7 @@ func runReconcile(cmd *cobra.Command, args []string) {
 
 	jq.ValidateInstalled()
 
-	k8sClient := k8sutils.GetOrCreateKubernetesClient()
+	k8sClient := k8sutils.CreateKubernetesClient()
 	cache := common.GetOrCreateAliasCache()
 	cache.CacheAll(createOpslevelClient())
 

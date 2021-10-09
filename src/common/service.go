@@ -442,7 +442,7 @@ func dedupServices(input []ServiceRegistration) ([]ServiceRegistration, error) {
 
 func getServices(c *config.Config) ([]ServiceRegistration, error) {
 	var services []ServiceRegistration
-	k8sClient := k8sutils.GetOrCreateKubernetesClient()
+	k8sClient := k8sutils.CreateKubernetesClient()
 	for i, importConfig := range c.Service.Import {
 		selector := importConfig.SelectorConfig
 		if selectorErr := selector.Validate(); selectorErr != nil {
