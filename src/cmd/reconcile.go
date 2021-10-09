@@ -13,7 +13,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var resyncInterval int
+var (
+	resyncInterval int
+	batchSize      int
+)
 
 var reconcileCmd = &cobra.Command{
 	Use:   "reconcile",
@@ -25,7 +28,8 @@ var reconcileCmd = &cobra.Command{
 func init() {
 	serviceCmd.AddCommand(reconcileCmd)
 
-	reconcileCmd.Flags().IntVarP(&resyncInterval, "resync", "r", 24, "The amount (in hours) before a full resync of the kubernetes cluster happens with OpsLevel. [default: 24]")
+	reconcileCmd.Flags().IntVar(&resyncInterval, "resync", 24, "The amount (in hours) before a full resync of the kubernetes cluster happens with OpsLevel. [default: 24]")
+	reconcileCmd.Flags().IntVar(&batchSize, "batch", 500, "The max amount of k8s resources to batch process with jq. Helps to speedup initial startup. [default: 500]")
 }
 
 func runReconcile(cmd *cobra.Command, args []string) {
@@ -53,10 +57,10 @@ func runReconcile(cmd *cobra.Command, args []string) {
 			continue
 		}
 		callback := createHandler(fmt.Sprintf("service.import[%d]", i), importConfig, reconcileQueue)
-		controller := k8sutils.NewController(*gvr, resync, 500)
+		controller := k8sutils.NewController(*gvr, resync, batchSize)
 		controller.OnAdd = callback
 		controller.OnUpdate = callback
-		controller.Start(1)
+		go controller.Start(1)
 	}
 
 	// Loop forever resyncing teams at resync interval

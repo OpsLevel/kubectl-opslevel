@@ -190,6 +190,7 @@ func NewController(gvr schema.GroupVersionResource, resyncInterval time.Duration
 		factory:  factory,
 		informer: informer,
 		maxBatch: maxBatch,
+		Channel:  make(chan struct{}),
 		OnAdd:    nullKubernetesControllerHandler,
 		OnUpdate: nullKubernetesControllerHandler,
 		OnDelete: nullKubernetesControllerHandler,
