@@ -16,7 +16,7 @@ type SelectorParser struct {
 }
 
 type ServiceRegistration struct {
-	Name         string
+	Name         string                                  `json:",omitempty"`
 	Description  string                                  `json:",omitempty"`
 	Owner        string                                  `json:",omitempty"`
 	Lifecycle    string                                  `json:",omitempty"`
@@ -37,6 +37,9 @@ func (s *ServiceRegistration) toPrettyJson() string {
 }
 
 func (s *ServiceRegistration) mergeData(o ServiceRegistration) {
+	if s.Name == "" {
+		s.Name = o.Name
+	}
 	if s.Description == "" {
 		s.Description = o.Description
 	}
@@ -68,7 +71,6 @@ func (s *ServiceRegistration) mergeData(o ServiceRegistration) {
 	for _, tag := range o.TagCreates {
 		s.TagCreates = append(s.TagCreates, tag)
 	}
-	s.TagCreates = removeDuplicatesTags(s.TagCreates)
 	s.TagAssigns = removeOverlappedKeys(s.TagAssigns, s.TagCreates)
 	for _, tool := range o.Tools {
 		s.Tools = append(s.Tools, tool)
