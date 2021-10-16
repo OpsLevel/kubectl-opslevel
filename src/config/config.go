@@ -20,7 +20,7 @@ type TagRegistrationConfig struct {
 }
 
 type ServiceRegistrationConfig struct {
-	Name         string                `default:".metadata.name" json:"name"`
+	Name         string                `json:"name"`
 	Description  string                `json:"description"`
 	Owner        string                `json:"owner"`
 	Lifecycle    string                `json:"lifecycle"`
