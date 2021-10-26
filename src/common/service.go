@@ -65,7 +65,7 @@ func (s *ServiceRegistration) mergeData(o ServiceRegistration) {
 		s.Aliases = append(s.Aliases, alias)
 	}
 	s.Aliases = removeDuplicates(s.Aliases)
-	for _, tag := range o.TagAssigns {
+	for _, tag := range removeOverlappedKeys(s.TagAssigns, o.TagAssigns) {
 		s.TagAssigns = append(s.TagAssigns, tag)
 	}
 	for _, tag := range o.TagCreates {
