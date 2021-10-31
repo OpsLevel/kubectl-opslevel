@@ -34,10 +34,10 @@ func ReconcileService(client *opslevel.Client, service ServiceRegistration) {
 	if needsUpdate {
 		updateService(client, service, foundService)
 	}
-	go handleAliases(client, service, foundService)
-	go handleTags(client, service, foundService)
-	go handleTools(client, service, foundService)
-	go handleRepositories(client, service, foundService)
+	handleAliases(client, service, foundService)
+	handleTags(client, service, foundService)
+	handleTools(client, service, foundService)
+	handleRepositories(client, service, foundService)
 	log.Info().Msgf("[%s] Finished processing data", foundService.Name)
 }
 
