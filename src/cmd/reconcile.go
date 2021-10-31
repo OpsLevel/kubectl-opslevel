@@ -58,7 +58,6 @@ func runReconcile(cmd *cobra.Command, args []string) {
 		}
 		callback := createHandler(fmt.Sprintf("service.import[%d]", i), importConfig, reconcileQueue)
 		controller := k8sutils.NewController(*gvr, resync, batchSize)
-		controller.OnAdd = callback
 		controller.OnUpdate = callback
 		go controller.Start(1)
 	}
