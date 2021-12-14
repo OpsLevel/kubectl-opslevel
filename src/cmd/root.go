@@ -22,6 +22,7 @@ var (
 	apiTokenFile string
 	cfgFile      string
 	concurrency  int
+	outputFormat string
 )
 
 var rootCmd = &cobra.Command{
@@ -43,6 +44,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&apiTokenFile, "api-token-path", "", "Absolute path to a file containing the OpsLevel API Token. Overrides environment variable 'OPSLEVEL_API_TOKEN'")
 	rootCmd.PersistentFlags().String("api-url", "https://api.opslevel.com/graphql", "The OpsLevel API Url. Overrides environment variable 'OPSLEVEL_API_URL'")
 	rootCmd.PersistentFlags().IntP("workers", "w", -1, "Sets the number of workers for API call processing. The default is == # CPU cores (cgroup aware). Overrides environment variable 'OPSLEVEL_WORKERS'")
+	rootCmd.PersistentFlags().StringP("output", "o", "text", "Output format.  One of: json|text [default: text]")
 
 	viper.BindPFlags(rootCmd.PersistentFlags())
 	viper.BindEnv("log-format", "OPSLEVEL_LOG_FORMAT", "OL_LOG_FORMAT", "OL_LOGFORMAT")
@@ -56,6 +58,7 @@ func init() {
 func initConfig() {
 	readConfig()
 	setupLogging()
+	setupOutput()
 	setupConcurrency()
 	setupAPIToken()
 }
@@ -106,6 +109,17 @@ func setupLogging() {
 	default:
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
+}
+
+func setupOutput() {
+	outputFormat := strings.ToLower(viper.GetString("output"))
+	if outputFormat != "json" {
+		outputFormat = "text"
+	}
+}
+
+func IsTextOutput() bool {
+	return outputFormat == "text"
 }
 
 func setupConcurrency() {
