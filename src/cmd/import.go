@@ -32,7 +32,11 @@ func runImport(cmd *cobra.Command, args []string) {
 	services, servicesErr := common.GetAllServices(config)
 	cobra.CheckErr(servicesErr)
 
-	common.GetOrCreateAliasCache().CacheAll(createOpslevelClient())
+	olClient := createOpslevelClient()
+
+	opslevel.Cache.CacheTiers(olClient)
+	opslevel.Cache.CacheLifecycles(olClient)
+	opslevel.Cache.CacheTeams(olClient)
 
 	log.Info().Msgf("Worker Concurrency == %v", concurrency)
 	done := make(chan bool)

@@ -9,6 +9,7 @@ import (
 	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/kubectl-opslevel/jq"
 	"github.com/opslevel/kubectl-opslevel/k8sutils"
+	"github.com/opslevel/opslevel-go"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -39,8 +40,11 @@ func runReconcile(cmd *cobra.Command, args []string) {
 	jq.ValidateInstalled()
 
 	k8sClient := k8sutils.CreateKubernetesClient()
-	cache := common.GetOrCreateAliasCache()
-	cache.CacheAll(createOpslevelClient())
+	olClient := createOpslevelClient()
+
+	opslevel.Cache.CacheTiers(olClient)
+	opslevel.Cache.CacheLifecycles(olClient)
+	opslevel.Cache.CacheTeams(olClient)
 
 	resync := time.Hour * time.Duration(resyncInterval)
 	reconcileQueue := make(chan common.ServiceRegistration, 1)
@@ -68,7 +72,11 @@ func runReconcile(cmd *cobra.Command, args []string) {
 	go func() {
 		for {
 			<-ticker.C
-			cache.CacheAll(createOpslevelClient()) // <- has a mutex lock that will block the serviceCreate/serviceUpdate mutation goroutine
+			olClient := createOpslevelClient()
+			// has a mutex lock that will block TryGet in ReconcileService goroutine
+			opslevel.Cache.CacheTiers(olClient)
+			opslevel.Cache.CacheLifecycles(olClient)
+			opslevel.Cache.CacheTeams(olClient)
 		}
 	}()
 

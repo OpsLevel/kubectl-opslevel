@@ -8,8 +8,8 @@ require (
 	github.com/go-logr/logr v0.4.0
 	github.com/google/go-cmp v0.5.5
 	github.com/imdario/mergo v0.3.10 // indirect
-	github.com/opslevel/opslevel-go v0.4.0
-	github.com/rs/zerolog v1.25.0
+	github.com/opslevel/opslevel-go v0.4.2
+	github.com/rs/zerolog v1.26.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
 	go.uber.org/automaxprocs v1.4.0
@@ -21,3 +21,13 @@ require (
 
 // Uncomment for local development
 // replace github.com/opslevel/opslevel-go => ../../opslevel-go
+
+replace github.com/opslevel/kubectl-opslevel/common => ./common
+
+replace github.com/opslevel/kubectl-opslevel/cmd => ./cmd
+
+replace github.com/opslevel/kubectl-opslevel/config => ./config
+
+replace github.com/opslevel/kubectl-opslevel/jq => ./jq
+
+replace github.com/opslevel/kubectl-opslevel/k8utils => ./k8utils
