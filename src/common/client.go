@@ -60,17 +60,17 @@ func createService(client *opslevel.Client, registration ServiceRegistration) (*
 	}
 	if v, ok := opslevel.Cache.TryGetTier(registration.Tier); ok {
 		serviceCreateInput.Tier = string(v.Alias)
-	} else {
+	} else if registration.Tier != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", registration.Name, registration.Tier)
 	}
 	if v, ok := opslevel.Cache.TryGetLifecycle(registration.Lifecycle); ok {
 		serviceCreateInput.Lifecycle = string(v.Alias)
-	} else {
+	} else if registration.Lifecycle != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", registration.Name, registration.Lifecycle)
 	}
 	if v, ok := opslevel.Cache.TryGetTeam(registration.Owner); ok {
 		serviceCreateInput.Owner = string(v.Alias)
-	} else {
+	} else if registration.Owner != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", registration.Name, registration.Owner)
 	}
 	service, err := client.CreateService(serviceCreateInput)
@@ -92,17 +92,17 @@ func updateService(client *opslevel.Client, registration ServiceRegistration, se
 	}
 	if v, ok := opslevel.Cache.TryGetTier(registration.Tier); ok {
 		updateServiceInput.Tier = string(v.Alias)
-	} else {
+	} else if registration.Tier != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", service.Name, registration.Tier)
 	}
 	if v, ok := opslevel.Cache.TryGetLifecycle(registration.Lifecycle); ok {
 		updateServiceInput.Lifecycle = string(v.Alias)
-	} else {
+	} else if registration.Lifecycle != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", service.Name, registration.Lifecycle)
 	}
 	if v, ok := opslevel.Cache.TryGetTeam(registration.Owner); ok {
 		updateServiceInput.Owner = string(v.Alias)
-	} else {
+	} else if registration.Owner != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", service.Name, registration.Owner)
 	}
 	updatedService, updateServiceErr := client.UpdateService(updateServiceInput)
