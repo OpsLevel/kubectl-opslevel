@@ -41,6 +41,10 @@ func ReconcileService(client *opslevel.Client, service ServiceRegistration) {
 func findService(client *opslevel.Client, registration ServiceRegistration) (*opslevel.Service, bool) {
 	for _, alias := range registration.Aliases {
 		foundService, err := client.GetServiceWithAlias(alias)
+		if err != nil {
+			log.Warn().Msgf("[%s] Tried finding service with alias '%s' but got API error\n\tREASON: %v", foundService.Name, alias, err)
+			continue
+		}
 		if err == nil && foundService.Id != nil {
 			log.Info().Msgf("[%s] Reconciling service found with alias '%s' ...", foundService.Name, alias)
 			return foundService, true
