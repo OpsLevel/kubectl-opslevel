@@ -2,10 +2,10 @@ name: Manual
 on:
   workflow_dispatch:
     inputs:
-      rc-version:
+      version:
         description: 'The Release Candidate Version'     
         required: true
-        default: '1'
+        default: 'v0.6.7-beta1'
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Get the tag name
-        run: echo "TAG=$(git describe --tags $(git rev-list --tags --max-count=1))-rc${{ github.event.inputs.rc-version }}" >> $GITHUB_ENV
+        run: echo "TAG=${{ github.event.inputs.version }}" >> $GITHUB_ENV
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
@@ -46,10 +46,12 @@ jobs:
         uses: goreleaser/goreleaser-action@v2
         with:
           version: latest
-          args: release --rm-dist
+          args: release --rm-dist -f .goreleaser.rc.yml --skip-publish --skip-validate  
           workdir: ./src
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           # GitHub sets this automatically
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+      - name: Push Docker
+        run: docker push public.ecr.aws/opslevel/kubectl-opslevel:${{ github.event.inputs.version }}
