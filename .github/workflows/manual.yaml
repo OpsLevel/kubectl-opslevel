@@ -1,8 +1,11 @@
-name: Release
+name: Manual
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      rc-version:
+        description: 'The Release Candidate Version'     
+        required: true
+        default: '1'
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
@@ -12,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Get the tag name
-        run: echo "TAG=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_ENV
+        run: echo "TAG=$(git describe --tags $(git rev-list --tags --max-count=1))-rc${{ github.event.inputs.tags }}" >> $GITHUB_ENV
       - name: Set up Go
         uses: actions/setup-go@v2
         with:

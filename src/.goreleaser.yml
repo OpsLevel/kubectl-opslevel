@@ -70,3 +70,5 @@ changelog:
   filters:
     exclude:
       - "^Merge"
+release:
+  prerelease: auto

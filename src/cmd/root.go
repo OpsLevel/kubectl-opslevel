@@ -32,7 +32,8 @@ var rootCmd = &cobra.Command{
 	Long:    `Opslevel Commandline Tools`,
 }
 
-func Execute() {
+func Execute(v string) {
+	version = v
 	cobra.CheckErr(rootCmd.Execute())
 }
 

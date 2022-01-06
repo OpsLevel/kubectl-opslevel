@@ -1,7 +1,18 @@
 package main
 
-import "github.com/opslevel/kubectl-opslevel/cmd"
+import (
+	"fmt"
+
+	"github.com/opslevel/kubectl-opslevel/cmd"
+)
+
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+	builtBy = "unknown"
+)
 
 func main() {
-	cmd.Execute()
+	cmd.Execute(fmt.Sprintf("%s-%s-%s-%s", version, commit, date, builtBy))
 }
