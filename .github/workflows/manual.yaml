@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Get the tag name
-        run: echo "TAG=$(git describe --tags $(git rev-list --tags --max-count=1))-rc${{ github.event.inputs.tags }}" >> $GITHUB_ENV
+        run: echo "TAG=$(git describe --tags $(git rev-list --tags --max-count=1))-rc${{ github.event.inputs.rc-version }}" >> $GITHUB_ENV
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
@@ -46,7 +46,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v2
         with:
           version: latest
-          args: release --rm-dist --release-notes=../changes/${{ env.TAG }}.md
+          args: release --rm-dist
           workdir: ./src
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
