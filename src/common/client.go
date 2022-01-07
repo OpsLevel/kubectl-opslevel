@@ -145,6 +145,12 @@ func assignTags(client *opslevel.Client, registration ServiceRegistration, servi
 		Id:   service.Id,
 		Tags: registration.TagAssigns,
 	}
+
+	// convert keys to lowercase
+	for i := range input.Tags {
+		input.Tags[i].Key = strings.ToLower(input.Tags[i].Key)
+	}
+
 	_, err := client.AssignTags(input)
 	jsonBytes, _ := json.Marshal(registration.TagAssigns)
 	if err != nil {
