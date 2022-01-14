@@ -51,35 +51,29 @@ func findService(client *opslevel.Client, registration ServiceRegistration) (*op
 }
 
 func serviceNeedsUpdate(input opslevel.ServiceUpdateInput, service *opslevel.Service) bool {
-	if input.Name != service.Name {
+	if input.Name != "" && input.Name != service.Name {
 		return true
 	}
-	if input.Product != service.Product {
+	if input.Product != "" && input.Product != service.Product {
 		return true
 	}
-	if input.Description != service.Description {
+	if input.Description != "" && input.Description != service.Description {
 		return true
 	}
-	if input.Language != service.Language {
+	if input.Language != "" && input.Language != service.Language {
 		return true
 	}
-	if input.Framework != service.Framework {
+	if input.Framework != "" && input.Framework != service.Framework {
 		return true
 	}
-	if service.Tier != nil {
-		if input.Tier != service.Tier.Alias {
-			return true
-		}
+	if input.Tier != "" && input.Tier != service.Tier.Alias {
+		return true
 	}
-	if service.Lifecycle != nil {
-		if input.Lifecycle != service.Lifecycle.Alias {
-			return true
-		}
+	if input.Lifecycle != "" && input.Lifecycle != service.Lifecycle.Alias {
+		return true
 	}
-	if service.Owner != nil {
-		if input.Owner != service.Owner.Alias {
-			return true
-		}
+	if input.Owner != "" && input.Owner != service.Owner.Alias {
+		return true
 	}
 	return false
 }
@@ -257,7 +251,7 @@ func handleRepositories(client *opslevel.Client, registration ServiceRegistratio
 		repositoryCreate.Service = opslevel.IdentifierInput{Id: service.Id}
 		_, err := client.CreateServiceRepository(repositoryCreate)
 		if err != nil {
-			log.Error().Msgf("[%s] Failed assigning repository '$s'\n\tREASON: %v", service.Name, repositoryAsString, err.Error())
+			log.Error().Msgf("[%s] Failed assigning repository '%s'\n\tREASON: %v", service.Name, repositoryAsString, err.Error())
 		} else {
 			log.Info().Msgf("[%s] Attached repository '%s'", service.Name, repositoryAsString)
 		}
