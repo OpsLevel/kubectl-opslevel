@@ -9,6 +9,7 @@ require (
 	github.com/google/go-cmp v0.5.5
 	github.com/imdario/mergo v0.3.10 // indirect
 	github.com/opslevel/opslevel-go v0.4.2
+	github.com/rocktavious/autopilot v0.1.5 // indirect
 	github.com/rs/zerolog v1.26.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
