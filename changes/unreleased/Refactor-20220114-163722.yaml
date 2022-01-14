@@ -1,0 +1,3 @@
+kind: Refactor
+body: Do not send a ServiceUpdate mutation if nothing changed about the data
+time: 2022-01-14T16:37:22.080214-06:00

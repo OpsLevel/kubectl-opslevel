@@ -50,6 +50,34 @@ func findService(client *opslevel.Client, registration ServiceRegistration) (*op
 	return nil, false
 }
 
+func serviceNeedsUpdate(input opslevel.ServiceUpdateInput, service *opslevel.Service) bool {
+	if input.Name != "" && input.Name != service.Name {
+		return true
+	}
+	if input.Product != "" && input.Product != service.Product {
+		return true
+	}
+	if input.Description != "" && input.Description != service.Description {
+		return true
+	}
+	if input.Language != "" && input.Language != service.Language {
+		return true
+	}
+	if input.Framework != "" && input.Framework != service.Framework {
+		return true
+	}
+	if input.Tier != "" && input.Tier != service.Tier.Alias {
+		return true
+	}
+	if input.Lifecycle != "" && input.Lifecycle != service.Lifecycle.Alias {
+		return true
+	}
+	if input.Owner != "" && input.Owner != service.Owner.Alias {
+		return true
+	}
+	return false
+}
+
 func createService(client *opslevel.Client, registration ServiceRegistration) (*opslevel.Service, error) {
 	serviceCreateInput := opslevel.ServiceCreateInput{
 		Name:        registration.Name,
@@ -105,13 +133,17 @@ func updateService(client *opslevel.Client, registration ServiceRegistration, se
 	} else if registration.Owner != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", service.Name, registration.Owner)
 	}
-	updatedService, updateServiceErr := client.UpdateService(updateServiceInput)
-	if updateServiceErr != nil {
-		log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
-	} else {
-		if diff := cmp.Diff(service, updatedService); diff != "" {
-			log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
+	if serviceNeedsUpdate(updateServiceInput, service) {
+		updatedService, updateServiceErr := client.UpdateService(updateServiceInput)
+		if updateServiceErr != nil {
+			log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
+		} else {
+			if diff := cmp.Diff(service, updatedService); diff != "" {
+				log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
+			}
 		}
+	} else {
+		log.Info().Msgf("[%s] No changes detected to fields - skipping update", service.Name)
 	}
 }
 
@@ -219,7 +251,7 @@ func handleRepositories(client *opslevel.Client, registration ServiceRegistratio
 		repositoryCreate.Service = opslevel.IdentifierInput{Id: service.Id}
 		_, err := client.CreateServiceRepository(repositoryCreate)
 		if err != nil {
-			log.Error().Msgf("[%s] Failed assigning repository '$s'\n\tREASON: %v", service.Name, repositoryAsString, err.Error())
+			log.Error().Msgf("[%s] Failed assigning repository '%s'\n\tREASON: %v", service.Name, repositoryAsString, err.Error())
 		} else {
 			log.Info().Msgf("[%s] Attached repository '%s'", service.Name, repositoryAsString)
 		}
