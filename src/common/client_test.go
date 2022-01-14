@@ -7,7 +7,7 @@ import (
 	"github.com/rocktavious/autopilot"
 )
 
-func TestServiceNeedsUpdateIsTrue(t *testing.T) {
+func Test_ServiceNeedsUpdate_IsTrue_WhenInputDiffers(t *testing.T) {
 	// Arrange
 	service := opslevel.Service{
 		ServiceId: opslevel.ServiceId{
@@ -43,7 +43,7 @@ func TestServiceNeedsUpdateIsTrue(t *testing.T) {
 	autopilot.Equals(t, true, result3)
 }
 
-func TestServiceNeedsUpdateIsFalse(t *testing.T) {
+func Test_ServiceNeedsUpdate_IsFalse_WhenInputMatches(t *testing.T) {
 	// Arrange
 	service := opslevel.Service{
 		ServiceId: opslevel.ServiceId{
