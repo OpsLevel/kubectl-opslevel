@@ -50,6 +50,40 @@ func findService(client *opslevel.Client, registration ServiceRegistration) (*op
 	return nil, false
 }
 
+func serviceNeedsUpdate(input opslevel.ServiceUpdateInput, service *opslevel.Service) bool {
+	if input.Name != service.Name {
+		return true
+	}
+	if input.Product != service.Product {
+		return true
+	}
+	if input.Description != service.Description {
+		return true
+	}
+	if input.Language != service.Language {
+		return true
+	}
+	if input.Framework != service.Framework {
+		return true
+	}
+	if service.Tier != nil {
+		if input.Tier != service.Tier.Alias {
+			return true
+		}
+	}
+	if service.Lifecycle != nil {
+		if input.Lifecycle != service.Lifecycle.Alias {
+			return true
+		}
+	}
+	if service.Owner != nil {
+		if input.Owner != service.Owner.Alias {
+			return true
+		}
+	}
+	return false
+}
+
 func createService(client *opslevel.Client, registration ServiceRegistration) (*opslevel.Service, error) {
 	serviceCreateInput := opslevel.ServiceCreateInput{
 		Name:        registration.Name,
@@ -105,13 +139,17 @@ func updateService(client *opslevel.Client, registration ServiceRegistration, se
 	} else if registration.Owner != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", service.Name, registration.Owner)
 	}
-	updatedService, updateServiceErr := client.UpdateService(updateServiceInput)
-	if updateServiceErr != nil {
-		log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
-	} else {
-		if diff := cmp.Diff(service, updatedService); diff != "" {
-			log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
+	if serviceNeedsUpdate(updateServiceInput, service) {
+		updatedService, updateServiceErr := client.UpdateService(updateServiceInput)
+		if updateServiceErr != nil {
+			log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
+		} else {
+			if diff := cmp.Diff(service, updatedService); diff != "" {
+				log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
+			}
 		}
+	} else {
+		log.Info().Msgf("[%s] No changes detected to fields - skipping update", service.Name)
 	}
 }
 
