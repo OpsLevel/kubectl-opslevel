@@ -1,0 +1,4 @@
+kind: Feature
+body: set opslevel client timeout to 40s and allow configuration via OPSLEVEL_API_TIMEOUT
+  or corresponding cli flag
+time: 2022-01-26T16:09:13.276577-06:00

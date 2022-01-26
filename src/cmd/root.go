@@ -5,6 +5,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/opslevel/opslevel-go"
 	"github.com/spf13/cobra"
@@ -20,6 +21,7 @@ import (
 var (
 	apiToken     string
 	apiTokenFile string
+	apiTimeout   int
 	cfgFile      string
 	concurrency  int
 	outputFormat string
@@ -46,12 +48,14 @@ func init() {
 	rootCmd.PersistentFlags().String("api-url", "https://api.opslevel.com/graphql", "The OpsLevel API Url. Overrides environment variable 'OPSLEVEL_API_URL'")
 	rootCmd.PersistentFlags().IntP("workers", "w", -1, "Sets the number of workers for API call processing. The default is == # CPU cores (cgroup aware). Overrides environment variable 'OPSLEVEL_WORKERS'")
 	rootCmd.PersistentFlags().StringP("output", "o", "text", "Output format.  One of: json|text [default: text]")
+	rootCmd.PersistentFlags().IntVar(&apiTimeout, "api-timeout", 40, "The OpsLevel API timeout in seconds. Overrides environment variable 'OPSLEVEL_API_TIMEOUT'")
 
 	viper.BindPFlags(rootCmd.PersistentFlags())
 	viper.BindEnv("log-format", "OPSLEVEL_LOG_FORMAT", "OL_LOG_FORMAT", "OL_LOGFORMAT")
 	viper.BindEnv("log-level", "OPSLEVEL_LOG_LEVEL", "OL_LOG_LEVEL", "OL_LOGLEVEL")
 	viper.BindEnv("api-url", "OPSLEVEL_API_URL", "OL_API_URL", "OL_APIURL")
 	viper.BindEnv("api-token", "OPSLEVEL_API_TOKEN", "OL_API_TOKEN", "OL_APITOKEN")
+	viper.BindEnv("api-timeout", "OPSLEVEL_API_TIMEOUT")
 	viper.BindEnv("workers", "OPSLEVEL_WORKERS", "OL_WORKERS")
 	cobra.OnInitialize(initConfig)
 }
@@ -161,7 +165,12 @@ func setupAPIToken() {
 }
 
 func createOpslevelClient() *opslevel.Client {
-	client := opslevel.NewClient(viper.GetString("api-token"), opslevel.SetURL(viper.GetString("api-url")), opslevel.SetUserAgentExtra(fmt.Sprintf("kubectl-%s", version)))
+	client := opslevel.NewClient(
+		viper.GetString("api-token"),
+		opslevel.SetURL(viper.GetString("api-url")),
+		opslevel.SetUserAgentExtra(fmt.Sprintf("kubectl-%s", version)),
+		opslevel.SetTimeout(time.Second*time.Duration(apiTimeout)),
+	)
 	clientErr := client.Validate()
 	if clientErr != nil {
 		if strings.Contains(clientErr.Error(), "Please provide a valid OpsLevel API token") {
