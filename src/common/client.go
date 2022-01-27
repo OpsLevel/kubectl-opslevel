@@ -16,21 +16,26 @@ func ReconcileService(client *opslevel.Client, service ServiceRegistration) {
 		return
 	}
 	log.Trace().Msgf("[%s] Parsed Data: \n%s", service.Name, service.toPrettyJson())
-	foundService, needsUpdate := findService(client, service)
-	if foundService == nil {
-		if service.Name == "" {
-			log.Warn().Msgf("unable to create service with an empty name.  aliases = [\"%s\"]", strings.Join(service.Aliases, "\", \""))
-			return
-		}
+	foundService, foundServiceStatus := validateServiceAliases(client, service)
+	switch foundServiceStatus {
+	case serviceAliasesResult_NoAliasesMatched:
 		newService, newServiceErr := createService(client, service)
 		if newServiceErr != nil {
+			log.Warn().Msgf("[%s] api error during service creation ... skipping reconciliation.\n\tREASON: %v", service.Name, newServiceErr)
 			return
 		}
 		foundService = newService
-	}
-	if needsUpdate {
+	case serviceAliasesResult_AliasMatched:
 		updateService(client, service, foundService)
+
+	case serviceAliasesResult_MultipleServicesFound:
+		log.Warn().Msgf("[%s] found multiple services with aliases = [\"%s\"].  cannot know which service to target for update ... skipping reconciliation", service.Name, strings.Join(service.Aliases, "\", \""))
+		return
+	case serviceAliasesResult_APIErrorHappened:
+		log.Warn().Msgf("[%s] api error during service lookup by alias.  unable to guarentee service was found or not ... skipping reconciliation", service.Name)
+		return
 	}
+
 	handleAliases(client, service, foundService)
 	handleTags(client, service, foundService)
 	handleTools(client, service, foundService)
@@ -38,16 +43,48 @@ func ReconcileService(client *opslevel.Client, service ServiceRegistration) {
 	log.Info().Msgf("[%s] Finished processing data", foundService.Name)
 }
 
-func findService(client *opslevel.Client, registration ServiceRegistration) (*opslevel.Service, bool) {
+type serviceAliasesResult string
+
+const (
+	serviceAliasesResult_NoAliasesMatched      serviceAliasesResult = "NoAliasesMatched"
+	serviceAliasesResult_AliasMatched          serviceAliasesResult = "AliasMatched"
+	serviceAliasesResult_MultipleServicesFound serviceAliasesResult = "MultipleServicesFound"
+	serviceAliasesResult_APIErrorHappened      serviceAliasesResult = "APIErrorHappened"
+)
+
+// This function has 4 outcomes that can happen while looping over the aliases list
+// serviceAliasesResult_NoAliasesMatched - means that all API calls succeeded and none of the aliases matched an existing service
+// serviceAliasesResult_AliasMatched - means that all the API calls succeeded and a single service was found matching 1 of N aliases
+// serviceAliasesResult_MultipleServicesFound - means that all API calls succeeded but multiple services were returning means the list of aliases does not definitively describe a single service and might be a configuration problem
+// serviceAliasesResult_APIErrorHappened - means that 1 of N aliases got an 4xx/5xx and thereforce we cannot say 100% that the services doesn't exist
+func validateServiceAliases(client *opslevel.Client, registration ServiceRegistration) (*opslevel.Service, serviceAliasesResult) {
+	var gotError error
+	foundServices := map[string]*opslevel.Service{}
 	for _, alias := range registration.Aliases {
 		foundService, err := client.GetServiceWithAlias(alias)
-		if err == nil && foundService.Id != nil {
-			log.Info().Msgf("[%s] Reconciling service found with alias '%s' ...", foundService.Name, alias)
-			return foundService, true
+		if err != nil {
+			gotError = err
+		} else {
+			if foundService.Id != nil {
+				foundServices[foundService.Id.(string)] = foundService
+			}
 		}
 	}
-	// TODO: last ditch effort - search for service with alias == registration.Name ?
-	return nil, false
+	if gotError != nil {
+		return nil, serviceAliasesResult_APIErrorHappened
+	}
+	foundServicesCount := len(foundServices)
+	if foundServicesCount > 1 {
+		return nil, serviceAliasesResult_MultipleServicesFound
+	}
+	if foundServicesCount < 1 {
+		return nil, serviceAliasesResult_NoAliasesMatched
+	}
+	output := []*opslevel.Service{}
+	for _, value := range foundServices {
+		output = append(output, value)
+	}
+	return output[0], serviceAliasesResult_AliasMatched
 }
 
 func serviceNeedsUpdate(input opslevel.ServiceUpdateInput, service *opslevel.Service) bool {
