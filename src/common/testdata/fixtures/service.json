@@ -1,0 +1,11 @@
+{
+    "data": {
+      "account": {
+        "service": {
+          "id": "XXX",
+          "name": "Test",
+          "aliases": ["Alias1", "Alias2", "Alias3"]
+        }
+      }
+    }
+  }
