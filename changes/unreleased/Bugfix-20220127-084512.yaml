@@ -1,0 +1,3 @@
+kind: Bugfix
+body: fix a bug where API failures during service lookup causes new service creation
+time: 2022-01-27T08:45:12.103372-06:00
