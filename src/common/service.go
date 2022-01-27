@@ -71,6 +71,7 @@ func (s *ServiceRegistration) mergeData(o ServiceRegistration) {
 	for _, tag := range o.TagCreates {
 		s.TagCreates = append(s.TagCreates, tag)
 	}
+	s.TagAssigns = removeDuplicatesFromTagInputList(s.TagAssigns)
 	s.TagAssigns = removeOverlappedKeys(s.TagAssigns, s.TagCreates)
 	for _, tool := range o.Tools {
 		s.Tools = append(s.Tools, tool)
@@ -91,6 +92,25 @@ func parseFieldArray(field string, filters []string, resources []byte) []*JQResp
 		output = append(output, parseField(fmt.Sprintf("%s[%d]", field, i+1), filter, resources))
 	}
 	return output
+}
+
+func contains(item opslevel.TagInput, data []opslevel.TagInput) bool {
+	for _, v := range data {
+		if item.Key == v.Key && item.Value == v.Value {
+			return true
+		}
+	}
+	return false
+}
+
+func removeDuplicatesFromTagInputList(data []opslevel.TagInput) []opslevel.TagInput {
+	unique := []opslevel.TagInput{}
+	for _, entry := range data {
+		if contains(entry, unique) == false {
+			unique = append(unique, entry)
+		}
+	}
+	return unique
 }
 
 // Also removes empty string values
