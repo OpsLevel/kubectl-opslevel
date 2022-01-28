@@ -1,0 +1,4 @@
+kind: Refactor
+body: If all tags in a service tag assign API already exist on the service then skip
+  sending an API request
+time: 2022-01-27T15:21:01.606522-06:00
