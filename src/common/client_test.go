@@ -83,6 +83,102 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func Test_ContainsAllTags_IsTrue_WhenAllTagsOverlap(t *testing.T) {
+	// Arrange
+	inputA := []opslevel.TagInput{
+		{
+			Key:   "foo",
+			Value: "bar",
+		},
+		{
+			Key:   "hello",
+			Value: "world",
+		},
+		{
+			Key:   "apple",
+			Value: "orange",
+		},
+	}
+	inputB := []opslevel.Tag{
+		{
+			Key:   "foo",
+			Value: "bar",
+		},
+		{
+			Key:   "hello",
+			Value: "world",
+		},
+		{
+			Key:   "apple",
+			Value: "orange",
+		},
+	}
+	// Act
+	result := containsAllTags(inputA, inputB)
+	// Assert
+	autopilot.Equals(t, true, result)
+}
+
+func Test_ContainsAllTags_IsFalse_WhenTagInputHasMore(t *testing.T) {
+	// Arrange
+	inputA := []opslevel.TagInput{
+		{
+			Key:   "foo",
+			Value: "bar",
+		},
+		{
+			Key:   "hello",
+			Value: "world",
+		},
+		{
+			Key:   "apple",
+			Value: "orange",
+		},
+	}
+	inputB := []opslevel.Tag{
+		{
+			Key:   "foo",
+			Value: "bar",
+		},
+		{
+			Key:   "hello",
+			Value: "world",
+		},
+	}
+	// Act
+	result := containsAllTags(inputA, inputB)
+	// Assert
+	autopilot.Equals(t, false, result)
+}
+
+func Test_ContainsAllTags_IsTrue_WhenServiceHasMore(t *testing.T) {
+	// Arrange
+	inputA := []opslevel.TagInput{
+		{
+			Key:   "foo",
+			Value: "bar",
+		},
+	}
+	inputB := []opslevel.Tag{
+		{
+			Key:   "foo",
+			Value: "bar",
+		},
+		{
+			Key:   "hello",
+			Value: "world",
+		},
+		{
+			Key:   "apple",
+			Value: "orange",
+		},
+	}
+	// Act
+	result := containsAllTags(inputA, inputB)
+	// Assert
+	autopilot.Equals(t, true, result)
+}
+
 func Test_ServiceNeedsUpdate_IsTrue_WhenInputDiffers(t *testing.T) {
 	// Arrange
 	service := opslevel.Service{

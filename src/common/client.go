@@ -206,20 +206,43 @@ func handleTags(client *opslevel.Client, registration ServiceRegistration, servi
 	createTags(client, registration, service)
 }
 
+func containsAllTags(tagAssigns []opslevel.TagInput, serviceTags []opslevel.Tag) bool {
+	found := map[int]bool{}
+	for i, expected := range tagAssigns {
+		found[i] = false
+		for _, match := range serviceTags {
+			if expected.Key == match.Key && expected.Value == match.Value {
+				found[i] = true
+				break
+			}
+		}
+	}
+	for _, value := range found {
+		if value == false {
+			return false
+		}
+	}
+	return true
+}
+
 func assignTags(client *opslevel.Client, registration ServiceRegistration, service *opslevel.Service) {
 	if registration.TagAssigns == nil {
 		return
 	}
-	input := opslevel.TagAssignInput{
-		Id:   service.Id,
-		Tags: registration.TagAssigns,
-	}
-	_, err := client.AssignTags(input)
-	jsonBytes, _ := json.Marshal(registration.TagAssigns)
-	if err != nil {
-		log.Error().Msgf("[%s] Failed assigning tags: %s\n\tREASON: %v", service.Name, string(jsonBytes), err.Error())
+	if containsAllTags(registration.TagAssigns, service.Tags.Nodes) == false {
+		input := opslevel.TagAssignInput{
+			Id:   service.Id,
+			Tags: registration.TagAssigns,
+		}
+		_, err := client.AssignTags(input)
+		jsonBytes, _ := json.Marshal(registration.TagAssigns)
+		if err != nil {
+			log.Error().Msgf("[%s] Failed assigning tags: %s\n\tREASON: %v", service.Name, string(jsonBytes), err.Error())
+		} else {
+			log.Info().Msgf("[%s] Assigned tags: %s", service.Name, string(jsonBytes))
+		}
 	} else {
-		log.Info().Msgf("[%s] Assigned tags: %s", service.Name, string(jsonBytes))
+		log.Info().Msgf("[%s] All tags already assigned to service.", service.Name)
 	}
 }
 
