@@ -1,4 +1,0 @@
-kind: Bugfix
-body: remove duplicate values from the tag assigns array before sending to the API
-  to reduce memory pressure
-time: 2022-01-27T14:06:18.841148-06:00
