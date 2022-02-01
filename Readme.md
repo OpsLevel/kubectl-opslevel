@@ -6,9 +6,9 @@
     <a href="https://goreportcard.com/report/github.com/OpsLevel/kubectl-opslevel" alt="Go Report Card">
         <img src="https://goreportcard.com/badge/github.com/OpsLevel/kubectl-opslevel" /></a>
     <a href="https://GitHub.com/OpsLevel/kubectl-opslevel/releases/" alt="Release">
-        <img src="https://img.shields.io/github/v/release/OpsLevel/kubectl-opslevel" /></a>  
-    <a href="https://GitHub.com/OpsLevel/kubectl-opslevel/issues/" alt="Issues">
-        <img src="https://img.shields.io/github/issues/OpsLevel/kubectl-opslevel.svg" /></a>  
+        <img src="https://img.shields.io/github/v/release/OpsLevel/kubectl-opslevel" /></a> 
+    <a href="https://masterminds.github.io/stability/active.html" alt="Stability: Active">
+        <img src="https://masterminds.github.io/stability/active.svg" /></a>  
     <a href="https://github.com/OpsLevel/kubectl-opslevel/graphs/contributors" alt="Contributors">
         <img src="https://img.shields.io/github/contributors/OpsLevel/kubectl-opslevel" /></a>
     <a href="https://github.com/OpsLevel/kubectl-opslevel/pulse" alt="Activity">
