@@ -8,8 +8,6 @@ builds:
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
       - -trimpath
-    ldflags:
-      - '-s -w -X github.com/opslevel/kubectl-opslevel/cmd.version={{.Version}}'
     goos:
       - windows
       - linux
