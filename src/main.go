@@ -9,10 +9,15 @@ import (
 var (
 	version = "dev"
 	commit  = "none"
-	date    = "unknown"
-	builtBy = "unknown"
 )
 
+func truncate_commit(commit string, length int) (short_commit string) {
+	if len(commit) > length {
+		return commit[:length]
+	}
+	return commit
+}
+
 func main() {
-	cmd.Execute(fmt.Sprintf("%s-%s-%s-%s", version, commit, date, builtBy))
+	cmd.Execute(fmt.Sprintf("%s-%s", version, truncate_commit(commit, 12)))
 }
