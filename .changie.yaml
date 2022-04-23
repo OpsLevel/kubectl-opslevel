@@ -1,12 +1,16 @@
-changesDir: changes
+changesDir: .changes
 unreleasedDir: unreleased
 headerPath: header.tpl.md
 versionHeaderPath: ""
 changelogPath: CHANGELOG.md
 versionExt: md
-versionFormat: '## [{{.Version}}] - {{.Time.Format "2006-01-02"}}'
+versionFormat: '## [{{.Time.Format "January 02, 2006"}}]((https://github.com/OpsLevel/kubectl-opslevel/compare/{{.PreviousVersion}}...{{.Version}}))'
 kindFormat: '### {{.Kind}}'
-changeFormat: '* {{.Body}}'
+changeFormat: '- {{.Body}}'
+footerFormat: |
+  ## Docker Image
+
+    - `docker pull public.ecr.aws/opslevel/kubectl-opslevel:{{.Version}}`
 kinds:
 - label: Feature
 - label: Refactor
