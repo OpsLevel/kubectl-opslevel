@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/alecthomas/jsonschema v0.0.0-20210526225647-edb03dcab7bc
 	github.com/creasty/defaults v1.5.1
-	github.com/go-logr/logr v0.4.0
+	github.com/go-logr/logr v1.2.0
 	github.com/google/go-cmp v0.5.5
 	github.com/opslevel/opslevel-go v0.4.5-0.20220225194148-bc75f2c38d93
 	github.com/rocktavious/autopilot v0.1.5
@@ -16,7 +16,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	k8s.io/apimachinery v0.22.2
 	k8s.io/client-go v0.22.2
-	k8s.io/klog/v2 v2.9.0
+	k8s.io/klog/v2 v2.70.0
 )
 
 require (
