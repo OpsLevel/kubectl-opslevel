@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/opslevel/opslevel-go"
+	"github.com/opslevel/opslevel-go/v2022"
 	"github.com/rocktavious/autopilot"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

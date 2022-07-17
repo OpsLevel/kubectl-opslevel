@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/opslevel/opslevel-go"
+	"github.com/opslevel/opslevel-go/v2022"
 	"github.com/rs/zerolog/log"
 )
 

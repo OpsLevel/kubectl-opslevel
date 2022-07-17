@@ -6,7 +6,7 @@ import (
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/kubectl-opslevel/jq"
-	"github.com/opslevel/opslevel-go"
+	"github.com/opslevel/opslevel-go/v2022"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
