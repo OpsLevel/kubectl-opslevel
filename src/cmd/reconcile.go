@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	resyncInterval int
-	batchSize      int
+	reconcileResyncInterval int
+	reconcileBatchSize      int
 )
 
 var reconcileCmd = &cobra.Command{
@@ -29,8 +29,8 @@ var reconcileCmd = &cobra.Command{
 func init() {
 	serviceCmd.AddCommand(reconcileCmd)
 
-	reconcileCmd.Flags().IntVar(&resyncInterval, "resync", 24, "The amount (in hours) before a full resync of the kubernetes cluster happens with OpsLevel. [default: 24]")
-	reconcileCmd.Flags().IntVar(&batchSize, "batch", 500, "The max amount of k8s resources to batch process with jq. Helps to speedup initial startup. [default: 500]")
+	reconcileCmd.Flags().IntVar(&reconcileResyncInterval, "resync", 24, "The amount (in hours) before a full resync of the kubernetes cluster happens with OpsLevel. [default: 24]")
+	reconcileCmd.Flags().IntVar(&reconcileBatchSize, "batch", 500, "The max amount of k8s resources to batch process with jq. Helps to speedup initial startup. [default: 500]")
 }
 
 func runReconcile(cmd *cobra.Command, args []string) {
@@ -46,7 +46,7 @@ func runReconcile(cmd *cobra.Command, args []string) {
 	opslevel.Cache.CacheLifecycles(olClient)
 	opslevel.Cache.CacheTeams(olClient)
 
-	resync := time.Hour * time.Duration(resyncInterval)
+	resync := time.Hour * time.Duration(reconcileResyncInterval)
 	reconcileQueue := make(chan common.ServiceRegistration, 1)
 
 	for i, importConfig := range config.Service.Import {
@@ -61,7 +61,7 @@ func runReconcile(cmd *cobra.Command, args []string) {
 			continue
 		}
 		callback := createHandler(fmt.Sprintf("service.import[%d]", i), importConfig, reconcileQueue)
-		controller := k8sutils.NewController(*gvr, resync, batchSize)
+		controller := k8sutils.NewController(*gvr, resync, reconcileBatchSize)
 		controller.OnAdd = callback
 		controller.OnUpdate = callback
 		go controller.Start(1)
