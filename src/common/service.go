@@ -190,7 +190,7 @@ func convertToServiceRepositoryCreateInput(data map[string]string) *opslevel.Ser
 		displayName = val
 	}
 	return &opslevel.ServiceRepositoryCreateInput{
-		Repository:    *opslevel.NewIdFromAlias(repoAlias),
+		Repository:    *opslevel.NewIdentifier(repoAlias),
 		BaseDirectory: baseDirectory,
 		DisplayName:   displayName,
 	}
