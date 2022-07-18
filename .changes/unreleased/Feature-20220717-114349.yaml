@@ -1,0 +1,3 @@
+kind: Feature
+body: Add command `collect` to send k8s payloads to custom even checks
+time: 2022-07-17T11:43:49.361472-05:00

@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	ConfigCurrentVersion = "1.1.0"
+	ConfigCurrentVersion = "1.2.0"
 )
 
 type TagRegistrationConfig struct {
@@ -39,8 +39,13 @@ type Import struct {
 	OpslevelConfig ServiceRegistrationConfig   `yaml:"opslevel" json:"opslevel" mapstructure:"opslevel"`
 }
 
+type Collect struct {
+	SelectorConfig k8sutils.KubernetesSelector `yaml:"selector" json:"selector" mapstructure:"selector"`
+}
+
 type Service struct {
-	Import []Import `json:"import"`
+	Import  []Import  `json:"import"`
+	Collect []Collect `json:"collect"`
 }
 
 type Config struct {

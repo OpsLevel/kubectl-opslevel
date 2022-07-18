@@ -370,7 +370,7 @@ func anyIsTrue(resourceIndex int, filters []*JQResponseMulti) bool {
 
 }
 
-func filterResources(selector k8sutils.KubernetesSelector, resources [][]byte) [][]byte {
+func FilterResources(selector k8sutils.KubernetesSelector, resources [][]byte) [][]byte {
 	var output [][]byte
 	resourceCount := len(resources)
 	// Parse
@@ -495,7 +495,7 @@ func GetAllServices(c *config.Config) ([]ServiceRegistration, error) {
 }
 
 func ProcessResources(field string, config config.Import, resources [][]byte) ([]ServiceRegistration, error) {
-	filtered := filterResources(config.SelectorConfig, resources)
+	filtered := FilterResources(config.SelectorConfig, resources)
 	if len(filtered) < 1 {
 		return []ServiceRegistration{}, nil
 	}

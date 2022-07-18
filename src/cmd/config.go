@@ -15,7 +15,7 @@ import (
 
 // Make sure we only use spaces inside of these samples
 var configSimple = []byte(`#Simple Opslevel CLI Config
-version: "1.1.0"
+version: "1.2.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
@@ -35,11 +35,17 @@ service:
             - .metadata.labels
           create: # tag with the same key name but with a different value with be added to the service
             - '{"environment": .spec.template.metadata.labels.environment}'
-
+  collect:
+    - selector: # This limits what data we look at in Kubernetes
+        apiVersion: apps/v1 # only supports resources found in 'kubectl api-resources --verbs="get,list"'
+        kind: Deployment
+        excludes: # filters out resources if any expression returns truthy
+          - .metadata.namespace == "kube-system"
+          - .metadata.annotations."opslevel.com/ignore"
 `)
 
 var configSample = []byte(`#Sample Opslevel CLI Config
-version: "1.1.0"
+version: "1.2.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
@@ -77,7 +83,13 @@ service:
           - .metadata.annotations.repo
           # find annotations with format: opslevel.com/repo.<displayname>.<repo.subpath.dots.turned.to.forwardslash>: <opslevel repo alias> 
           - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/repos"))) | map({"name": .key | split(".")[2], "directory": .key | split(".")[3:] | join("/"), "repo": .value})'
-
+  collect:
+    - selector: # This limits what data we look at in Kubernetes
+        apiVersion: apps/v1 # only supports resources found in 'kubectl api-resources --verbs="get,list"'
+        kind: Deployment
+        excludes: # filters out resources if any expression returns truthy
+          - .metadata.namespace == "kube-system"
+          - .metadata.annotations."opslevel.com/ignore"
 `)
 
 var configCmd = &cobra.Command{
