@@ -1,4 +1,0 @@
-kind: Bugfix
-body: 'fix where `tools` and `repositories` JQ processing that returns null but still
-  registers an empty structure '
-time: 2022-08-05T11:30:06.130282-05:00
