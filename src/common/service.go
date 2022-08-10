@@ -213,6 +213,9 @@ func getAliases(index int, data []*JQResponseMulti) []string {
 		parsedData := data[i].Objects[index]
 		switch parsedData.Type {
 		case String:
+			if parsedData.StringObj == "" {
+				continue
+			}
 			output = append(output, parsedData.StringObj)
 		case StringArray:
 			for _, item := range parsedData.StringArray {
@@ -273,11 +276,17 @@ func getTools(index int, data []*JQResponseMulti) []opslevel.ToolCreateInput {
 		parsedData := data[i].Objects[index]
 		switch parsedData.Type {
 		case StringStringMap:
+			if parsedData.StringMap == nil {
+				continue
+			}
 			if input, err := convertToToolCreateInput(parsedData.StringMap); err == nil {
 				output = append(output, *input)
 			}
 		case StringStringMapArray:
 			for _, item := range parsedData.StringMapArray {
+				if item == nil {
+					continue
+				}
 				if input, err := convertToToolCreateInput(item); err == nil {
 					output = append(output, *input)
 				}
@@ -313,11 +322,17 @@ func getRepositories(index int, data []*JQResponseMulti) []opslevel.ServiceRepos
 				}
 			}
 		case StringStringMap:
+			if parsedData.StringMap == nil {
+				continue
+			}
 			if input := convertToServiceRepositoryCreateInput(parsedData.StringMap); input != nil {
 				output = append(output, *input)
 			}
 		case StringStringMapArray:
 			for _, item := range parsedData.StringMapArray {
+				if item == nil {
+					continue
+				}
 				if input := convertToServiceRepositoryCreateInput(item); input != nil {
 					output = append(output, *input)
 				}
