@@ -5,7 +5,8 @@ go 1.18
 require (
 	github.com/alecthomas/jsonschema v0.0.0-20210526225647-edb03dcab7bc
 	github.com/creasty/defaults v1.5.1
-	github.com/go-logr/logr v0.4.0
+	github.com/go-logr/logr v1.2.3
+	github.com/go-resty/resty/v2 v2.7.0
 	github.com/google/go-cmp v0.5.5
 	github.com/opslevel/opslevel-go/v2022 v2022.8.25
 	github.com/rocktavious/autopilot v0.1.5
@@ -30,7 +31,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/go-resty/resty/v2 v2.7.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
