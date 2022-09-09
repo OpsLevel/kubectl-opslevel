@@ -12,6 +12,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: 'true'
+          token: ${{ secrets.ORG_GITHUB_TOKEN }}
       - name: Fetch all tags
         run: git fetch --force --tags
       - name: Get the tag name
