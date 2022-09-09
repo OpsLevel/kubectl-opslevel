@@ -7,7 +7,7 @@ require (
 	github.com/creasty/defaults v1.5.1
 	github.com/go-logr/logr v0.4.0
 	github.com/google/go-cmp v0.5.5
-	github.com/opslevel/opslevel-go/v2022 v2022.7.15
+	github.com/opslevel/opslevel-go/v2022 v2022.8.25
 	github.com/rocktavious/autopilot v0.1.5
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.2.1
