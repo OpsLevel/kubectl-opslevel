@@ -25,6 +25,8 @@
  <a href="#troubleshooting">Troubleshooting</a>
 </p>
 
+[![Overall](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fapp.opslevel.com%2Fapi%2Fservice_level%2F4SZo_XBzNM8K84zLHYdEXCcvBL6q_pTzUMSR09DmnZM)](https://app.opslevel.com/services/opslevel_kubernetes_sync/maturity-report)
+
 `kubectl-opslevel` is a command line tool that enables you to import & reconcile services with [OpsLevel](https://www.opslevel.com/) from your Kubernetes clusters.  You can also run this tool inside your Kubernetes cluster as a job to reconcile the data with OpsLevel periodically using our [Helm Chart](https://github.com/OpsLevel/helm-charts).
 
 ## Prerequisite
