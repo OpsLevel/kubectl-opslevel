@@ -1,4 +1,0 @@
-kind: Refactor
-body: 'BREAKING CHANGE: `--api-url` no longer needs `/graphql` on the end - this keeps
-  this field in sync with our other tools.  A full example of usage is `--api-url=https://self-hosted.prod.example.com`'
-time: 2022-10-18T20:20:49.022088-05:00
