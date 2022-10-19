@@ -25,6 +25,11 @@ builds:
       - goos: windows
         goarch: 'arm64'
     binary: '{{ .ProjectName }}'
+archives:
+  - name_template: '{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}'
+    format_overrides:
+      - goos: windows
+        format: zip
 dockers:
   - image_templates:
     - "public.ecr.aws/opslevel/kubectl-opslevel:{{ .Tag }}"
@@ -32,12 +37,6 @@ dockers:
     - "--label=org.opencontainers.image.created={{ .Date }}"
     - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
     - "--label=org.opencontainers.image.version={{ .Tag }}"
-    - "--build-arg=VERSION={{ .Tag }}"
-archives:
-  - name_template: '{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}'
-    format_overrides:
-      - goos: windows
-        format: zip
 brews:
   - name: kubectl
     homepage: "https://www.opslevel.com/"
@@ -53,7 +52,7 @@ brews:
     tap:
       owner: opslevel
       name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+      token: "{{ .Env.ORG_GITHUB_TOKEN }}"
 checksum:
   name_template: '{{ .ProjectName }.sha256'
   algorithm: sha256
