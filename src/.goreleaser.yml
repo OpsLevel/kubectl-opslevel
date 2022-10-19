@@ -54,7 +54,7 @@ brews:
       name: homebrew-tap
       token: "{{ .Env.ORG_GITHUB_TOKEN }}"
 checksum:
-  name_template: '{{ .ProjectName }.sha256'
+  name_template: '{{ .ProjectName }}.sha256'
   algorithm: sha256
 signs:
   - artifacts: checksum
