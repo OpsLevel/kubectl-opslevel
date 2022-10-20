@@ -13,7 +13,7 @@ require (
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
-	go.uber.org/automaxprocs v1.4.0
+	go.uber.org/automaxprocs v1.5.1
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apimachinery v0.25.3
 	k8s.io/client-go v0.25.3
