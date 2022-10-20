@@ -166,21 +166,13 @@ func setupAPIToken() {
 }
 
 func createOpslevelClient() *opslevel.Client {
-	client := opslevel.NewClient(
-		viper.GetString("api-token"),
+	client := opslevel.NewGQLClient(
+		opslevel.SetAPIToken(viper.GetString("api-token")),
 		opslevel.SetURL(viper.GetString("api-url")),
 		opslevel.SetUserAgentExtra(fmt.Sprintf("kubectl-%s", version)),
 		opslevel.SetTimeout(time.Second*time.Duration(apiTimeout)),
 	)
-	clientErr := client.Validate()
-	if clientErr != nil {
-		if strings.Contains(clientErr.Error(), "Please provide a valid OpsLevel API token") {
-			cobra.CheckErr(fmt.Errorf("%s via 'export OPSLEVEL_API_TOKEN=XXX' or '--api-token=XXX' or '--api-token-path=/path/to/token/file'", clientErr.Error()))
-		} else {
-			cobra.CheckErr(clientErr)
-		}
-	}
-	cobra.CheckErr(clientErr)
+	cobra.CheckErr(client.Validate())
 	return client
 }
 
