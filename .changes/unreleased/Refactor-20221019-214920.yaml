@@ -1,0 +1,3 @@
+kind: Refactor
+body: do not obscure api error responses when doing client validation
+time: 2022-10-19T21:49:20.05112-05:00
