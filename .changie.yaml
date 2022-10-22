@@ -4,7 +4,7 @@ headerPath: header.tpl.md
 versionHeaderPath: ""
 changelogPath: CHANGELOG.md
 versionExt: md
-versionFormat: '## [{{.Time.Format "January 02, 2006"}}]((https://github.com/OpsLevel/kubectl-opslevel/compare/{{.PreviousVersion}}...{{.Version}}))'
+versionFormat: '## [{{.Time.Format "January 02, 2006"}}](https://github.com/OpsLevel/kubectl-opslevel/compare/{{.PreviousVersion}}...{{.Version}})'
 kindFormat: '### {{.Kind}}'
 changeFormat: '- {{.Body}}'
 footerFormat: |
@@ -12,10 +12,11 @@ footerFormat: |
 
     - `docker pull public.ecr.aws/opslevel/kubectl-opslevel:{{.Version}}`
 kinds:
-- label: Feature
-- label: Refactor
-- label: Deprecated
-- label: Removed
-- label: Bugfix
-- label: Docs
-- label: Security
+  - label: Bugfix
+  - label: Feature
+  - label: Security
+  - label: Refactor
+  - label: Deprecated
+  - label: Removed
+  - label: Docs
+  - label: Dependency
