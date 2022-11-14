@@ -15,7 +15,7 @@ require (
 	github.com/spf13/viper v1.8.1
 	go.uber.org/automaxprocs v1.5.1
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/apimachinery v0.25.3
+	k8s.io/apimachinery v0.25.4
 	k8s.io/client-go v0.25.3
 	k8s.io/klog/v2 v2.80.1
 )
