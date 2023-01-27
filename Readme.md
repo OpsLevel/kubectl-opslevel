@@ -146,6 +146,31 @@ Make sure you have `zsh` completion turned on by having the following as one of 
 echo "autoload -U compinit; compinit" >> ~/.zshrc
 ```
 
+### Collect
+
+This tool also comes with a way to collect the Kubernetes data to our custom event checks (CEC) as payloads.
+
+```yaml
+#Sample Opslevel CLI Config
+version: "1.2.0"
+service:
+  import:
+    ... Import Coammands Config Here ...
+  collect:
+    - selector: # This limits what data we look at in Kubernetes
+        apiVersion: apps/v1 # only supports resources found in 'kubectl api-resources --verbs="get,list"'
+        kind: Deployment
+        excludes: # filters out resources if any expression returns truthy
+          - .metadata.namespace == "kube-system"
+          - .metadata.annotations."opslevel.com/ignore"
+```
+
+```sh
+kubectl opslevel collect --integration-url https://app.opslevel.com/integrations/custom_event/XXXX-XX-XX-XXXXX
+```
+
+This will then use the `collect` stanza's selector to get the JSON payload of the resource and ship it to our CEC endpoint for use in the maturity rubric checks.
+
 ### JSON-Schema
 
 The tool also has the ability to output a [JSON-Schema](https://json-schema.org/) file for use in IDE's when editing the configuration file.
