@@ -10,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/opslevel/opslevel-go/v2022 v2022.10.22
 	github.com/rocktavious/autopilot v0.1.5
-	github.com/rs/zerolog v1.28.0
+	github.com/rs/zerolog v1.29.1
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
 	go.uber.org/automaxprocs v1.5.1
