@@ -21,7 +21,7 @@ jobs:
       - name: Set Release Version
         id: version
         run: |
-          echo "::set-output name=RELEASE_VERSION::$(date +v%Y.%-m.%-d)"
+          echo "RELEASE_VERSION=$(date +v%Y.%-m.%-d)" >> $GITHUB_OUTPUT
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
