@@ -23,7 +23,7 @@ jobs:
         run: |
           echo "::set-output name=RELEASE_VERSION::$(date +v%Y.%-m.%-d)"
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: 1.18
       - name: Cache Go modules
