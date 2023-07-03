@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/opslevel/opslevel-go/v2022"
+	"github.com/opslevel/opslevel-go/v2023"
 	"github.com/rocktavious/autopilot"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -183,7 +183,7 @@ func Test_ServiceNeedsUpdate_IsTrue_WhenInputDiffers(t *testing.T) {
 	// Arrange
 	service := opslevel.Service{
 		ServiceId: opslevel.ServiceId{
-			Id: opslevel.NewID("XXX"),
+			Id: *opslevel.NewID("XXX"),
 		},
 		Name:        "Test",
 		Description: "Hello World",
@@ -219,7 +219,7 @@ func Test_ServiceNeedsUpdate_IsFalse_WhenInputMatches(t *testing.T) {
 	// Arrange
 	service := opslevel.Service{
 		ServiceId: opslevel.ServiceId{
-			Id: opslevel.NewID("XXX"),
+			Id: *opslevel.NewID("XXX"),
 		},
 		Name:        "Test",
 		Description: "Hello World",
