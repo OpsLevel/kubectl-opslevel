@@ -24,6 +24,7 @@ type ServiceRegistration struct {
 	Product      string                                  `json:",omitempty"`
 	Language     string                                  `json:",omitempty"`
 	Framework    string                                  `json:",omitempty"`
+	System       string                                  `json:",omitempty"`
 	Aliases      []string                                `json:",omitempty"`
 	TagAssigns   []opslevel.TagInput                     `json:",omitempty"`
 	TagCreates   []opslevel.TagInput                     `json:",omitempty"`
@@ -60,6 +61,9 @@ func (s *ServiceRegistration) mergeData(o ServiceRegistration) {
 	}
 	if s.Framework == "" {
 		s.Framework = o.Framework
+	}
+	if s.System == "" {
+		s.System = o.System
 	}
 	for _, alias := range o.Aliases {
 		s.Aliases = append(s.Aliases, alias)
@@ -425,6 +429,7 @@ func parseResources(field string, c config.ServiceRegistrationConfig, count int,
 	Products := parseField(fmt.Sprintf("%s.product", field), c.Product, resources)
 	Languages := parseField(fmt.Sprintf("%s.language", field), c.Language, resources)
 	Frameworks := parseField(fmt.Sprintf("%s.framework", field), c.Framework, resources)
+	Systems := parseField(fmt.Sprintf("%s.system", field), c.System, resources)
 	Aliases := parseFieldArray(fmt.Sprintf("%s.aliases", field), c.Aliases, resources)
 	if len(Aliases) < 1 {
 		Aliases = append(Aliases, parseField("Auto Added Alias", "\"k8s:\\(.metadata.name)-\\(.metadata.namespace)\"", resources))
@@ -446,6 +451,7 @@ func parseResources(field string, c config.ServiceRegistrationConfig, count int,
 		service.Product = getString(i, Products)
 		service.Language = getString(i, Languages)
 		service.Framework = getString(i, Frameworks)
+		service.System = getString(i, Systems)
 		service.Aliases = getAliases(i, Aliases)
 		service.TagAssigns = getTags(i, TagAssigns)
 		service.TagCreates = getTags(i, TagCreates)

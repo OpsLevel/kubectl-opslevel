@@ -39,6 +39,7 @@ func ReconcileService(client *opslevel.Client, service ServiceRegistration) {
 	handleAliases(client, service, foundService)
 	handleTags(client, service, foundService)
 	handleTools(client, service, foundService)
+	handleSystem(client, service, foundService)
 	handleRepositories(client, service, foundService)
 	log.Info().Msgf("[%s] Finished processing data", foundService.Name)
 }
@@ -316,5 +317,20 @@ func handleRepositories(client *opslevel.Client, registration ServiceRegistratio
 		} else {
 			log.Info().Msgf("[%s] Attached repository '%s'", service.Name, repositoryAsString)
 		}
+	}
+}
+
+func handleSystem(client *opslevel.Client, registration ServiceRegistration, service *opslevel.Service) {
+	if registration.System != "" {
+		system, foundSystemErr := client.GetSystem(registration.System)
+		if foundSystemErr != nil {
+			log.Warn().Msgf("[%s] System with alias: '%s' not found so service cannot be attached to it ... skipping", service.Name, system)
+			return
+		}
+		assignServiceErr := system.AssignService(client, service.Name)
+		if assignServiceErr != nil {
+			log.Error().Msgf("[%s] Failed assigning service to system '%s'\n\tREASON: %v", service.Name, system, assignServiceErr.Error())
+		}
+		log.Info().Msgf("[%s] Attached service '%s'", service.Name, system)
 	}
 }

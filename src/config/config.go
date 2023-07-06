@@ -28,6 +28,7 @@ type ServiceRegistrationConfig struct {
 	Product      string                `json:"product"`
 	Language     string                `json:"language"`
 	Framework    string                `json:"framework"`
+	System       string                `json:"system"`
 	Aliases      []string              `json:"aliases"` // JQ expressions that return a single string or a []string
 	Tags         TagRegistrationConfig `json:"tags"`
 	Tools        []string              `json:"tools"`        // JQ expressions that return a single map[string]string or a []map[string]string
