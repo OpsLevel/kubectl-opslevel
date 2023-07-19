@@ -6,7 +6,7 @@ import (
 
 	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/kubectl-opslevel/k8sutils"
-	"github.com/opslevel/opslevel-go/v2022"
+	"github.com/opslevel/opslevel-go/v2023"
 
 	_ "github.com/rs/zerolog/log"
 )

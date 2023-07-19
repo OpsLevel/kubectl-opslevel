@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opslevel/opslevel-go/v2022"
+	"github.com/opslevel/opslevel-go/v2023"
 	"github.com/spf13/cobra"
 
 	"github.com/rs/zerolog"

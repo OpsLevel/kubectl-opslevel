@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/opslevel/opslevel-go/v2022"
+	"github.com/opslevel/opslevel-go/v2023"
 	"github.com/rs/zerolog/log"
 )
 
@@ -65,8 +65,8 @@ func validateServiceAliases(client *opslevel.Client, registration ServiceRegistr
 		if err != nil {
 			gotError = err
 		} else {
-			if foundService.Id != nil {
-				foundServices[foundService.Id.(string)] = foundService
+			if foundService.Id != "" {
+				foundServices[string(foundService.Id)] = foundService
 			}
 		}
 	}
@@ -230,11 +230,12 @@ func assignTags(client *opslevel.Client, registration ServiceRegistration, servi
 		return
 	}
 	if containsAllTags(registration.TagAssigns, service.Tags.Nodes) == false {
-		input := opslevel.TagAssignInput{
-			Id:   service.Id,
-			Tags: registration.TagAssigns,
+		tags := map[string]string{}
+		for _, tagAssign := range registration.TagAssigns {
+			tags[tagAssign.Key] = tagAssign.Value
 		}
-		_, err := client.AssignTags(input)
+
+		_, err := client.AssignTags(string(service.Id), tags)
 		jsonBytes, _ := json.Marshal(registration.TagAssigns)
 		if err != nil {
 			log.Error().Msgf("[%s] Failed assigning tags: %s\n\tREASON: %v", service.Name, string(jsonBytes), err.Error())
