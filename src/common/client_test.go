@@ -291,7 +291,7 @@ func Test_ValidateServiceAliases_WhenSuccessfulMatch(t *testing.T) {
 	// Act
 	service, status := validateServiceAliases(mockedClient, registration)
 	// Assert
-	autopilot.Equals(t, "XXX", service.Id)
+	autopilot.Equals(t, "XXX", string(service.Id))
 	autopilot.Equals(t, serviceAliasesResult_AliasMatched, status)
 }
 
