@@ -109,6 +109,7 @@ service:
         product: .metadata.annotations."opslevel.com/product"
         language: .metadata.annotations."opslevel.com/language"
         framework: .metadata.annotations."opslevel.com/framework"
+        system: .metadata.annotations."opslevel.com/system"
         aliases: # This are how we identify the services again during reconciliation - please make sure they are very unique
           - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
         tags:
