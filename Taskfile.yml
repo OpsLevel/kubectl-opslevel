@@ -33,7 +33,7 @@ tasks:
     desc: Update opslevel-go version to latest release
     dir: "{{.SRC_DIR}}"
     cmds:
-      - go get github.com/opslevel/opslevel-go/v2023@none
+      - go get -u github.com/opslevel/opslevel-go/v2023
       - go mod tidy
 
   workspace:
