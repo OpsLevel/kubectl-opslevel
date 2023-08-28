@@ -1,0 +1,46 @@
+# https://taskfile.dev/
+
+version: '3'
+
+env:
+  SRC_DIR: "{{.TASKFILE_DIR}}/src"
+
+tasks:
+  lint:
+    desc: Formatting and linting
+    dir: "{{.SRC_DIR}}"
+    cmds:
+      - gofmt -d .
+      - go vet ./...
+      - golangci-lint run
+
+  lintfix:
+    desc: Fix formatting and linting
+    dir: "{{.SRC_DIR}}"
+    cmds:
+      - gofmt -w .
+      - go mod tidy
+      - golangci-lint run --fix
+
+  test:
+    desc: Run tests
+    dir: "{{.SRC_DIR}}"
+    cmds:
+      - go test -race -coverprofile=coverage.txt -covermode=atomic -v ./... {{ .CLI_ARGS }}
+    silent: true
+
+  update-opslevel-go:
+    desc: Update opslevel-go version to latest release
+    dir: "{{.SRC_DIR}}"
+    cmds:
+      - go get -u github.com/opslevel/opslevel-go/v2023
+      - go mod tidy
+
+  workspace:
+    desc: Setup workspace for cli & opslevel-go development
+    dir: "{{.SRC_DIR}}"
+    cmds:
+      - git submodule update --init
+      - go work init || exit 0
+      - go work use . submodules/opslevel-go
+      - echo "Workspace ready!"
