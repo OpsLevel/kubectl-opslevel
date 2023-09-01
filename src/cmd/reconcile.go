@@ -27,7 +27,7 @@ var reconcileCmd = &cobra.Command{
 }
 
 func init() {
-	serviceCmd.AddCommand(reconcileCmd)
+	rootCmd.AddCommand(reconcileCmd)
 
 	reconcileCmd.Flags().IntVar(&reconcileResyncInterval, "resync", 24, "The amount (in hours) before a full resync of the kubernetes cluster happens with OpsLevel. [default: 24]")
 	reconcileCmd.Flags().IntVar(&reconcileBatchSize, "batch", 500, "The max amount of k8s resources to batch process with jq. Helps to speedup initial startup. [default: 500]")

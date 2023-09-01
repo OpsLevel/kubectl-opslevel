@@ -20,7 +20,7 @@ var importCmd = &cobra.Command{
 }
 
 func init() {
-	serviceCmd.AddCommand(importCmd)
+	rootCmd.AddCommand(importCmd)
 }
 
 func runImport(cmd *cobra.Command, args []string) {
