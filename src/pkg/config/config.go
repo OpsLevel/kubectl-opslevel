@@ -3,15 +3,15 @@ package config
 import (
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 
 	"github.com/opslevel/kubectl-opslevel/k8sutils"
 
 	"github.com/creasty/defaults"
-	"github.com/spf13/viper"
 )
 
 var (
-	ConfigCurrentVersion = "1.2.0"
+	ConfigCurrentVersion = "1.3.0"
 )
 
 type TagRegistrationConfig struct {
@@ -28,6 +28,7 @@ type ServiceRegistrationConfig struct {
 	Product      string                `json:"product"`
 	Language     string                `json:"language"`
 	Framework    string                `json:"framework"`
+	System       string                `json:"system"`
 	Aliases      []string              `json:"aliases"` // JQ expressions that return a single string or a []string
 	Tags         TagRegistrationConfig `json:"tags"`
 	Tools        []string              `json:"tools"`        // JQ expressions that return a single map[string]string or a []map[string]string
@@ -57,15 +58,20 @@ type ConfigVersion struct {
 	Version string
 }
 
-func New() (*Config, error) {
+func NewConfig(data []byte) (*Config, error) {
 	v := &ConfigVersion{}
-	viper.Unmarshal(&v)
+	if err := yaml.Unmarshal(data, &v); err != nil {
+		return nil, err
+	}
+
 	if v.Version != ConfigCurrentVersion {
 		return nil, errors.New(fmt.Sprintf("Supported config version is '%s' but found '%s' | Please update config file or create a new sample with `kubectl opslevel config sample`", ConfigCurrentVersion, v.Version))
 	}
 
 	c := &Config{}
-	viper.Unmarshal(&c)
+	if err := yaml.Unmarshal(data, &c); err != nil {
+		return nil, err
+	}
 	if err := defaults.Set(c); err != nil {
 		return c, err
 	}

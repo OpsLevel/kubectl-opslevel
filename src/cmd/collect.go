@@ -6,17 +6,11 @@ import (
 	"time"
 
 	"github.com/opslevel/kubectl-opslevel/common"
-	"github.com/opslevel/kubectl-opslevel/config"
-	"github.com/opslevel/kubectl-opslevel/jq"
 	"github.com/opslevel/kubectl-opslevel/k8sutils"
+	"github.com/opslevel/kubectl-opslevel/pkg/config"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-)
-
-var (
-	collectResyncInterval int
-	collectBatchSize      int
 )
 
 var collectCmd = &cobra.Command{
@@ -27,20 +21,15 @@ var collectCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(collectCmd)
+	runCmd.AddCommand(collectCmd)
 
 	collectCmd.Flags().StringP("integration-url", "i", "", "OpsLevel integration url (OPSLEVEL_INTEGRATION_URL)")
-	collectCmd.Flags().IntVar(&collectResyncInterval, "resync", 24, "The amount (in hours) before a full resync of the kubernetes cluster happens with OpsLevel. [default: 24]")
-	collectCmd.Flags().IntVar(&collectBatchSize, "batch", 500, "The max amount of k8s resources to batch process. Helps to speedup initial startup. [default: 500]")
 
 	viper.BindEnv("integration-url", "OPSLEVEL_INTEGRATION_URL")
 }
 
 func runCollect(cmd *cobra.Command, args []string) {
-	config, configErr := config.New()
-	cobra.CheckErr(configErr)
-
-	jq.ValidateInstalled()
+	config := getCfgFile()
 
 	integrationUrl := viper.GetString("integration-url")
 	if len(integrationUrl) <= 0 {
@@ -49,7 +38,7 @@ func runCollect(cmd *cobra.Command, args []string) {
 
 	k8sClient := k8sutils.CreateKubernetesClient()
 
-	resync := time.Hour * time.Duration(reconcileResyncInterval)
+	resync := time.Hour * time.Duration(resyncInterval)
 	collectQueue := make(chan string, 1)
 
 	for i, importConfig := range config.Service.Collect {
@@ -64,7 +53,7 @@ func runCollect(cmd *cobra.Command, args []string) {
 			continue
 		}
 		callback := createCollectHandler(fmt.Sprintf("service.import[%d]", i), importConfig, collectQueue)
-		controller := k8sutils.NewController(*gvr, resync, reconcileBatchSize)
+		controller := k8sutils.NewController(*gvr, resync, batchSize)
 		controller.OnAdd = callback
 		controller.OnUpdate = callback
 		go controller.Start(1)

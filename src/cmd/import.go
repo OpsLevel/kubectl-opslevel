@@ -4,8 +4,6 @@ import (
 	"sync"
 
 	"github.com/opslevel/kubectl-opslevel/common"
-	"github.com/opslevel/kubectl-opslevel/config"
-	"github.com/opslevel/kubectl-opslevel/jq"
 	"github.com/opslevel/opslevel-go/v2023"
 
 	"github.com/rs/zerolog/log"
@@ -24,10 +22,7 @@ func init() {
 }
 
 func runImport(cmd *cobra.Command, args []string) {
-	config, configErr := config.New()
-	cobra.CheckErr(configErr)
-
-	jq.ValidateInstalled()
+	config := getCfgFile()
 
 	services, servicesErr := common.GetAllServices(config)
 	cobra.CheckErr(servicesErr)

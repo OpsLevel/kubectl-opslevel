@@ -6,17 +6,11 @@ import (
 	"time"
 
 	"github.com/opslevel/kubectl-opslevel/common"
-	"github.com/opslevel/kubectl-opslevel/config"
-	"github.com/opslevel/kubectl-opslevel/jq"
 	"github.com/opslevel/kubectl-opslevel/k8sutils"
+	"github.com/opslevel/kubectl-opslevel/pkg/config"
 	"github.com/opslevel/opslevel-go/v2023"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-)
-
-var (
-	reconcileResyncInterval int
-	reconcileBatchSize      int
 )
 
 var reconcileCmd = &cobra.Command{
@@ -27,17 +21,11 @@ var reconcileCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(reconcileCmd)
-
-	reconcileCmd.Flags().IntVar(&reconcileResyncInterval, "resync", 24, "The amount (in hours) before a full resync of the kubernetes cluster happens with OpsLevel. [default: 24]")
-	reconcileCmd.Flags().IntVar(&reconcileBatchSize, "batch", 500, "The max amount of k8s resources to batch process with jq. Helps to speedup initial startup. [default: 500]")
+	runCmd.AddCommand(reconcileCmd)
 }
 
 func runReconcile(cmd *cobra.Command, args []string) {
-	config, configErr := config.New()
-	cobra.CheckErr(configErr)
-
-	jq.ValidateInstalled()
+	config := getCfgFile()
 
 	k8sClient := k8sutils.CreateKubernetesClient()
 	olClient := createOpslevelClient()
@@ -46,7 +34,7 @@ func runReconcile(cmd *cobra.Command, args []string) {
 	opslevel.Cache.CacheLifecycles(olClient)
 	opslevel.Cache.CacheTeams(olClient)
 
-	resync := time.Hour * time.Duration(reconcileResyncInterval)
+	resync := time.Hour * time.Duration(resyncInterval)
 	reconcileQueue := make(chan common.ServiceRegistration, 1)
 
 	for i, importConfig := range config.Service.Import {
@@ -61,7 +49,7 @@ func runReconcile(cmd *cobra.Command, args []string) {
 			continue
 		}
 		callback := createHandler(fmt.Sprintf("service.import[%d]", i), importConfig, reconcileQueue)
-		controller := k8sutils.NewController(*gvr, resync, reconcileBatchSize)
+		controller := k8sutils.NewController(*gvr, resync, batchSize)
 		controller.OnAdd = callback
 		controller.OnUpdate = callback
 		go controller.Start(1)

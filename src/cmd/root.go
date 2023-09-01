@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"github.com/opslevel/kubectl-opslevel/pkg/config"
 	"os"
 	"runtime"
 	"strings"
@@ -70,23 +71,6 @@ func initConfig() {
 }
 
 func readConfig() {
-	if cfgFile != "" {
-		if cfgFile == "." {
-			viper.SetConfigType("yaml")
-			viper.ReadConfig(os.Stdin)
-			return
-		} else {
-			viper.SetConfigFile(cfgFile)
-		}
-	} else {
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-
-		viper.SetConfigName("opslevel")
-		viper.SetConfigType("yaml")
-		viper.AddConfigPath(".")
-		viper.AddConfigPath(home)
-	}
 	viper.SetEnvPrefix("OPSLEVEL")
 	viper.AutomaticEnv()
 	viper.ReadInConfig()
@@ -178,4 +162,12 @@ func createOpslevelClient() *opslevel.Client {
 
 func createRestClient() *resty.Client {
 	return opslevel.NewRestClient(opslevel.SetURL(viper.GetString("api-url")))
+}
+
+func getCfgFile() *config.Config {
+	data, err := os.ReadFile(cfgFile)
+	cobra.CheckErr(err)
+	output, err := config.NewConfig(data)
+	cobra.CheckErr(err)
+	return output
 }
