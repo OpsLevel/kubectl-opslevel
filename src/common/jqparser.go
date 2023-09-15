@@ -88,7 +88,7 @@ func (parser *JQParser) ParseMulti(field string, data []byte) *JQResponseMulti {
 }
 
 func (resp *JQResponse) Unmarshal() {
-	//fmt.Printf("Unmarshaling '%s'\n", string(resp.Bytes))
+	// fmt.Printf("Unmarshaling '%s'\n", string(resp.Bytes))
 	if string(resp.Bytes) == "" {
 		resp.Type = Empty
 		return
@@ -138,7 +138,7 @@ func (resp *JQResponse) Unmarshal() {
 }
 
 func (resp *JQResponseMulti) Unmarshal() {
-	//fmt.Printf("Unmarshaling '%s'\n", string(resp.Bytes))
+	// fmt.Printf("Unmarshaling '%s'\n", string(resp.Bytes))
 	if string(resp.Bytes) == "[]" {
 		resp.Objects = nil
 		return
