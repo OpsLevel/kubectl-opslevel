@@ -119,6 +119,7 @@ func (c *KubernetesController) processNextItem() bool {
 
 	return true
 }
+
 func (c *KubernetesController) mainloop() {
 	for c.processNextItem() {
 	}

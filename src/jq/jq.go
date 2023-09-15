@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os/exec"
 	"strings"
@@ -72,7 +71,7 @@ func (jq *JQ) Commandline() string {
 func (jq *JQ) Run(json []byte) ([]byte, *JQError) {
 	var stderr bytes.Buffer
 	ctx, cancel := context.WithTimeout(context.Background(), jq.timeout)
-	//fmt.Printf("Exec: `jq %s`\n", strings.Join(jq.options, " "))
+	// fmt.Printf("Exec: `jq %s`\n", strings.Join(jq.options, " "))
 	cmd := exec.CommandContext(ctx, "jq", jq.options...)
 	cmd.Stdin = bytes.NewBuffer(json)
 	cmd.Stderr = &stderr
@@ -80,9 +79,9 @@ func (jq *JQ) Run(json []byte) ([]byte, *JQError) {
 	defer cancel()
 	out, err := cmd.Output()
 	if err != nil {
-		//fmt.Println("Got Error on JQ Execution")
-		//fmt.Println(err.Error())
-		//fmt.Println(string(stderr.Bytes()))
+		// fmt.Println("Got Error on JQ Execution")
+		// fmt.Println(err.Error())
+		// fmt.Println(string(stderr.Bytes()))
 		// TODO: printing out that it couldn't find JQ binary
 		if err.Error() == "exit status 2" {
 			return nil, &JQError{Message: jq.Commandline(), Type: BadOptions}
@@ -94,9 +93,9 @@ func (jq *JQ) Run(json []byte) ([]byte, *JQError) {
 			return nil, &JQError{Message: string(json), Type: BadJSON}
 		}
 		if err.Error() == "exit status 5" {
-			return nil, &JQError{Message: string(stderr.Bytes()), Type: BadExcution}
+			return nil, &JQError{Message: stderr.String(), Type: BadExcution}
 		}
-		return nil, &JQError{Message: string(stderr.Bytes()), Type: BadExcution}
+		return nil, &JQError{Message: stderr.String(), Type: BadExcution}
 	}
 	return out, nil
 }
@@ -129,11 +128,11 @@ func NewWithOptions(filter string, timeout time.Duration, options []JQOpt) JQ {
 			opts = append(opts, fmt.Sprintf("--%s", opt.Name))
 		}
 	}
-	opts = append(opts, fmt.Sprintf("%s", filter))
+	opts = append(opts, filter)
 	jq := &JQ{
 		options: opts,
 		timeout: timeout,
-		writer:  ioutil.Discard,
+		writer:  io.Discard,
 	}
 	return *jq
 }
