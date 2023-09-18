@@ -1,0 +1,4 @@
+kind: "Dependency"
+body: "Bump go.uber.org/automaxprocs from 1.5.1 to 1.5.3 in /src"
+time: 2023-09-18T19:46:02.00000Z
+
