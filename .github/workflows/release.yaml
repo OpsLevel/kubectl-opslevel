@@ -72,7 +72,7 @@ jobs:
           git tag -f ${{ steps.version.outputs.RELEASE_VERSION }} -m "Cut Release '${{ steps.version.outputs.RELEASE_VERSION }}'"
           git push -f origin refs/tags/${{ steps.version.outputs.RELEASE_VERSION }}
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2.7.0
+        uses: goreleaser/goreleaser-action@v5.0.0
         with:
           args: release --rm-dist --release-notes=../.changes/${{ steps.version.outputs.RELEASE_VERSION }}.md
           workdir: ./src
