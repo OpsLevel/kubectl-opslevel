@@ -327,10 +327,13 @@ func handleSystem(client *opslevel.Client, registration ServiceRegistration, ser
 			log.Warn().Msgf("[%s] System with alias: '%s' not found so service cannot be attached to it ... skipping", service.Name, system)
 			return
 		}
-		assignServiceErr := system.AssignService(client, service.Name)
+
+		assignServiceErr := system.AssignService(client, service.Aliases[0])
 		if assignServiceErr != nil {
 			log.Error().Msgf("[%s] Failed assigning service to system '%s'\n\tREASON: %v", service.Name, system, assignServiceErr.Error())
+			return
 		}
+
 		log.Info().Msgf("[%s] Attached service '%s'", service.Name, system)
 	}
 }
