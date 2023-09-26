@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/opslevel/kubectl-opslevel/common"
-	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/kubectl-opslevel/jq"
 	"github.com/opslevel/kubectl-opslevel/k8sutils"
 	"github.com/rs/zerolog/log"
@@ -37,7 +36,7 @@ func init() {
 }
 
 func runCollect(cmd *cobra.Command, args []string) {
-	config, configErr := config.New()
+	config, configErr := common.NewConfig()
 	cobra.CheckErr(configErr)
 
 	jq.ValidateInstalled()
@@ -83,7 +82,7 @@ func runCollect(cmd *cobra.Command, args []string) {
 	k8sutils.Start()
 }
 
-func createCollectHandler(field string, config config.Collect, queue chan string) k8sutils.KubernetesControllerHandler {
+func createCollectHandler(field string, config common.Collect, queue chan string) k8sutils.KubernetesControllerHandler {
 	id := fmt.Sprintf("%s/%s", config.SelectorConfig.ApiVersion, config.SelectorConfig.Kind)
 	return func(items []interface{}) {
 		var resources [][]byte

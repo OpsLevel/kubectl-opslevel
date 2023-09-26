@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/opslevel/kubectl-opslevel/common"
-	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/kubectl-opslevel/jq"
 	"github.com/opslevel/opslevel-go/v2023"
 
@@ -24,7 +23,7 @@ func init() {
 }
 
 func runImport(cmd *cobra.Command, args []string) {
-	config, configErr := config.New()
+	config, configErr := common.NewConfig()
 	cobra.CheckErr(configErr)
 
 	jq.ValidateInstalled()

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/opslevel/kubectl-opslevel/common"
-	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/kubectl-opslevel/jq"
 	"github.com/opslevel/kubectl-opslevel/k8sutils"
 	"github.com/opslevel/opslevel-go/v2023"
@@ -34,7 +33,7 @@ func init() {
 }
 
 func runReconcile(cmd *cobra.Command, args []string) {
-	config, configErr := config.New()
+	config, configErr := common.NewConfig()
 	cobra.CheckErr(configErr)
 
 	jq.ValidateInstalled()
@@ -93,7 +92,7 @@ func runReconcile(cmd *cobra.Command, args []string) {
 	k8sutils.Start()
 }
 
-func createHandler(field string, config config.Import, queue chan common.ServiceRegistration) k8sutils.KubernetesControllerHandler {
+func createHandler(field string, config common.Import, queue chan common.ServiceRegistration) k8sutils.KubernetesControllerHandler {
 	id := fmt.Sprintf("%s/%s", config.SelectorConfig.ApiVersion, config.SelectorConfig.Kind)
 	return func(items []interface{}) {
 		var resources [][]byte

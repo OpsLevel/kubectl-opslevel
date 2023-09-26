@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/kubectl-opslevel/k8sutils"
 	"github.com/opslevel/opslevel-go/v2023"
 
@@ -404,7 +403,7 @@ func aliasOverlaps(a []string, b []string) bool {
 }
 
 // TODO: bubble up errors better
-func parseResources(field string, c config.ServiceRegistrationConfig, count int, resources []byte) ([]ServiceRegistration, error) {
+func parseResources(field string, c ServiceRegistrationConfig, count int, resources []byte) ([]ServiceRegistration, error) {
 	services := make([]ServiceRegistration, count)
 
 	// Parse
@@ -468,7 +467,7 @@ func dedupServices(input []ServiceRegistration) ([]ServiceRegistration, error) {
 	return output, nil
 }
 
-func getServices(c *config.Config) ([]ServiceRegistration, error) {
+func getServices(c *Config) ([]ServiceRegistration, error) {
 	var services []ServiceRegistration
 	k8sClient := k8sutils.CreateKubernetesClient()
 	for i, importConfig := range c.Service.Import {
@@ -492,7 +491,7 @@ func getServices(c *config.Config) ([]ServiceRegistration, error) {
 	return services, nil
 }
 
-func GetAllServices(c *config.Config) ([]ServiceRegistration, error) {
+func GetAllServices(c *Config) ([]ServiceRegistration, error) {
 	services, err := getServices(c)
 	if err != nil {
 		return nil, err
@@ -500,7 +499,7 @@ func GetAllServices(c *config.Config) ([]ServiceRegistration, error) {
 	return dedupServices(services)
 }
 
-func ProcessResources(field string, config config.Import, resources [][]byte) ([]ServiceRegistration, error) {
+func ProcessResources(field string, config Import, resources [][]byte) ([]ServiceRegistration, error) {
 	filtered := FilterResources(config.SelectorConfig, resources)
 	if len(filtered) < 1 {
 		return []ServiceRegistration{}, nil

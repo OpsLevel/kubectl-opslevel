@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/opslevel/kubectl-opslevel/common"
-	"github.com/opslevel/kubectl-opslevel/config"
 	"github.com/opslevel/kubectl-opslevel/jq"
 
 	_ "github.com/rs/zerolog/log"
@@ -39,7 +38,7 @@ func runPreview(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	config, err := config.New()
+	config, err := common.NewConfig()
 	cobra.CheckErr(err)
 
 	jq.ValidateInstalled()
