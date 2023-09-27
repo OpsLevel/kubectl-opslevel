@@ -17,14 +17,13 @@ jobs:
           submodules: 'true'
       - name: Fetch all tags
         run: git fetch --force --tags
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version-file: 'src/go.mod'
       - name: Run Tests
         run: |-
           cd src/
-          go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
+          docker build -t testing:latest -f Dockerfile.test .
+          id=$(docker create testing:latest)
+          docker cp $id:/src/coverage.txt - > coverage.txt  
+          docker rm -v $id
       - name: Upload Coverage
         run: |-
           cd src/
