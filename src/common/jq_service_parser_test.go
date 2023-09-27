@@ -231,7 +231,7 @@ var k8sResource = `{
 }
 `
 
-func TestJQServicePArserSimpleConfig(t *testing.T) {
+func TestJQServiceParserSimpleConfig(t *testing.T) {
 	// Arrange
 	config, err := GetConfig(ConfigSimple)
 	if err != nil {
