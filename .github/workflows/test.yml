@@ -20,7 +20,7 @@ jobs:
       - name: Run Tests
         run: |-
           cd src/
-          docker build -t testing:latest -f Dockerfile.test .
+          docker build -t testing:latest -f Dockerfile.test --target tester .
           id=$(docker create testing:latest)
           docker cp $id:/src/coverage.txt - > coverage.txt  
           docker rm -v $id
