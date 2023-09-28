@@ -24,8 +24,8 @@ var configSchemaCmd = &cobra.Command{
 	Long:  "Print the jsonschema for configuration file",
 	Run: func(cmd *cobra.Command, args []string) {
 		schema := jsonschema.Reflect(&common.Config{})
-		jsonBytes, jsonErr := json.MarshalIndent(schema, "", "  ")
-		cobra.CheckErr(jsonErr)
+		jsonBytes, err := json.MarshalIndent(schema, "", "  ")
+		cobra.CheckErr(err)
 		fmt.Println(string(jsonBytes))
 	},
 }
@@ -37,8 +37,8 @@ var configViewCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		conf, err := common.NewConfig()
 		cobra.CheckErr(err)
-		output, err2 := yaml.Marshal(conf)
-		cobra.CheckErr(err2)
+		output, err := yaml.Marshal(conf)
+		cobra.CheckErr(err)
 		fmt.Println(string(output))
 	},
 }
@@ -62,12 +62,8 @@ var configSampleCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(configCmd)
-	configCmd.AddCommand(
-		configSchemaCmd,
-		configViewCmd,
-		configSampleCmd,
-	)
+	configCmd.AddCommand(configSchemaCmd, configViewCmd, configSampleCmd)
 
-	configSampleCmd.Flags().Bool("simple", false, "Adjust the sample config to a bit simpler")
+	configSampleCmd.Flags().Bool("simple", false, "Adjust the sample config to be a less complex")
 	viper.BindPFlags(configSampleCmd.Flags())
 }

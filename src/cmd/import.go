@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/opslevel/kubectl-opslevel/common"
-	"github.com/opslevel/kubectl-opslevel/jq"
 	"github.com/opslevel/opslevel-go/v2023"
 
 	"github.com/rs/zerolog/log"
@@ -15,41 +14,34 @@ var importCmd = &cobra.Command{
 	Use:   "import",
 	Short: "Create or Update service entries in OpsLevel",
 	Long:  `This command will take the data found in your Kubernetes cluster and begin to reconcile it with OpsLevel`,
-	Run:   runImport,
+	Run: func(cmd *cobra.Command, args []string) {
+		config, err := common.NewConfig()
+		cobra.CheckErr(err)
+
+		services, err := common.GetAllServices(config)
+		cobra.CheckErr(err)
+
+		client := createOpslevelClient()
+
+		opslevel.Cache.CacheTiers(client)
+		opslevel.Cache.CacheLifecycles(client)
+		opslevel.Cache.CacheTeams(client)
+
+		done := make(chan bool)
+		queue := make(chan common.ServiceRegistration, concurrency)
+		go createWorkerPool(concurrency, queue, done)
+		go enqueue(services, queue)
+		<-done
+		log.Info().Msg("Import Complete")
+	},
 }
 
 func init() {
 	serviceCmd.AddCommand(importCmd)
 }
 
-func runImport(cmd *cobra.Command, args []string) {
-	config, configErr := common.NewConfig()
-	cobra.CheckErr(configErr)
-
-	jq.ValidateInstalled()
-
-	services, servicesErr := common.GetAllServices(config)
-	cobra.CheckErr(servicesErr)
-
-	olClient := createOpslevelClient()
-
-	opslevel.Cache.CacheTiers(olClient)
-	opslevel.Cache.CacheLifecycles(olClient)
-	opslevel.Cache.CacheTeams(olClient)
-
-	log.Info().Msgf("Worker Concurrency == %v", concurrency)
-	done := make(chan bool)
-	queue := make(chan common.ServiceRegistration, concurrency)
-	go createWorkerPool(concurrency, queue, done)
-	go enqueue(services, queue)
-	<-done
-	log.Info().Msg("Import Complete")
-}
-
-// TODO: Helpers probably shouldn't be exported
-// Helpers
-
 func createWorkerPool(count int, queue chan common.ServiceRegistration, done chan<- bool) {
+	log.Info().Msgf("Worker Concurrency == %v", count)
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(count)
 	for i := 0; i < count; i++ {
