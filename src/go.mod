@@ -94,4 +94,6 @@ require (
 )
 
 // Uncomment for local development
-replace github.com/opslevel/opslevel-go => ./submodules/opslevel-go
+replace github.com/opslevel/opslevel-go/v2023 => ./submodules/opslevel-go
+
+replace github.com/opslevel/opslevel-common/v2023 => ./submodules/opslevel-common
