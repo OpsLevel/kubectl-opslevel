@@ -304,3 +304,26 @@ func BenchmarkJQParser_New(b *testing.B) {
 	}
 }
 
+func BenchmarkJQParser_Bulk_New(b *testing.B) {
+	config, _ := GetConfig(ConfigSample)
+	parser := NewJQServiceParser(config.Service.Import[0].OpslevelConfig)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for i := 0; i < 10000; i++ {
+			_, _ = parser.Run(k8sResource)
+		}
+	}
+}
+
+func BenchmarkJQParser_Bulk_Old(b *testing.B) {
+	config, _ := GetConfig(ConfigSample)
+	one := []byte(k8sResource)
+	data := make([][]byte, 10000)
+	for i := 0; i < 10000; i++ {
+		data[i] = one
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = parseResources("", config.Service.Import[0].OpslevelConfig, 1, joinResourceBytes(data))
+	}
+}

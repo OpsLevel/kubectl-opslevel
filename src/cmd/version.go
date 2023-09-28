@@ -12,13 +12,11 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version information",
 	Long:  `Print version information`,
-	Run:   runVersion,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(version)
+	},
 }
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
-}
-
-func runVersion(cmd *cobra.Command, args []string) {
-	fmt.Println(version)
 }

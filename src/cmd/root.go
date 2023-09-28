@@ -59,15 +59,13 @@ func init() {
 	viper.BindEnv("api-token", "OPSLEVEL_API_TOKEN", "OL_API_TOKEN", "OL_APITOKEN")
 	viper.BindEnv("api-timeout", "OPSLEVEL_API_TIMEOUT")
 	viper.BindEnv("workers", "OPSLEVEL_WORKERS", "OL_WORKERS")
-	cobra.OnInitialize(initConfig)
-}
-
-func initConfig() {
-	readConfig()
-	setupLogging()
-	setupOutput()
-	setupConcurrency()
-	setupAPIToken()
+	cobra.OnInitialize(func() {
+		readConfig()
+		setupLogging()
+		setupOutput()
+		setupConcurrency()
+		setupAPIToken()
+	})
 }
 
 func readConfig() {

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/opslevel/kubectl-opslevel/common"
-	"github.com/opslevel/kubectl-opslevel/jq"
 	"github.com/opslevel/kubectl-opslevel/k8sutils"
 	"github.com/opslevel/opslevel-go/v2023"
 	"github.com/rs/zerolog/log"
@@ -35,8 +34,6 @@ func init() {
 func runReconcile(cmd *cobra.Command, args []string) {
 	config, configErr := common.NewConfig()
 	cobra.CheckErr(configErr)
-
-	jq.ValidateInstalled()
 
 	k8sClient := k8sutils.CreateKubernetesClient()
 	olClient := createOpslevelClient()
