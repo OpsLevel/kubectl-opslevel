@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"os"
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/go-resty/resty/v2"
 
 	"github.com/opslevel/opslevel-go/v2023"
 	"github.com/spf13/cobra"
@@ -118,7 +119,7 @@ func setupLogging() {
 }
 
 func setupOutput() {
-	outputFormat := strings.ToLower(viper.GetString("output"))
+	outputFormat = strings.ToLower(viper.GetString("output"))
 	if outputFormat != "json" {
 		outputFormat = "text"
 	}
@@ -140,10 +141,9 @@ func setupConcurrency() {
 // setupAPIToken evaluates several API token sources and sets the preferred token based on precedence.
 //
 // Precedence:
-//   1. --api-token
-//   2. --api-token-path
-//   3. OL_APITOKEN
-//
+//  1. --api-token
+//  2. --api-token-path
+//  3. OL_APITOKEN
 func setupAPIToken() {
 	const key = "api-token"
 

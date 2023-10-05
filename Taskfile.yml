@@ -1,0 +1,99 @@
+# https://taskfile.dev/
+
+version: '3'
+
+env:
+  SRC_DIR: "{{.TASKFILE_DIR}}/src"
+
+tasks:
+  lint:
+    desc: Formatting and linting
+    dir: "{{.SRC_DIR}}"
+    cmds:
+      - gofumpt -d .
+      - go vet ./...
+      - golangci-lint run
+
+  lintfix:
+    desc: Fix formatting and linting
+    dir: "{{.SRC_DIR}}"
+    cmds:
+      - gofumpt -w .
+      - go mod tidy
+      - golangci-lint run --fix
+
+  setup:
+    desc: Setup linter, formatter, etc. for local testing and CI
+    cmds:
+      - cmd: echo "Installing development tools..."
+        silent: true
+      - task: install-changie
+      - task: install-gofumpt
+      - task: install-golangci-lint
+      - cmd: echo "Development tools installed!"
+        silent: true
+      - task: workspace
+
+  test:
+    desc: Run tests
+    dir: "{{.SRC_DIR}}"
+    cmds:
+      - go test -race -coverprofile=coverage.txt -covermode=atomic -v ./... {{ .CLI_ARGS }}
+    silent: true
+
+  update-opslevel-go:
+    desc: Update opslevel-go version to latest release
+    dir: "{{.SRC_DIR}}"
+    cmds:
+      - go get -u github.com/opslevel/opslevel-go/v2023
+      - go mod tidy
+
+  workspace:
+    desc: Setup workspace for cli & opslevel-go development
+    dir: "{{.SRC_DIR}}"
+    cmds:
+      - cmd: echo "Setting up opslevel-go workspace..."
+        silent: true
+      - git submodule update --init
+      - go work init || exit 0
+      - go work use . submodules/opslevel-go
+      - cmd: echo "opslevel-go workspace ready!"
+        silent: true
+
+  # internal (not directly called) tasks
+
+  go-install-tool:
+    desc: go install '{{.GO_TOOL}}' and set GOBIN if not set
+    internal: true
+    silent: true
+    vars:
+      IS_TOOL_INSTALLED:
+        sh: which {{.GO_TOOL}} > /dev/null || echo "1"
+    cmds:
+      - test -z "{{.IS_TOOL_INSTALLED}}" || echo "Installing {{.GO_TOOL}}..."
+      - test -z "{{.IS_TOOL_INSTALLED}}" || go install {{.GO_TOOL_PATH}}
+      - test -n $(go env GOBIN) || go env -w GOBIN=$(go env GOPATH)/bin
+      - echo "  '{{.GO_TOOL}}' is installed."
+    requires:
+      vars: [GO_TOOL, GO_TOOL_PATH]
+
+  install-changie:
+    desc: go install "changie"
+    internal: true
+    cmds:
+      - task: go-install-tool
+        vars: { GO_TOOL: "changie", GO_TOOL_PATH: "github.com/miniscruff/changie@latest" }
+
+  install-gofumpt:
+    desc: go install "gofumpt"
+    internal: true
+    cmds:
+      - task: go-install-tool
+        vars: { GO_TOOL: "gofumpt", GO_TOOL_PATH: "mvdan.cc/gofumpt@latest" }
+
+  install-golangci-lint:
+    desc: go install "golangci-lint"
+    internal: true
+    cmds:
+      - task: go-install-tool
+        vars: { GO_TOOL: "golangci-lint", GO_TOOL_PATH: "github.com/golangci/golangci-lint/cmd/golangci-lint@latest" }

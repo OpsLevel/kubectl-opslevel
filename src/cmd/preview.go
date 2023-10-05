@@ -32,7 +32,7 @@ func init() {
 }
 
 func runPreview(cmd *cobra.Command, args []string) {
-	var samples = 5
+	samples := 5
 	if len(args) > 0 {
 		if parsedSamples, err := strconv.Atoi(args[0]); err == nil {
 			samples = parsedSamples
@@ -51,7 +51,9 @@ func runPreview(cmd *cobra.Command, args []string) {
 		samples = servicesCount
 	}
 
-	if IsTextOutput() { fmt.Print("The following data was found in your Kubernetes cluster ...\n\n") }
+	if IsTextOutput() {
+		fmt.Print("The following data was found in your Kubernetes cluster ...\n\n")
+	}
 	if len(services) == 0 {
 		fmt.Printf("[]\n")
 	} else {
@@ -61,11 +63,15 @@ func runPreview(cmd *cobra.Command, args []string) {
 		}
 		fmt.Printf("%s\n", string(prettyJSON))
 		if samples < servicesCount {
-			if IsTextOutput() { fmt.Printf("\nShowing %v / %v resources\n", samples, servicesCount) }
+			if IsTextOutput() {
+				fmt.Printf("\nShowing %v / %v resources\n", samples, servicesCount)
+			}
 		}
 	}
 
-	if IsTextOutput() { fmt.Println("\nIf you're happy with the above data you can reconcile it with OpsLevel by running:\n\n OPSLEVEL_API_TOKEN=XXX kubectl opslevel service import\n\nOtherwise, please adjust the config file and rerun this command") }
+	if IsTextOutput() {
+		fmt.Println("\nIf you're happy with the above data you can reconcile it with OpsLevel by running:\n\n OPSLEVEL_API_TOKEN=XXX kubectl opslevel service import\n\nOtherwise, please adjust the config file and rerun this command")
+	}
 }
 
 func sample(data []common.ServiceRegistration, samples int) []common.ServiceRegistration {

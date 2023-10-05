@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/opslevel/kubectl-opslevel/k8sutils"
@@ -10,9 +9,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-	ConfigCurrentVersion = "1.2.0"
-)
+var ConfigCurrentVersion = "1.2.0"
 
 type TagRegistrationConfig struct {
 	Assign []string `json:"assign"` // JQ expressions that return a single string or a map[string]string
@@ -62,7 +59,7 @@ func New() (*Config, error) {
 	v := &ConfigVersion{}
 	viper.Unmarshal(&v)
 	if v.Version != ConfigCurrentVersion {
-		return nil, errors.New(fmt.Sprintf("Supported config version is '%s' but found '%s' | Please update config file or create a new sample with `kubectl opslevel config sample`", ConfigCurrentVersion, v.Version))
+		return nil, fmt.Errorf("Supported config version is '%s' but found '%s' | Please update config file or create a new sample with `kubectl opslevel config sample`", ConfigCurrentVersion, v.Version)
 	}
 
 	c := &Config{}

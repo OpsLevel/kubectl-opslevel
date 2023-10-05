@@ -65,24 +65,15 @@ func (s *ServiceRegistration) mergeData(o ServiceRegistration) {
 	if s.System == "" {
 		s.System = o.System
 	}
-	for _, alias := range o.Aliases {
-		s.Aliases = append(s.Aliases, alias)
-	}
+	s.Aliases = append(s.Aliases, o.Aliases...)
+
 	s.Aliases = removeDuplicates(s.Aliases)
-	for _, tag := range removeOverlappedKeys(s.TagAssigns, o.TagAssigns) {
-		s.TagAssigns = append(s.TagAssigns, tag)
-	}
-	for _, tag := range o.TagCreates {
-		s.TagCreates = append(s.TagCreates, tag)
-	}
+	s.TagAssigns = append(s.TagAssigns, removeOverlappedKeys(s.TagAssigns, o.TagAssigns)...)
+	s.TagCreates = append(s.TagCreates, o.TagCreates...)
 	s.TagAssigns = removeDuplicatesFromTagInputList(s.TagAssigns)
 	s.TagAssigns = removeOverlappedKeys(s.TagAssigns, s.TagCreates)
-	for _, tool := range o.Tools {
-		s.Tools = append(s.Tools, tool)
-	}
-	for _, repo := range o.Repositories {
-		s.Repositories = append(s.Repositories, repo)
-	}
+	s.Tools = append(s.Tools, o.Tools...)
+	s.Repositories = append(s.Repositories, o.Repositories...)
 }
 
 func parseField(field string, filter string, resources []byte) *JQResponseMulti {
@@ -110,7 +101,7 @@ func contains(item opslevel.TagInput, data []opslevel.TagInput) bool {
 func removeDuplicatesFromTagInputList(data []opslevel.TagInput) []opslevel.TagInput {
 	unique := []opslevel.TagInput{}
 	for _, entry := range data {
-		if contains(entry, unique) == false {
+		if !contains(entry, unique) {
 			unique = append(unique, entry)
 		}
 	}
@@ -159,7 +150,7 @@ func removeOverlappedKeys(source []opslevel.TagInput, check []opslevel.TagInput)
 				break
 			}
 		}
-		if foundMatch == false {
+		if !foundMatch {
 			output = append(output, tagAssign)
 		}
 	}
@@ -346,9 +337,11 @@ func getRepositories(index int, data []*JQResponseMulti) []opslevel.ServiceRepos
 	return output
 }
 
-var StartArray []byte = []byte(`[`)
-var EndArray []byte = []byte(`]`)
-var JoinItem []byte = []byte(`,`)
+var (
+	StartArray []byte = []byte(`[`)
+	EndArray   []byte = []byte(`]`)
+	JoinItem   []byte = []byte(`,`)
+)
 
 func joinResourceBytes(resources [][]byte) []byte {
 	var output []byte
@@ -386,7 +379,6 @@ func anyIsTrue(resourceIndex int, filters []*JQResponseMulti) bool {
 		}
 	}
 	return false
-
 }
 
 func FilterResources(selector k8sutils.KubernetesSelector, resources [][]byte) [][]byte {

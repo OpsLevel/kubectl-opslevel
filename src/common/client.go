@@ -219,7 +219,7 @@ func containsAllTags(tagAssigns []opslevel.TagInput, serviceTags []opslevel.Tag)
 		}
 	}
 	for _, value := range found {
-		if value == false {
+		if !value {
 			return false
 		}
 	}
@@ -230,7 +230,7 @@ func assignTags(client *opslevel.Client, registration ServiceRegistration, servi
 	if registration.TagAssigns == nil {
 		return
 	}
-	if containsAllTags(registration.TagAssigns, service.Tags.Nodes) == false {
+	if !containsAllTags(registration.TagAssigns, service.Tags.Nodes) {
 		tags := map[string]string{}
 		for _, tagAssign := range registration.TagAssigns {
 			tags[tagAssign.Key] = tagAssign.Value
