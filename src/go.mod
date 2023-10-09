@@ -8,7 +8,7 @@ require (
 	github.com/go-logr/logr v1.2.4
 	github.com/go-resty/resty/v2 v2.9.1
 	github.com/google/go-cmp v0.5.9
-	github.com/opslevel/opslevel-go/v2023 v2023.9.12
+	github.com/opslevel/opslevel-go/v2023 v2023.10.8
 	github.com/rocktavious/autopilot v0.1.5
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cobra v1.7.0
