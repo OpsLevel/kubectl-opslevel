@@ -163,6 +163,7 @@ func setupAPIToken() {
 	viper.Set(key, token)
 }
 
+// createOpslevelClient creates a new OpsLevel client
 func createOpslevelClient() *opslevel.Client {
 	client := opslevel.NewGQLClient(
 		opslevel.SetAPIToken(viper.GetString("api-token")),

@@ -1,38 +1,33 @@
 module github.com/opslevel/kubectl-opslevel
 
-go 1.21
+go 1.21.0
 
 require (
 	github.com/alecthomas/jsonschema v0.0.0-20210526225647-edb03dcab7bc
 	github.com/creasty/defaults v1.7.0
-	github.com/go-logr/logr v1.2.3
-	github.com/go-resty/resty/v2 v2.8.0
-	github.com/go-logr/logr v1.2.4
-	github.com/go-resty/resty/v2 v2.9.1
-	github.com/flant/libjq-go v1.6.2
-	github.com/go-logr/logr v1.2.3
-	github.com/go-resty/resty/v2 v2.8.0
+	github.com/go-resty/resty/v2 v2.10.0
 	github.com/google/go-cmp v0.5.9
-	github.com/opslevel/opslevel-go/v2023 v2023.9.12
-	github.com/rocktavious/autopilot v0.1.5
-	github.com/rocktavious/autopilot/v2023 v2023.8.18
-	github.com/rs/zerolog v1.30.0
+	github.com/opslevel/opslevel-common/v2023 v2023.9.1
+	github.com/opslevel/opslevel-go/v2023 v2023.10.20
+	github.com/opslevel/opslevel-jq-parser/v2023 v2023.11.2
+	github.com/opslevel/opslevel-k8s-controller/v2023 v2023.11.2
+	github.com/rocktavious/autopilot/v2023 v2023.11.2
+	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
 	go.uber.org/automaxprocs v1.5.3
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/apimachinery v0.28.2
-	k8s.io/client-go v0.28.2
-	k8s.io/klog/v2 v2.100.1
 )
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
-	github.com/Masterminds/semver/v3 v3.1.1 // indirect
-	github.com/Masterminds/sprig/v3 v3.2.2 // indirect
+	github.com/Masterminds/semver/v3 v3.2.0 // indirect
+	github.com/Masterminds/sprig/v3 v3.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
+	github.com/flant/libjq-go v1.6.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
+	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
@@ -47,7 +42,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hasura/go-graphql-client v0.10.0 // indirect
-	github.com/huandu/xstrings v1.3.1 // indirect
+	github.com/huandu/xstrings v1.3.3 // indirect
 	github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -72,11 +67,11 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
-	golang.org/x/net v0.15.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.11.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
-	golang.org/x/term v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
@@ -84,7 +79,10 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/api v0.28.2 // indirect
+	k8s.io/api v0.28.3 // indirect
+	k8s.io/apimachinery v0.28.3 // indirect
+	k8s.io/client-go v0.28.3 // indirect
+	k8s.io/klog/v2 v2.110.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230717233707-2695361300d9 // indirect
 	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
@@ -94,6 +92,10 @@ require (
 )
 
 // Uncomment for local development
+replace github.com/opslevel/opslevel-k8s-controller/v2023 => ./submodules/opslevel-k8s-controller
+
+replace github.com/opslevel/opslevel-jq-parser/v2023 => ./submodules/opslevel-jq-parser
+
 replace github.com/opslevel/opslevel-go/v2023 => ./submodules/opslevel-go
 
 replace github.com/opslevel/opslevel-common/v2023 => ./submodules/opslevel-common
