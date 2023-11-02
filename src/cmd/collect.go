@@ -3,10 +3,11 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	opslevel_common "github.com/opslevel/opslevel-common/v2023"
+	opslevel_k8s_controller "github.com/opslevel/opslevel-k8s-controller/v2023"
 	"time"
 
 	"github.com/opslevel/kubectl-opslevel/common"
-	"github.com/opslevel/kubectl-opslevel/k8sutils"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,7 +23,7 @@ var collectCmd = &cobra.Command{
 	Short: "Acts as a kubernetes controller to collect resources for submission to OpsLevel as custom event check payloads",
 	Long:  `Acts as a kubernetes controller to collect resources for submission to OpsLevel as custom event check payloads`,
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := common.NewConfig()
+		config, err := LoadConfig()
 		cobra.CheckErr(err)
 
 		integrationUrl := viper.GetString("integration-url")
@@ -30,27 +31,19 @@ var collectCmd = &cobra.Command{
 			cobra.CheckErr(fmt.Errorf("please specify --integration-url"))
 		}
 
-		k8sClient := k8sutils.CreateKubernetesClient()
-
 		resync := time.Hour * time.Duration(reconcileResyncInterval)
 		collectQueue := make(chan string, 1)
-
 		for i, importConfig := range config.Service.Collect {
 			selector := importConfig.SelectorConfig
-			if err := selector.Validate(); err != nil {
-				log.Fatal().Err(err).Msg("invalid selector")
-				return
-			}
-			gvr, err := k8sClient.GetGVR(selector)
+			controller, err := opslevel_k8s_controller.NewK8SController(selector, resync, reconcileBatchSize, false)
 			if err != nil {
-				log.Error().Err(err).Msg("invalid kubernetes group resource version")
+				log.Error().Err(err).Msg("failed to create k8s controller")
 				continue
 			}
 			callback := createCollectHandler(fmt.Sprintf("service.import[%d]", i), importConfig, collectQueue)
-			controller := k8sutils.NewController(*gvr, resync, reconcileBatchSize)
 			controller.OnAdd = callback
 			controller.OnUpdate = callback
-			go controller.Start(1)
+			go controller.Start()
 		}
 
 		// Loop forever waiting to collect 1 payload at a time
@@ -63,7 +56,7 @@ var collectCmd = &cobra.Command{
 			}
 		}()
 
-		k8sutils.Start()
+		opslevel_common.Run("Controller")
 	},
 }
 
@@ -77,7 +70,7 @@ func init() {
 	viper.BindEnv("integration-url", "OPSLEVEL_INTEGRATION_URL")
 }
 
-func createCollectHandler(field string, config common.Collect, queue chan string) k8sutils.KubernetesControllerHandler {
+func createCollectHandler(field string, config common.Collect, queue chan string) func(items []interface{}) {
 	id := fmt.Sprintf("%s/%s", config.SelectorConfig.ApiVersion, config.SelectorConfig.Kind)
 	return func(items []interface{}) {
 		var resources [][]byte

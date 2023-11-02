@@ -3,11 +3,12 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	opslevel_common "github.com/opslevel/opslevel-common/v2023"
+	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
+	opslevel_k8s_controller "github.com/opslevel/opslevel-k8s-controller/v2023"
 	"time"
 
 	"github.com/opslevel/kubectl-opslevel/common"
-	"github.com/opslevel/kubectl-opslevel/k8sutils"
-	"github.com/opslevel/opslevel-go/v2023"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -32,64 +33,44 @@ func init() {
 }
 
 func runReconcile(cmd *cobra.Command, args []string) {
-	config, configErr := common.NewConfig()
-	cobra.CheckErr(configErr)
+	config, err := LoadConfig()
+	cobra.CheckErr(err)
 
-	k8sClient := k8sutils.CreateKubernetesClient()
-	olClient := createOpslevelClient()
-
-	opslevel.Cache.CacheTiers(olClient)
-	opslevel.Cache.CacheLifecycles(olClient)
-	opslevel.Cache.CacheTeams(olClient)
+	common.SyncCache(createOpslevelClient())
 
 	resync := time.Hour * time.Duration(reconcileResyncInterval)
-	reconcileQueue := make(chan common.ServiceRegistration, 1)
+	common.SyncCaches(createOpslevelClient(), resync)
+
+	queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
 
 	for i, importConfig := range config.Service.Import {
 		selector := importConfig.SelectorConfig
-		if selectorErr := selector.Validate(); selectorErr != nil {
-			log.Fatal().Err(selectorErr)
-			return
-		}
-		gvr, err := k8sClient.GetGVR(selector)
+		controller, err := opslevel_k8s_controller.NewK8SController(selector, resync, reconcileBatchSize, false)
 		if err != nil {
-			log.Error().Err(err)
+			log.Error().Err(err).Msg("failed to create k8s controller")
 			continue
 		}
-		callback := createHandler(fmt.Sprintf("service.import[%d]", i), importConfig, reconcileQueue)
-		controller := k8sutils.NewController(*gvr, resync, reconcileBatchSize)
+		callback := createHandler(fmt.Sprintf("service.import[%d]", i), importConfig, queue)
 		controller.OnAdd = callback
 		controller.OnUpdate = callback
-		go controller.Start(1)
+		go controller.Start()
 	}
-
-	// Loop forever resyncing teams at resync interval
-	ticker := time.NewTicker(resync)
-	go func() {
-		for {
-			<-ticker.C
-			olClient := createOpslevelClient()
-			// has a mutex lock that will block TryGet in ReconcileService goroutine
-			opslevel.Cache.CacheTiers(olClient)
-			opslevel.Cache.CacheLifecycles(olClient)
-			opslevel.Cache.CacheTeams(olClient)
-		}
-	}()
 
 	// Loop forever waiting to reconcile 1 service at a time
 	go func() {
-		client := createOpslevelClient()
-		for {
-			for service := range reconcileQueue {
-				common.ReconcileService(client, service)
+		reconciler := common.NewServiceReconciler(common.NewOpslevelClient(createOpslevelClient()))
+		for registration := range queue {
+			err := reconciler.Reconcile(registration)
+			if err != nil {
+				log.Error().Err(err).Msg("failed when reconciling service")
 			}
 		}
 	}()
 
-	k8sutils.Start()
+	opslevel_common.Run("Controller")
 }
 
-func createHandler(field string, config common.Import, queue chan common.ServiceRegistration) k8sutils.KubernetesControllerHandler {
+func createHandler(field string, config common.Import, queue chan opslevel_jq_parser.ServiceRegistration) func(items []interface{}) {
 	id := fmt.Sprintf("%s/%s", config.SelectorConfig.ApiVersion, config.SelectorConfig.Kind)
 	return func(items []interface{}) {
 		var resources [][]byte

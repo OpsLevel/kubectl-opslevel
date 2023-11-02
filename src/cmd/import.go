@@ -1,11 +1,8 @@
 package cmd
 
 import (
-	"sync"
-
 	"github.com/opslevel/kubectl-opslevel/common"
-	"github.com/opslevel/opslevel-go/v2023"
-
+	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -15,50 +12,27 @@ var importCmd = &cobra.Command{
 	Short: "Create or Update service entries in OpsLevel",
 	Long:  `This command will take the data found in your Kubernetes cluster and begin to reconcile it with OpsLevel`,
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := common.NewConfig()
+		_, err := LoadConfig()
 		cobra.CheckErr(err)
 
-		services, err := common.GetAllServices(config)
-		cobra.CheckErr(err)
+		common.SyncCache(createOpslevelClient())
+		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
 
-		client := createOpslevelClient()
+		// Start K8S Poller / Controller sending data to channel in goroutine - closeing after sync is done
 
-		opslevel.Cache.CacheTiers(client)
-		opslevel.Cache.CacheLifecycles(client)
-		opslevel.Cache.CacheTeams(client)
+		// Reconcile - TODO: before this used to process this in parallel is that needed?
+		reconciler := common.NewServiceReconciler(common.NewOpslevelClient(createOpslevelClient()))
+		for registration := range queue {
+			err := reconciler.Reconcile(registration)
+			if err != nil {
+				log.Error().Err(err).Msg("failed when reconciling service")
+			}
+		}
 
-		done := make(chan bool)
-		queue := make(chan common.ServiceRegistration, concurrency)
-		go createWorkerPool(concurrency, queue, done)
-		go enqueue(services, queue)
-		<-done
 		log.Info().Msg("Import Complete")
 	},
 }
 
 func init() {
 	serviceCmd.AddCommand(importCmd)
-}
-
-func createWorkerPool(count int, queue chan common.ServiceRegistration, done chan<- bool) {
-	log.Info().Msgf("Worker Concurrency == %v", count)
-	var waitGroup sync.WaitGroup
-	waitGroup.Add(count)
-	for i := 0; i < count; i++ {
-		go func(c *opslevel.Client, q chan common.ServiceRegistration, wg *sync.WaitGroup) {
-			for data := range q {
-				common.ReconcileService(c, data)
-			}
-			wg.Done()
-		}(createOpslevelClient(), queue, &waitGroup)
-	}
-	waitGroup.Wait()
-	done <- true
-}
-
-func enqueue(services []common.ServiceRegistration, queue chan common.ServiceRegistration) {
-	for _, service := range services {
-		queue <- service
-	}
-	close(queue)
 }
