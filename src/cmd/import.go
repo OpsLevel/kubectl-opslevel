@@ -12,23 +12,14 @@ var importCmd = &cobra.Command{
 	Short: "Create or Update service entries in OpsLevel",
 	Long:  `This command will take the data found in your Kubernetes cluster and begin to reconcile it with OpsLevel`,
 	Run: func(cmd *cobra.Command, args []string) {
-		_, err := LoadConfig()
+		config, err := LoadConfig()
 		cobra.CheckErr(err)
 
-		common.SyncCache(createOpslevelClient())
+		client := createOpslevelClient()
+		common.SyncCache(client)
 		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
-
-		// Start K8S Poller / Controller sending data to channel in goroutine - closeing after sync is done
-
-		// Reconcile - TODO: before this used to process this in parallel is that needed?
-		reconciler := common.NewServiceReconciler(common.NewOpslevelClient(createOpslevelClient()))
-		for registration := range queue {
-			err := reconciler.Reconcile(registration)
-			if err != nil {
-				log.Error().Err(err).Msg("failed when reconciling service")
-			}
-		}
-
+		common.SetupControllers(config, queue, 0)
+		common.ReconcileServices(client, queue)
 		log.Info().Msg("Import Complete")
 	},
 }
