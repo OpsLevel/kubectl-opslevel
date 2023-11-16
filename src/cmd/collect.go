@@ -33,6 +33,7 @@ var collectCmd = &cobra.Command{
 
 		resync := time.Hour * time.Duration(collectResyncInterval)
 		queue := make(chan string, 1)
+		var wg sync.WaitGroup
 		for _, config := range config.Service.Collect {
 			controller, err := opslevel_k8s_controller.NewK8SController(config.SelectorConfig, resync)
 			if err != nil {
@@ -42,7 +43,6 @@ var collectCmd = &cobra.Command{
 			callback := createCollectHandler(config, queue)
 			controller.OnAdd = callback
 			controller.OnUpdate = callback
-			var wg sync.WaitGroup
 			go controller.Start(&wg)
 		}
 		PushPayloads(integrationUrl, queue)
