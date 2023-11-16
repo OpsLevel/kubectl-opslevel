@@ -7,7 +7,7 @@ WORKDIR /src
 COPY --from=libjq /libjq /libjq
 
 # Cache-friendly download of go dependencies.
-ADD go.mod go.sum /src/
+COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . /src
