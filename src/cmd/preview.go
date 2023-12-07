@@ -34,7 +34,7 @@ If the optional argument SAMPLES_COUNT=0 this will print out everything.`,
 		common.SyncCache(client)
 		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
 		common.SetupControllers(config, queue, 0)
-		common.PrintServices(IsTextOutput(), sampleCount, queue)
+		PrintServices(IsTextOutput(), sampleCount, queue)
 	},
 }
 
@@ -43,7 +43,7 @@ func init() {
 }
 
 func PrintServices(isTextOutput bool, samples int, queue <-chan opslevel_jq_parser.ServiceRegistration) {
-	services := AggregateServices(queue)
+	services := common.AggregateServices(queue)
 	// Deduplicate ServiceRegistrations
 
 	// Sample the data

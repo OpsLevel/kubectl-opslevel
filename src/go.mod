@@ -7,10 +7,10 @@ require (
 	github.com/creasty/defaults v1.7.0
 	github.com/go-resty/resty/v2 v2.10.0
 	github.com/google/go-cmp v0.6.0
-	github.com/opslevel/opslevel-common/v2023 v2023.9.1
+	github.com/opslevel/opslevel-common/v2023 v2023.11.16
 	github.com/opslevel/opslevel-go/v2023 v2023.11.16
 	github.com/opslevel/opslevel-jq-parser/v2023 v2023.11.2
-	github.com/opslevel/opslevel-k8s-controller/v2023 v2023.11.2
+	github.com/opslevel/opslevel-k8s-controller/v2023 v2023.11.16
 	github.com/rocktavious/autopilot/v2023 v2023.11.3-0.20231109195949-b29afb0d3daa
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cobra v1.8.0
@@ -41,7 +41,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.5 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hasura/go-graphql-client v0.10.0 // indirect
+	github.com/hasura/go-graphql-client v0.10.1 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/iancoleman/orderedmap v0.3.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
@@ -69,14 +69,14 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.15.0 // indirect
+	golang.org/x/crypto v0.16.0 // indirect
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa // indirect
-	golang.org/x/net v0.18.0 // indirect
-	golang.org/x/oauth2 v0.14.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
-	golang.org/x/term v0.14.0 // indirect
+	golang.org/x/net v0.19.0 // indirect
+	golang.org/x/oauth2 v0.15.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/time v0.4.0 // indirect
+	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
@@ -86,8 +86,8 @@ require (
 	k8s.io/apimachinery v0.28.4 // indirect
 	k8s.io/client-go v0.28.4 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20231113174909-778a5567bc1e // indirect
-	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
+	k8s.io/kube-openapi v0.0.0-20231206194836-bf4651e18aa8 // indirect
+	k8s.io/utils v0.0.0-20231127182322-b307cd553661 // indirect
 	nhooyr.io/websocket v1.8.10 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
