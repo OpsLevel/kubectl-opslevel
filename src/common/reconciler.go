@@ -88,7 +88,7 @@ func (r *ServiceReconciler) ServiceNeedsUpdate(input opslevel.ServiceUpdateInput
 	if input.Lifecycle != "" && input.Lifecycle != service.Lifecycle.Alias {
 		return true
 	}
-	if input.Owner != "" && input.Owner != service.Owner.Alias {
+	if input.Owner != nil && *input.Owner.Alias != service.Owner.Alias {
 		return true
 	}
 	return false
@@ -167,7 +167,7 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 		log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", registration.Name, registration.Lifecycle)
 	}
 	if v, ok := opslevel.Cache.TryGetTeam(registration.Owner); ok {
-		serviceCreateInput.Owner = string(v.Alias)
+		serviceCreateInput.Owner = opslevel.NewIdentifier(v.Alias)
 	} else if registration.Owner != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", registration.Name, registration.Owner)
 	}
@@ -199,7 +199,7 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 		log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", service.Name, registration.Lifecycle)
 	}
 	if v, ok := opslevel.Cache.TryGetTeam(registration.Owner); ok {
-		updateServiceInput.Owner = string(v.Alias)
+		updateServiceInput.Owner = opslevel.NewIdentifier(v.Alias)
 	} else if registration.Owner != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", service.Name, registration.Owner)
 	}
@@ -294,7 +294,7 @@ func (r *ServiceReconciler) handleTools(service *opslevel.Service, registration 
 func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	for _, repositoryCreate := range registration.Repositories {
 		repositoryAsString := fmt.Sprintf("{Alias: %s, Directory: %s, Name: %s}", repositoryCreate.Repository.Alias, repositoryCreate.BaseDirectory, repositoryCreate.DisplayName)
-		foundRepository, foundRepositoryErr := r.client.GetRepositoryWithAlias(string(repositoryCreate.Repository.Alias))
+		foundRepository, foundRepositoryErr := r.client.GetRepositoryWithAlias(*repositoryCreate.Repository.Alias)
 		if foundRepositoryErr != nil {
 			log.Warn().Msgf("[%s] Repository with alias: '%s' not found so it cannot be attached to service ... skipping", service.Name, repositoryAsString)
 			continue
@@ -318,7 +318,7 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 			log.Debug().Msgf("[%s] Repository '%s' already attached to service ... skipping", service.Name, repositoryAsString)
 			continue
 		}
-		repositoryCreate.Service = opslevel.IdentifierInput{Id: service.Id}
+		repositoryCreate.Service = opslevel.IdentifierInput{Id: &service.Id}
 		err := r.client.CreateServiceRepository(repositoryCreate)
 		if err != nil {
 			log.Error().Msgf("[%s] Failed assigning repository '%s'\n\tREASON: %v", service.Name, repositoryAsString, err.Error())
