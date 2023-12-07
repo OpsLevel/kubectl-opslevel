@@ -329,7 +329,7 @@ func Test_Reconciler_ServiceNeedsUpdate(t *testing.T) {
 			input: opslevel.ServiceUpdateInput{
 				Name:     "Test",
 				Language: "Python",
-				Owner:    "platform",
+				Owner:    opslevel.NewIdentifier("platform"),
 			},
 			service: service1,
 			result:  true,
