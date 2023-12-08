@@ -56,7 +56,7 @@ func PrintServices(isTextOutput bool, samples int, queue <-chan opslevel_jq_pars
 
 	prettyJSON, err := json.MarshalIndent(sampled, "", "    ")
 	cobra.CheckErr(err)
-	fmt.Printf("%s\n", string(prettyJSON))
+	fmt.Println(string(prettyJSON))
 
 	if isTextOutput {
 		servicesCount := len(*services)

@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func Test_Reconciler_Reconcile(t *testing.T) {
+func TestReconcilerReconcile(t *testing.T) {
 	// Arrange
 	type TestCase struct {
 		registration opslevel_jq_parser.ServiceRegistration

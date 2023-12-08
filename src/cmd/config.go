@@ -65,7 +65,7 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 	configCmd.AddCommand(configSchemaCmd, configViewCmd, configSampleCmd)
 
-	configSampleCmd.Flags().Bool("simple", false, "Adjust the sample config to be a less complex")
+	configSampleCmd.Flags().Bool("simple", false, "Adjust the sample config to be less complex")
 	viper.BindPFlags(configSampleCmd.Flags())
 }
 
