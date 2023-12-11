@@ -11,7 +11,7 @@ require (
 	github.com/opslevel/opslevel-go/v2023 v2023.11.16
 	github.com/opslevel/opslevel-jq-parser/v2023 v2023.11.2
 	github.com/opslevel/opslevel-k8s-controller/v2023 v2023.11.16
-	github.com/rocktavious/autopilot/v2023 v2023.11.3-0.20231109195949-b29afb0d3daa
+	github.com/rocktavious/autopilot/v2023 v2023.12.7
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.1
