@@ -9,7 +9,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/opslevel/opslevel-common/v2023 v2023.11.16
 	github.com/opslevel/opslevel-go/v2023 v2023.11.16
-	github.com/opslevel/opslevel-jq-parser/v2023 v2023.11.2
+	github.com/opslevel/opslevel-jq-parser/v2023 v2023.12.11
 	github.com/opslevel/opslevel-k8s-controller/v2023 v2023.11.16
 	github.com/rocktavious/autopilot/v2023 v2023.11.3-0.20231109195949-b29afb0d3daa
 	github.com/rs/zerolog v1.31.0

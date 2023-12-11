@@ -141,8 +141,8 @@ github.com/opslevel/opslevel-common/v2023 v2023.11.16 h1:VAGQ2A8xqOi74j3/+DFgn51
 github.com/opslevel/opslevel-common/v2023 v2023.11.16/go.mod h1:GYsnRMVfyN5o0p3xGtD49kvapbfFHWWM6+Bk++8CDeQ=
 github.com/opslevel/opslevel-go/v2023 v2023.11.16 h1:8/lfTjEQ+J0o4ZxPIawdrFyOnBpgpbp29BVsL6htNMs=
 github.com/opslevel/opslevel-go/v2023 v2023.11.16/go.mod h1:GxHwZJyxJXqz8kNrozqBh1Wb4R1YGKVZ7SpuMlVGJaU=
-github.com/opslevel/opslevel-jq-parser/v2023 v2023.11.2 h1:rGX+iNeIAX5MnNKWU3ryaxrlO4/GKLRs0IKBX3TuxzU=
-github.com/opslevel/opslevel-jq-parser/v2023 v2023.11.2/go.mod h1:40pgjrgiVRLILzOkLDIyWGsP2ERejs6773i/r3A64Gg=
+github.com/opslevel/opslevel-jq-parser/v2023 v2023.12.11 h1:bo0+q2VpWhDIL5SUx+sQIFD1cKUpLmCSezy64vrVGpY=
+github.com/opslevel/opslevel-jq-parser/v2023 v2023.12.11/go.mod h1:40pgjrgiVRLILzOkLDIyWGsP2ERejs6773i/r3A64Gg=
 github.com/opslevel/opslevel-k8s-controller/v2023 v2023.11.16 h1:4C8pA5knK//UbtClvQcaAeDvAeaS55JpVPsXI7JS/HM=
 github.com/opslevel/opslevel-k8s-controller/v2023 v2023.11.16/go.mod h1:igmwm6SCtNPx/SSlXsJIkH3lK8/cjXiM9w9UQxFkwRI=
 github.com/pelletier/go-toml/v2 v2.1.0 h1:FnwAJ4oYMvbT/34k9zzHuZNrhlz48GB3/s6at6/MHO4=
