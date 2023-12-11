@@ -4,7 +4,9 @@ before:
     - go mod tidy
 builds:
   - env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=1
+      - CGO_CFLAGS="-I/libjq/include"
+      - CGO_LDFLAGS="-L/libjq/lib"
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
       - -trimpath
@@ -50,7 +52,7 @@ brews:
       bin.install "kubectl-opslevel"
     test: |
       system "#{bin}/kubectl-opslevel version"
-    tap:
+    repository:
       owner: opslevel
       name: homebrew-tap
       token: "{{ .Env.ORG_GITHUB_TOKEN }}"

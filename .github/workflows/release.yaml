@@ -22,17 +22,6 @@ jobs:
         id: version
         run: |
           echo "RELEASE_VERSION=$(date +v%Y.%-m.%-d)" >> $GITHUB_OUTPUT
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version-file: 'src/go.mod'
-      - name: Cache Go modules
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
       - name: Import GPG Key
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v6
@@ -47,8 +36,6 @@ jobs:
           password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         env:
           AWS_REGION: us-east-1
-      - name: Cache Docker Layers
-        run: docker pull public.ecr.aws/opslevel/kubectl-opslevel:v2022.8.5 || true
       - name: Ensure Release Does Not Exist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -71,6 +58,12 @@ jobs:
           fi
           git tag -f ${{ steps.version.outputs.RELEASE_VERSION }} -m "Cut Release '${{ steps.version.outputs.RELEASE_VERSION }}'"
           git push -f origin refs/tags/${{ steps.version.outputs.RELEASE_VERSION }}
+      - name: Extract LibJQ
+        run: |-
+          docker pull flant/jq:b6be13d5-glibc
+          id=$(docker create flant/jq:b6be13d5-glibc)
+          docker cp $id:/libjq - > /libjq 
+          docker rm -v $id
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5.0.0
         with:
