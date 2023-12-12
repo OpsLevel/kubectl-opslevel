@@ -156,6 +156,9 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 		Language:    registration.Language,
 		Framework:   registration.Framework,
 	}
+	if registration.System != "" {
+		serviceCreateInput.Parent = opslevel.NewIdentifier(registration.System)
+	}
 	if v, ok := opslevel.Cache.TryGetTier(registration.Tier); ok {
 		serviceCreateInput.Tier = string(v.Alias)
 	} else if registration.Tier != "" {
@@ -187,6 +190,9 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 		Description: registration.Description,
 		Language:    registration.Language,
 		Framework:   registration.Framework,
+	}
+	if registration.System != "" {
+		updateServiceInput.Parent = opslevel.NewIdentifier(registration.System)
 	}
 	if v, ok := opslevel.Cache.TryGetTier(registration.Tier); ok {
 		updateServiceInput.Tier = string(v.Alias)
