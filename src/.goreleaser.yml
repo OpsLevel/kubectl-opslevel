@@ -5,33 +5,24 @@ before:
 builds:
   - env:
       - CGO_ENABLED=1
-      - CGO_CFLAGS="-I/libjq/include"
-      - CGO_LDFLAGS="-L/libjq/lib"
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
       - -trimpath
     goos:
-      - windows
-      - linux
       - darwin
     goarch:
       - amd64
-      - '386'
-      - arm
-      - arm64
-    ignore:
-      - goos: darwin
-        goarch: '386'
-      - goos: windows
-        goarch: 'arm'
-      - goos: windows
-        goarch: 'arm64'
     binary: '{{ .ProjectName }}'
 archives:
   - name_template: '{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}'
-    format_overrides:
-      - goos: windows
-        format: zip
+dockers:
+  - image_templates:
+      - "public.ecr.aws/opslevel/kubectl-opslevel:latest"
+      - "public.ecr.aws/opslevel/kubectl-opslevel:{{ .Tag }}"
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.version={{ .Tag }}"
 brews:
   - name: kubectl
     homepage: "https://www.opslevel.com/"

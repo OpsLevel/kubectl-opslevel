@@ -73,7 +73,7 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5.0.0
         with:
-          args: release --rm-dist --release-notes=../.changes/${{ steps.version.outputs.RELEASE_VERSION }}.md
+          args: release --clean --release-notes=../.changes/${{ steps.version.outputs.RELEASE_VERSION }}.md
           workdir: ./src
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
