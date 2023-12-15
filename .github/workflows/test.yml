@@ -17,12 +17,17 @@ jobs:
           submodules: 'true'
       - name: Fetch all tags
         run: git fetch --force --tags
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+      - name: Install libjq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libjq-dev
       - name: Run Tests
         run: |-
-          docker build -t testing:latest -f Dockerfile --target tester .
-          id=$(docker create testing:latest)
-          docker cp $id:/src/coverage.txt - > coverage.txt  
-          docker rm -v $id
+          go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
       - name: Upload Coverage
         run: |-
           cd src/
