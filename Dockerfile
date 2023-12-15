@@ -15,9 +15,10 @@ COPY . /app
 FROM builder as tester
 WORKDIR /app/src
 
-RUN cd ./src && go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
+RUN go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
 
 FROM builder as complier
+WORKDIR /app/src
 
 RUN go install github.com/goreleaser/goreleaser@v1.22.1
 
