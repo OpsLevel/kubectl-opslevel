@@ -21,9 +21,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.21"
-      - name: Install libjq
-        run: |
-          brew install jq
       - name: Run Tests
         run: |-
           cd src/
