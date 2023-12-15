@@ -15,14 +15,6 @@ builds:
     binary: '{{ .ProjectName }}'
 archives:
   - name_template: '{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}'
-dockers:
-  - image_templates:
-      - "public.ecr.aws/opslevel/kubectl-opslevel:latest"
-      - "public.ecr.aws/opslevel/kubectl-opslevel:{{ .Tag }}"
-    build_flag_templates:
-      - "--label=org.opencontainers.image.created={{ .Date }}"
-      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.version={{ .Tag }}"
 brews:
   - name: kubectl
     homepage: "https://www.opslevel.com/"
