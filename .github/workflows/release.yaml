@@ -58,21 +58,15 @@ jobs:
           fi
           git tag -f ${{ steps.version.outputs.RELEASE_VERSION }} -m "Cut Release '${{ steps.version.outputs.RELEASE_VERSION }}'"
           git push -f origin refs/tags/${{ steps.version.outputs.RELEASE_VERSION }}
-      - name: Extract LibJQ
-        run: |-
-          docker pull flant/jq:b6be13d5-glibc
-          id=$(docker create flant/jq:b6be13d5-glibc)
-          docker cp $id:/libjq - > /libjq 
-          docker rm -v $id
+
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5.0.0
-        with:
-          args: release --rm-dist --release-notes=../.changes/${{ steps.version.outputs.RELEASE_VERSION }}.md
-          workdir: ./src
-        env:
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
+        run: >-
+          docker build 
+          --build-arg RELEASE_VERSION=${{ steps.version.outputs.RELEASE_VERSION }}
+          --build-arg GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} 
+          --build-arg ORG_GITHUB_TOKEN=${{ steps.import_gpg.outputs.fingerprint }} 
+          --build-arg GPG_FINGERPRINT=${{ secrets.ORG_GITHUB_TOKEN }}
+          --target complier .
       - name: Report Release To OpsLevel
         uses: opslevel/report-deploy-github-action@v0.7.0
         with:
