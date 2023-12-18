@@ -10,7 +10,7 @@ require (
 	github.com/opslevel/opslevel-common/v2023 v2023.11.16
 	github.com/opslevel/opslevel-go/v2023 v2023.12.14
 	github.com/opslevel/opslevel-jq-parser/v2023 v2023.12.11
-	github.com/opslevel/opslevel-k8s-controller/v2023 v2023.11.16
+	github.com/opslevel/opslevel-k8s-controller/v2023 v2023.12.14
 	github.com/rocktavious/autopilot/v2023 v2023.12.7
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cobra v1.8.0
