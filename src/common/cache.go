@@ -1,8 +1,9 @@
 package common
 
 import (
-	"github.com/opslevel/opslevel-go/v2023"
 	"time"
+
+	"github.com/opslevel/opslevel-go/v2023"
 )
 
 // SyncCache Performs a one-time sync of the opslevel-go caches

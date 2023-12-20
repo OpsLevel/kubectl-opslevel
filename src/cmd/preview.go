@@ -3,12 +3,13 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+
 	"github.com/opslevel/kubectl-opslevel/common"
 	opslevel_common "github.com/opslevel/opslevel-common/v2023"
-	"github.com/opslevel/opslevel-jq-parser/v2023"
+	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
 	_ "github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"strconv"
 )
 
 // previewCmd represents the preview command
@@ -47,7 +48,7 @@ func PrintServices(isTextOutput bool, samples int, queue <-chan opslevel_jq_pars
 	// Deduplicate ServiceRegistrations
 
 	// Sample the data
-	sampled := opslevel_common.GetSample(samples, *services)
+	sampled := opslevel_common.GetSample[opslevel_jq_parser.ServiceRegistration](samples, *services)
 
 	// Print
 	if isTextOutput {

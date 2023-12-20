@@ -3,10 +3,11 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	opslevel_common "github.com/opslevel/opslevel-common/v2023"
-	opslevel_k8s_controller "github.com/opslevel/opslevel-k8s-controller/v2023"
 	"sync"
 	"time"
+
+	opslevel_common "github.com/opslevel/opslevel-common/v2023"
+	opslevel_k8s_controller "github.com/opslevel/opslevel-k8s-controller/v2023"
 
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/rs/zerolog/log"
@@ -14,9 +15,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-	collectResyncInterval int
-)
+var collectResyncInterval int
 
 var collectCmd = &cobra.Command{
 	Use:   "collect",

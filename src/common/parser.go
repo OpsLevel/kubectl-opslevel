@@ -3,12 +3,13 @@ package common
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/opslevel/opslevel-go/v2023"
-	"github.com/opslevel/opslevel-jq-parser/v2023"
-	"github.com/opslevel/opslevel-k8s-controller/v2023"
-	"github.com/rs/zerolog/log"
 	"sync"
 	"time"
+
+	"github.com/opslevel/opslevel-go/v2023"
+	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
+	opslevel_k8s_controller "github.com/opslevel/opslevel-k8s-controller/v2023"
+	"github.com/rs/zerolog/log"
 )
 
 func AggregateServices(queue <-chan opslevel_jq_parser.ServiceRegistration) *[]opslevel_jq_parser.ServiceRegistration {

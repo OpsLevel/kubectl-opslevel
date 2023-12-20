@@ -1,17 +1,16 @@
 package cmd
 
 import (
+	"time"
+
 	opslevel_common "github.com/opslevel/opslevel-common/v2023"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
-	"time"
 
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/spf13/cobra"
 )
 
-var (
-	reconcileResyncInterval int
-)
+var reconcileResyncInterval int
 
 var reconcileCmd = &cobra.Command{
 	Use:   "reconcile",
