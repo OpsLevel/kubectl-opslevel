@@ -3,11 +3,12 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/opslevel/opslevel-go/v2023"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
 	"github.com/rs/zerolog/log"
-	"strings"
 )
 
 type serviceAliasesResult string
@@ -177,13 +178,13 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 	service, err := r.client.CreateService(serviceCreateInput)
 	if err != nil {
 		return service, fmt.Errorf("[%s] Failed creating service\n\tREASON: %v", registration.Name, err.Error())
-	} else {
+	} else if service.Id != "" {
 		log.Info().Msgf("[%s] Created new service", service.Name)
 	}
 	return service, err
 }
 
-func (r *ServiceReconciler) updateService(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration, ) {
+func (r *ServiceReconciler) updateService(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	updateServiceInput := opslevel.ServiceUpdateInput{
 		Id:          service.Id,
 		Product:     registration.Product,
@@ -223,7 +224,7 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 	}
 }
 
-func (r *ServiceReconciler) handleAliases(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration, ) {
+func (r *ServiceReconciler) handleAliases(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	for _, alias := range registration.Aliases {
 		if alias == "" || service.HasAlias(alias) {
 			continue
