@@ -9,6 +9,7 @@ import (
 	"github.com/opslevel/opslevel-go/v2023"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 )
 
 type serviceAliasesResult string
@@ -137,6 +138,11 @@ func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.Servic
 	service, status := r.lookupService(registration)
 	switch status {
 	case serviceAliasesResult_NoAliasesMatched:
+		if viper.GetBool("disable-service-create") {
+			log.Info().Msgf("[%s] Avoided creating a new service\n\tREASON: service creation is disabled", registration.Name)
+			return nil, nil
+		}
+
 		newService, newServiceErr := r.createService(registration)
 		if newServiceErr != nil {
 			return nil, fmt.Errorf("[%s] api error during service creation ... skipping reconciliation.\n\tREASON: %v", registration.Name, newServiceErr)
@@ -181,7 +187,7 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 	service, err := r.client.CreateService(serviceCreateInput)
 	if err != nil {
 		return service, fmt.Errorf("[%s] Failed creating service\n\tREASON: %v", registration.Name, err.Error())
-	} else if service.Id != "" {
+	} else {
 		log.Info().Msgf("[%s] Created new service", service.Name)
 	}
 	return service, err

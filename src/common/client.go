@@ -2,8 +2,6 @@ package common
 
 import (
 	"github.com/opslevel/opslevel-go/v2023"
-	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 )
 
 type OpslevelClient struct {
@@ -95,10 +93,6 @@ func NewOpslevelClient(client *opslevel.Client) *OpslevelClient {
 			return client.GetServiceWithAlias(alias)
 		},
 		CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-			if viper.GetBool("disable-service-create") {
-				log.Info().Msgf("[%s] Not creating a new service\n\tREASON: service creation is disabled", input.Name)
-				return nil, nil
-			}
 			return client.CreateService(input)
 		},
 		UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
