@@ -38,6 +38,9 @@ func (r *ServiceReconciler) Reconcile(registration opslevel_jq_parser.ServiceReg
 	if err != nil {
 		return err
 	}
+	if service == nil {
+		return nil
+	}
 
 	// We don't care about errors at this point because they will just be logged
 	r.handleAliases(service, registration)
