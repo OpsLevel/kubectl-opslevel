@@ -27,6 +27,9 @@ func (c *OpslevelClient) GetService(alias string) (*opslevel.Service, error) {
 }
 
 func (c *OpslevelClient) CreateService(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+	if c.CreateServiceHandler == nil {
+		return nil, nil
+	}
 	return c.CreateServiceHandler(input)
 }
 
