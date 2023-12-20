@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"time"
+
 	opslevel_common "github.com/opslevel/opslevel-common/v2023"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
-	"time"
 
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -35,4 +37,9 @@ var reconcileCmd = &cobra.Command{
 func init() {
 	serviceCmd.AddCommand(reconcileCmd)
 	reconcileCmd.Flags().IntVar(&reconcileResyncInterval, "resync", 24, "The amount (in hours) before a full resync of the kubernetes cluster happens with OpsLevel. [default: 24]")
+
+	viper.SetDefault("disable-service-create", false)
+	reconcileCmd.Flags().Bool("disable-service-create", false, "Turns off automatic service creation (service data will still be reconciled). Overrides environment variable 'OPSLEVEL_DISABLE_SERVICE_CREATE'.")
+	viper.BindPFlag("disable-service-create", reconcileCmd.Flags().Lookup("disable-service-create"))
+	viper.BindEnv("disable-service-create", "OPSLEVEL_DISABLE_SERVICE_CREATE", "OL_DISABLE_SERVICE_CREATE")
 }

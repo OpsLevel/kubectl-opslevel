@@ -51,7 +51,6 @@ func init() {
 	rootCmd.PersistentFlags().IntVar(&apiTimeout, "api-timeout", 40, "The OpsLevel API timeout in seconds. Overrides environment variable 'OPSLEVEL_API_TIMEOUT'")
 	rootCmd.PersistentFlags().IntP("workers", "w", -1, "Sets the number of workers for API call processing. -1 == # CPU cores (cgroup aware). Overrides environment variable 'OPSLEVEL_WORKERS'")
 	rootCmd.PersistentFlags().StringP("output", "o", "text", "Output format.  One of: json|text")
-	rootCmd.PersistentFlags().Bool("disable-service-create", false, "Turns off automatic service creation (service data will still be reconciled). Overrides environment variable 'OPSLEVEL_DISABLE_SERVICE_CREATE' (options [\"false\",\"true\"])")
 
 	viper.BindPFlags(rootCmd.PersistentFlags())
 	viper.BindEnv("log-format", "OPSLEVEL_LOG_FORMAT", "OL_LOG_FORMAT", "OL_LOGFORMAT")
@@ -60,7 +59,6 @@ func init() {
 	viper.BindEnv("api-token", "OPSLEVEL_API_TOKEN", "OL_API_TOKEN", "OL_APITOKEN")
 	viper.BindEnv("api-timeout", "OPSLEVEL_API_TIMEOUT")
 	viper.BindEnv("workers", "OPSLEVEL_WORKERS", "OL_WORKERS")
-	viper.BindEnv("disable-service-create", "OPSLEVEL_DISABLE_SERVICE_CREATE", "OL_DISABLE_SERVICE_CREATE")
 	cobra.OnInitialize(func() {
 		readConfig()
 		setupLogging()
