@@ -3,12 +3,13 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+
 	"github.com/opslevel/kubectl-opslevel/common"
 	opslevel_common "github.com/opslevel/opslevel-common/v2023"
 	"github.com/opslevel/opslevel-jq-parser/v2023"
 	_ "github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"strconv"
 )
 
 // previewCmd represents the preview command

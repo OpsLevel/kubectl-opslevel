@@ -60,35 +60,11 @@ func init() {
 	viper.BindEnv("api-timeout", "OPSLEVEL_API_TIMEOUT")
 	viper.BindEnv("workers", "OPSLEVEL_WORKERS", "OL_WORKERS")
 	cobra.OnInitialize(func() {
-		readConfig()
 		setupLogging()
 		setupOutput()
 		setupConcurrency()
 		setupAPIToken()
 	})
-}
-
-func readConfig() {
-	if cfgFile != "" {
-		if cfgFile == "." {
-			viper.SetConfigType("yaml")
-			viper.ReadConfig(os.Stdin)
-			return
-		} else {
-			viper.SetConfigFile(cfgFile)
-		}
-	} else {
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-
-		viper.SetConfigName("opslevel")
-		viper.SetConfigType("yaml")
-		viper.AddConfigPath(".")
-		viper.AddConfigPath(home)
-	}
-	viper.SetEnvPrefix("OPSLEVEL")
-	viper.AutomaticEnv()
-	viper.ReadInConfig()
 }
 
 func setupLogging() {

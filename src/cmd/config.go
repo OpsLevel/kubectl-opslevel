@@ -3,7 +3,8 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/creasty/defaults"
+	"os"
+
 	"github.com/opslevel/kubectl-opslevel/common"
 
 	yaml "gopkg.in/yaml.v3"
@@ -70,16 +71,19 @@ func init() {
 }
 
 func LoadConfig() (*common.Config, error) {
-	v := &common.ConfigVersion{}
-	viper.Unmarshal(&v)
-	if v.Version != common.ConfigCurrentVersion {
-		return nil, fmt.Errorf("supported config version is '%s' but found '%s' | Please update config file or create a new sample with `kubectl opslevel config sample`", common.ConfigCurrentVersion, v.Version)
+	var commonConfig common.Config
+
+	yamlData, err := os.ReadFile(cfgFile)
+	if err != nil {
+		return nil, err
+	}
+	if err := yaml.Unmarshal(yamlData, &commonConfig); err != nil {
+		return nil, err
 	}
 
-	c := &common.Config{}
-	viper.Unmarshal(&c)
-	if err := defaults.Set(c); err != nil {
-		return c, err
+	if commonConfig.Version != common.ConfigCurrentVersion {
+		return nil, fmt.Errorf("supported config version is '%s' but found '%s' | Please update config file or create a new sample with `kubectl opslevel config sample`", common.ConfigCurrentVersion, commonConfig.Version)
 	}
-	return c, nil
+
+	return &commonConfig, nil
 }
