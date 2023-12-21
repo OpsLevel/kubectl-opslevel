@@ -173,6 +173,44 @@ func TestReconcilerReconcile(t *testing.T) {
 				autopilot.Ok(t, err)
 			},
 		},
+		"Happy Path Do Not Create Services": {
+			registration: testRegistration,
+			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
+				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+					return &opslevel.Service{}, nil // This returns a nil service as if the alias lookup didn't find anything
+				},
+				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+					panic("should not be called")
+				},
+				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+					panic("should not be called")
+				},
+				CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
+					return nil
+				},
+				AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
+					return nil
+				},
+				CreateTagHandler: func(input opslevel.TagCreateInput) error {
+					return nil
+				},
+				CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
+					return nil
+				},
+				GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
+					return nil, fmt.Errorf("api error")
+				},
+				CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
+					panic("should not be called")
+				},
+				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
+					panic("should not be called")
+				},
+			}, true),
+			assert: func(t *testing.T, err error) {
+				autopilot.Ok(t, err)
+			},
+		},
 	}
 	// Act
 	autopilot.RunTableTests(t, cases, func(t *testing.T, test TestCase) {
