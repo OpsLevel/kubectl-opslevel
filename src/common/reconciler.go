@@ -9,7 +9,6 @@ import (
 	"github.com/opslevel/opslevel-go/v2023"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 )
 
 type serviceAliasesResult string
@@ -20,6 +19,8 @@ const (
 	serviceAliasesResult_MultipleServicesFound serviceAliasesResult = "MultipleServicesFound"
 	serviceAliasesResult_APIErrorHappened      serviceAliasesResult = "APIErrorHappened"
 )
+
+var DisableServiceCreation = false
 
 type ServiceReconciler struct {
 	client *OpslevelClient
@@ -138,7 +139,7 @@ func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.Servic
 	service, status := r.lookupService(registration)
 	switch status {
 	case serviceAliasesResult_NoAliasesMatched:
-		if viper.GetBool("disable-service-create") {
+		if DisableServiceCreation {
 			log.Info().Msgf("[%s] Avoided creating a new service\n\tREASON: service creation is disabled", registration.Name)
 			return nil, nil
 		}

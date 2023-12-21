@@ -23,6 +23,8 @@ var reconcileCmd = &cobra.Command{
 		config, err := LoadConfig()
 		cobra.CheckErr(err)
 
+		common.DisableServiceCreation = viper.GetBool("disable-service-create")
+
 		client := createOpslevelClient()
 		common.SyncCache(client)
 		resync := time.Hour * time.Duration(reconcileResyncInterval)
