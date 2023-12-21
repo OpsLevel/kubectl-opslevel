@@ -13,6 +13,7 @@ import (
 
 var (
 	reconcileResyncInterval int
+	disableServiceCreation  bool
 )
 
 var reconcileCmd = &cobra.Command{
@@ -23,15 +24,14 @@ var reconcileCmd = &cobra.Command{
 		config, err := LoadConfig()
 		cobra.CheckErr(err)
 
-		common.DisableServiceCreation = viper.GetBool("disable-service-create")
-
 		client := createOpslevelClient()
+		disableServiceCreation := viper.GetBool("disable-service-create")
 		common.SyncCache(client)
 		resync := time.Hour * time.Duration(reconcileResyncInterval)
 		common.SyncCaches(createOpslevelClient(), resync)
 		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
 		common.SetupControllers(config, queue, resync)
-		common.ReconcileServices(client, queue)
+		common.ReconcileServices(client, disableServiceCreation, queue)
 		opslevel_common.Run("Controller")
 	},
 }

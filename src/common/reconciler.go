@@ -20,15 +20,15 @@ const (
 	serviceAliasesResult_APIErrorHappened      serviceAliasesResult = "APIErrorHappened"
 )
 
-var DisableServiceCreation = false
-
 type ServiceReconciler struct {
-	client *OpslevelClient
+	client                 *OpslevelClient
+	disableServiceCreation bool
 }
 
-func NewServiceReconciler(client *OpslevelClient) *ServiceReconciler {
+func NewServiceReconciler(client *OpslevelClient, disableServiceCreation bool) *ServiceReconciler {
 	return &ServiceReconciler{
-		client: client,
+		client:                 client,
+		disableServiceCreation: disableServiceCreation,
 	}
 }
 
@@ -139,7 +139,7 @@ func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.Servic
 	service, status := r.lookupService(registration)
 	switch status {
 	case serviceAliasesResult_NoAliasesMatched:
-		if DisableServiceCreation {
+		if r.disableServiceCreation {
 			log.Info().Msgf("[%s] Avoided creating a new service\n\tREASON: service creation is disabled", registration.Name)
 			return nil, nil
 		}
