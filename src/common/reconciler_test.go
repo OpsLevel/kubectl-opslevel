@@ -2,11 +2,12 @@ package common_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/opslevel-go/v2023"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
 	"github.com/rocktavious/autopilot/v2023"
-	"testing"
 )
 
 func TestReconcilerReconcile(t *testing.T) {
@@ -69,7 +70,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				Name:    "test",
 				Aliases: []string{},
 			},
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{}),
+			reconciler: common.NewServiceReconciler(&common.OpslevelClient{}, false),
 			assert: func(t *testing.T, err error) {
 				autopilot.Equals(t, "[test] found 0 aliases from kubernetes data", err.Error())
 			},
@@ -89,7 +90,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
 					return nil, fmt.Errorf("api error")
 				},
-			}),
+			}, false),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
@@ -103,7 +104,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
 					return nil, fmt.Errorf("api error")
 				},
-			}),
+			}, false),
 			assert: func(t *testing.T, err error) {
 				autopilot.Equals(t, "[test] api error during service lookup by alias.  unable to guarantee service was found or not ... skipping reconciliation", err.Error())
 			},
@@ -129,7 +130,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				CreateTagHandler: func(input opslevel.TagCreateInput) error {
 					panic("should not be called")
 				},
-			}),
+			}, false),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
@@ -167,7 +168,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
 					panic("should not be called")
 				},
-			}),
+			}, false),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
@@ -187,7 +188,7 @@ func Test_Reconciler_ContainsAllTags(t *testing.T) {
 		tags   []opslevel.Tag
 		result bool
 	}
-	reconciler := common.NewServiceReconciler(&common.OpslevelClient{})
+	reconciler := common.NewServiceReconciler(&common.OpslevelClient{}, false)
 	cases := map[string]TestCase{
 		"Is True When All Tags Overlap": {
 			input: []opslevel.TagInput{
@@ -307,7 +308,7 @@ func Test_Reconciler_ServiceNeedsUpdate(t *testing.T) {
 			Alias: "tier_1",
 		},
 	}
-	reconciler := common.NewServiceReconciler(&common.OpslevelClient{})
+	reconciler := common.NewServiceReconciler(&common.OpslevelClient{}, false)
 	cases := map[string]TestCase{
 		"Is True When Input Differs 1": {
 			input: opslevel.ServiceUpdateInput{
