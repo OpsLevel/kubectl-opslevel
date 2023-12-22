@@ -3,11 +3,12 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/opslevel/opslevel-go/v2023"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
 	"github.com/rs/zerolog/log"
-	"strings"
 )
 
 type serviceAliasesResult string
@@ -20,12 +21,14 @@ const (
 )
 
 type ServiceReconciler struct {
-	client *OpslevelClient
+	client                 *OpslevelClient
+	disableServiceCreation bool
 }
 
-func NewServiceReconciler(client *OpslevelClient) *ServiceReconciler {
+func NewServiceReconciler(client *OpslevelClient, disableServiceCreation bool) *ServiceReconciler {
 	return &ServiceReconciler{
-		client: client,
+		client:                 client,
+		disableServiceCreation: disableServiceCreation,
 	}
 }
 
@@ -36,6 +39,9 @@ func (r *ServiceReconciler) Reconcile(registration opslevel_jq_parser.ServiceReg
 	service, err := r.handleService(registration)
 	if err != nil {
 		return err
+	}
+	if service == nil {
+		return nil
 	}
 
 	// We don't care about errors at this point because they will just be logged
@@ -133,6 +139,11 @@ func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.Servic
 	service, status := r.lookupService(registration)
 	switch status {
 	case serviceAliasesResult_NoAliasesMatched:
+		if r.disableServiceCreation {
+			log.Info().Msgf("[%s] Avoided creating a new service\n\tREASON: service creation is disabled", registration.Name)
+			return nil, nil
+		}
+
 		newService, newServiceErr := r.createService(registration)
 		if newServiceErr != nil {
 			return nil, fmt.Errorf("[%s] api error during service creation ... skipping reconciliation.\n\tREASON: %v", registration.Name, newServiceErr)
@@ -183,7 +194,7 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 	return service, err
 }
 
-func (r *ServiceReconciler) updateService(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration, ) {
+func (r *ServiceReconciler) updateService(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	updateServiceInput := opslevel.ServiceUpdateInput{
 		Id:          service.Id,
 		Product:     registration.Product,
@@ -223,7 +234,7 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 	}
 }
 
-func (r *ServiceReconciler) handleAliases(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration, ) {
+func (r *ServiceReconciler) handleAliases(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	for _, alias := range registration.Aliases {
 		if alias == "" || service.HasAlias(alias) {
 			continue
