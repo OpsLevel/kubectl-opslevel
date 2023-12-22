@@ -21,12 +21,14 @@ const (
 )
 
 type ServiceReconciler struct {
-	client *OpslevelClient
+	client                 *OpslevelClient
+	disableServiceCreation bool
 }
 
-func NewServiceReconciler(client *OpslevelClient) *ServiceReconciler {
+func NewServiceReconciler(client *OpslevelClient, disableServiceCreation bool) *ServiceReconciler {
 	return &ServiceReconciler{
-		client: client,
+		client:                 client,
+		disableServiceCreation: disableServiceCreation,
 	}
 }
 
@@ -37,6 +39,9 @@ func (r *ServiceReconciler) Reconcile(registration opslevel_jq_parser.ServiceReg
 	service, err := r.handleService(registration)
 	if err != nil {
 		return err
+	}
+	if service == nil {
+		return nil
 	}
 
 	// We don't care about errors at this point because they will just be logged
@@ -134,6 +139,11 @@ func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.Servic
 	service, status := r.lookupService(registration)
 	switch status {
 	case serviceAliasesResult_NoAliasesMatched:
+		if r.disableServiceCreation {
+			log.Info().Msgf("[%s] Avoided creating a new service\n\tREASON: service creation is disabled", registration.Name)
+			return nil, nil
+		}
+
 		newService, newServiceErr := r.createService(registration)
 		if newServiceErr != nil {
 			return nil, fmt.Errorf("[%s] api error during service creation ... skipping reconciliation.\n\tREASON: %v", registration.Name, newServiceErr)
