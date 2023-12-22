@@ -26,7 +26,7 @@ type Config struct {
 }
 
 type ConfigVersion struct {
-	Version string
+	Version string `json:"version" yaml:"version"`
 }
 
 var ConfigCurrentVersion = "1.2.0"

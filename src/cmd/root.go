@@ -88,7 +88,10 @@ func readConfig() {
 	}
 	viper.SetEnvPrefix("OPSLEVEL")
 	viper.AutomaticEnv()
-	viper.ReadInConfig()
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func setupLogging() {

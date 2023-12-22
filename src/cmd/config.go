@@ -70,16 +70,20 @@ func init() {
 }
 
 func LoadConfig() (*common.Config, error) {
-	v := &common.ConfigVersion{}
-	viper.Unmarshal(&v)
+	v := common.ConfigVersion{}
+	if err := viper.Unmarshal(&v); err != nil {
+		return nil, err
+	}
 	if v.Version != common.ConfigCurrentVersion {
 		return nil, fmt.Errorf("supported config version is '%s' but found '%s' | Please update config file or create a new sample with `kubectl opslevel config sample`", common.ConfigCurrentVersion, v.Version)
 	}
 
-	c := &common.Config{}
-	viper.Unmarshal(&c)
-	if err := defaults.Set(c); err != nil {
-		return c, err
+	c := common.Config{}
+	if err := viper.Unmarshal(&c); err != nil {
+		return nil, err
 	}
-	return c, nil
+	if err := defaults.Set(&c); err != nil {
+		return nil, err
+	}
+	return &c, nil
 }
