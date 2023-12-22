@@ -25,10 +25,6 @@ type Config struct {
 	Service Service `json:"service"`
 }
 
-type ConfigVersion struct {
-	Version string
-}
-
 var ConfigCurrentVersion = "1.2.0"
 
 // Make sure we only use spaces inside of these samples
