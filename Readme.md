@@ -6,9 +6,9 @@
     <a href="https://goreportcard.com/report/github.com/OpsLevel/kubectl-opslevel" alt="Go Report Card">
         <img src="https://goreportcard.com/badge/github.com/OpsLevel/kubectl-opslevel" /></a>
     <a href="https://GitHub.com/OpsLevel/kubectl-opslevel/releases/" alt="Release">
-        <img src="https://img.shields.io/github/v/release/OpsLevel/kubectl-opslevel" /></a> 
+        <img src="https://img.shields.io/github/v/release/OpsLevel/kubectl-opslevel" /></a>
     <a href="https://masterminds.github.io/stability/active.html" alt="Stability: Active">
-        <img src="https://masterminds.github.io/stability/active.svg" /></a>  
+        <img src="https://masterminds.github.io/stability/active.svg" /></a>
     <a href="https://github.com/OpsLevel/kubectl-opslevel/graphs/contributors" alt="Contributors">
         <img src="https://img.shields.io/github/contributors/OpsLevel/kubectl-opslevel" /></a>
     <a href="https://github.com/OpsLevel/kubectl-opslevel/pulse" alt="Activity">
@@ -21,7 +21,7 @@
  <a href="#prerequisite">Prerequisite</a> |
  <a href="#installation">Installation</a> |
  <a href="#quickstart">Quickstart</a> |
- <a href="https://www.opslevel.com/docs/integrations/kubernetes/">Documentation</a> |
+ <a href="https://docs.opslevel.com/docs/kubernetes-integration">Documentation</a> |
  <a href="#troubleshooting">Troubleshooting</a>
 </p>
 
@@ -121,19 +121,19 @@ service:
             - '{"environment": .spec.template.metadata.labels.environment}'
         tools:
           - '{"category": "other", "displayName": "my-cool-tool", "url": .metadata.annotations."example.com/my-cool-tool"} | if .url then . else empty end'
-          # find annotations with format: opslevel.com/tools.<category>.<displayname>: <url> 
+          # find annotations with format: opslevel.com/tools.<category>.<displayname>: <url>
           - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tools"))) | map({"category": .key | split(".")[2], "displayName": .key | split(".")[3], "url": .value})'
         repositories: # attach repositories to the service using the opslevel repo alias - IE github.com:hashicorp/vault
           - '{"name": "My Cool Repo", "directory": "/", "repo": .metadata.annotations.repo} | if .repo then . else empty end'
           # if just the alias is returned as a single string we'll build the name for you and set the directory to "/"
           - .metadata.annotations.repo
-          # find annotations with format: opslevel.com/repo.<displayname>.<repo.subpath.dots.turned.to.forwardslash>: <opslevel repo alias> 
+          # find annotations with format: opslevel.com/repo.<displayname>.<repo.subpath.dots.turned.to.forwardslash>: <opslevel repo alias>
           - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/repos"))) | map({"name": .key | split(".")[2], "directory": .key | split(".")[3:] | join("/"), "repo": .value})'
 ```
 
 ### Enable shell autocompletion
 
-We have the ability to generate autocompletion scripts for the shell's `bash`, `zsh`, `fish` and `powershell`.  To generate 
+We have the ability to generate autocompletion scripts for the shell's `bash`, `zsh`, `fish` and `powershell`.  To generate
 the completion script for MacOS zsh:
 
 ```sh
@@ -204,7 +204,7 @@ Generally speaking if any other command works IE `kubectl get deployment` then a
 ### A field mapped in the configuration file is not in the service data
 
 For the most part `jq` filter failures are bubbled up but in certain edgecases they can fail silently.
-The best way to test a `jq` expression in isoloation is to emit the Kubernetes resource to json IE `kubectl get deployment <name> -o json` 
+The best way to test a `jq` expression in isoloation is to emit the Kubernetes resource to json IE `kubectl get deployment <name> -o json`
 and then play around with the expression in [jqplay](https://jqplay.org/)
 
 Generally speaking if we detect a json `null` value we do build any data for that field.
