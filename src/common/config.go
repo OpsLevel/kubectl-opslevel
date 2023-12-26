@@ -33,7 +33,7 @@ version: "1.2.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
-        apiVersion: apps/v1 # only supports resources found in 'kubectl api-resources --verbs="get,list"'
+        apiVersion: "apps/v1" # only supports resources found in 'kubectl api-resources --verbs="get,list"'
         kind: Deployment
         excludes: # filters out resources if any expression returns truthy
           - .metadata.namespace == "kube-system"
@@ -51,7 +51,7 @@ service:
             - '{"environment": .spec.template.metadata.labels.environment}'
   collect:
     - selector: # This limits what data we look at in Kubernetes
-        apiVersion: apps/v1 # only supports resources found in 'kubectl api-resources --verbs="get,list"'
+        apiVersion: "apps/v1" # only supports resources found in 'kubectl api-resources --verbs="get,list"'
         kind: Deployment
         excludes: # filters out resources if any expression returns truthy
           - .metadata.namespace == "kube-system"
@@ -63,7 +63,7 @@ version: "1.2.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
-        apiVersion: apps/v1 # only supports resources found in 'kubectl api-resources --verbs="get,list"'
+        apiVersion: "apps/v1" # only supports resources found in 'kubectl api-resources --verbs="get,list"'
         kind: Deployment
         excludes: # filters out resources if any expression returns truthy
           - .metadata.namespace == "kube-system"
@@ -103,7 +103,7 @@ service:
           - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/repo"))) | map({"name": .key | split(".")[2], "directory": .key | split(".")[3:] | join("/"), "repo": .value})'
   collect:
     - selector: # This limits what data we look at in Kubernetes
-        apiVersion: apps/v1 # only supports resources found in 'kubectl api-resources --verbs="get,list"'
+        apiVersion: "apps/v1" # only supports resources found in 'kubectl api-resources --verbs="get,list"'
         kind: Deployment
         excludes: # filters out resources if any expression returns truthy
           - .metadata.namespace == "kube-system"

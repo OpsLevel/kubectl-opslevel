@@ -1,9 +1,10 @@
 package cmd
 
 import (
+	"time"
+
 	opslevel_common "github.com/opslevel/opslevel-common/v2023"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
-	"time"
 
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/spf13/cobra"
@@ -27,7 +28,7 @@ var reconcileCmd = &cobra.Command{
 		common.SyncCaches(createOpslevelClient(), resync)
 		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
 		common.SetupControllers(config, queue, resync)
-		common.ReconcileServices(client, queue)
+		common.ReconcileServices(client, disableServiceCreation, queue)
 		opslevel_common.Run("Controller")
 	},
 }

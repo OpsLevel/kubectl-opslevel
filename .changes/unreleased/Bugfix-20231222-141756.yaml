@@ -1,0 +1,4 @@
+kind: Bugfix
+body: Fix bug with loading the ./opslevel-k8s.yaml file that prevented the tool from
+  working
+time: 2023-12-22T14:17:56.812309-06:00
