@@ -10,9 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	reconcileResyncInterval int
-)
+var reconcileResyncInterval int
 
 var reconcileCmd = &cobra.Command{
 	Use:   "reconcile",

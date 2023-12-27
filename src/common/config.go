@@ -1,8 +1,8 @@
 package common
 
 import (
-	"github.com/opslevel/opslevel-jq-parser/v2023"
-	"github.com/opslevel/opslevel-k8s-controller/v2023"
+	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
+	opslevel_k8s_controller "github.com/opslevel/opslevel-k8s-controller/v2023"
 	"gopkg.in/yaml.v3"
 )
 

@@ -1,9 +1,10 @@
 package common_test
 
 import (
+	"testing"
+
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/rocktavious/autopilot/v2023"
-	"testing"
 )
 
 func TestGetConfig(t *testing.T) {
