@@ -67,7 +67,7 @@ tasks:
         silent: true
       - git submodule update --init --remote
       - go work init || true
-      - git submodule | awk '{print $2}' | go work use .
+      - go work use . $(git submodule | awk '{print $2}')
       - cmd: echo "submodules ready!"
         silent: true
 
