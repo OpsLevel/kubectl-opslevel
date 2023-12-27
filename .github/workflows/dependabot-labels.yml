@@ -1,0 +1,12 @@
+name: Dependabot Labels
+
+on:
+  pull_request:
+    types:
+      - labeled
+
+jobs:
+  dependabot-pr-label:
+    if: github.event.label.name == 'dependencies'
+    uses: OpsLevel/actions/.github/workflows/dependabot_pr_labels.yml@main
+
