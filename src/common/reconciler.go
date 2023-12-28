@@ -335,7 +335,7 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 			log.Debug().Msgf("[%s] Repository '%s' already attached to service ... skipping", service.Name, repositoryAsString)
 			continue
 		}
-		repositoryCreate.Service = opslevel.IdentifierInput{Id: &service.Id}
+		repositoryCreate.Service = *opslevel.NewIdentifier(string(service.Id))
 		err := r.client.CreateServiceRepository(repositoryCreate)
 		if err != nil {
 			log.Error().Msgf("[%s] Failed assigning repository '%s'\n\tREASON: %v", service.Name, repositoryAsString, err.Error())
