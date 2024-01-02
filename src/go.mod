@@ -5,7 +5,7 @@ go 1.21.0
 require (
 	github.com/alecthomas/jsonschema v0.0.0-20220216202328-9eeeec9d044b
 	github.com/creasty/defaults v1.7.0
-	github.com/go-resty/resty/v2 v2.10.0
+	github.com/go-resty/resty/v2 v2.11.0
 	github.com/google/go-cmp v0.6.0
 	github.com/opslevel/opslevel-common/v2023 v2023.11.16
 	github.com/opslevel/opslevel-go/v2023 v2023.12.14
