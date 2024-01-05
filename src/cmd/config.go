@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 
-	"github.com/creasty/defaults"
 	"github.com/opslevel/kubectl-opslevel/common"
 
 	yaml "gopkg.in/yaml.v3"
@@ -51,11 +52,13 @@ var configSampleCmd = &cobra.Command{
 	Long:  "Print a sample config file which could be used",
 	Run: func(cmd *cobra.Command, args []string) {
 		var cfg *common.Config
+		var err error
 		if viper.GetBool("simple") {
-			cfg, _ = common.GetConfig(common.ConfigSimple)
+			cfg, err = common.ParseConfig(common.ConfigSimple)
 		} else {
-			cfg, _ = common.GetConfig(common.ConfigSample)
+			cfg, err = common.ParseConfig(common.ConfigSample)
 		}
+		cobra.CheckErr(err)
 		output, err := yaml.Marshal(cfg)
 		cobra.CheckErr(err)
 		fmt.Println(string(output))
@@ -70,21 +73,34 @@ func init() {
 	viper.BindPFlags(configSampleCmd.Flags())
 }
 
-func LoadConfig() (*common.Config, error) {
-	v := common.ConfigVersion{}
-	if err := viper.Unmarshal(&v); err != nil {
-		return nil, err
-	}
-	if v.Version != common.ConfigCurrentVersion {
-		return nil, fmt.Errorf("supported config version is '%s' but found '%s' | Please update config file or create a new sample with `kubectl opslevel config sample`", common.ConfigCurrentVersion, v.Version)
-	}
+func readConfig() []byte {
+	var err error
+	var res []byte
 
-	c := common.Config{}
-	if err := viper.Unmarshal(&c); err != nil {
+	switch cfgFile {
+	case ".":
+		res, err = os.ReadFile("./opslevel-k8s.yaml")
+	case "-":
+		buf := bytes.Buffer{}
+		_, err = buf.ReadFrom(os.Stdin)
+		res = buf.Bytes()
+	default:
+		res, err = os.ReadFile(cfgFile)
+	}
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+func LoadConfig() (*common.Config, error) {
+	configBytes := readConfig()
+	config, err := common.ParseConfig(string(configBytes))
+	if err != nil {
 		return nil, err
 	}
-	if err := defaults.Set(&c); err != nil {
-		return nil, err
+	if config.Version != common.ConfigCurrentVersion {
+		return nil, fmt.Errorf("supported config version is '%s' but found '%s' | Please update config file or create a new sample with `kubectl opslevel config sample`", common.ConfigCurrentVersion, config.Version)
 	}
-	return &c, nil
+	return config, nil
 }

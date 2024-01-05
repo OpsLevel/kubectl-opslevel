@@ -63,7 +63,7 @@ func init() {
 	viper.BindEnv("workers", "OPSLEVEL_WORKERS", "OL_WORKERS")
 	viper.BindEnv("disable-service-create", "OPSLEVEL_DISABLE_SERVICE_CREATE", "OL_DISABLE_SERVICE_CREATE")
 	cobra.OnInitialize(func() {
-		readConfig()
+		setupEnv()
 		setupLogging()
 		setupOutput()
 		setupConcurrency()
@@ -75,30 +75,9 @@ func init() {
 	})
 }
 
-func readConfig() {
-	if cfgFile != "" {
-		if cfgFile == "." {
-			viper.SetConfigType("yaml")
-			viper.ReadConfig(os.Stdin)
-			return
-		} else {
-			viper.SetConfigFile(cfgFile)
-		}
-	} else {
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-
-		viper.SetConfigName("opslevel")
-		viper.SetConfigType("yaml")
-		viper.AddConfigPath(".")
-		viper.AddConfigPath(home)
-	}
+func setupEnv() {
 	viper.SetEnvPrefix("OPSLEVEL")
 	viper.AutomaticEnv()
-	err := viper.ReadInConfig()
-	if err != nil {
-		panic(err)
-	}
 }
 
 func setupLogging() {
