@@ -76,26 +76,21 @@ func init() {
 }
 
 func readConfig() {
-	if cfgFile != "" {
-		if cfgFile == "-" {
-			viper.SetConfigType("yaml")
-			viper.ReadConfig(os.Stdin)
-			return
-		} else {
-			viper.SetConfigFile(cfgFile)
-		}
-	} else {
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-
-		viper.SetConfigName("opslevel")
-		viper.SetConfigType("yaml")
-		viper.AddConfigPath(".")
-		viper.AddConfigPath(home)
+	viper.SetConfigType("yaml")
+	switch cfgFile {
+	case ".":
+		viper.SetConfigFile("./opslevel-k8s.yaml")
+	case "-":
+		viper.ReadConfig(os.Stdin)
+	default:
+		viper.SetConfigFile(cfgFile)
 	}
 	viper.SetEnvPrefix("OPSLEVEL")
 	viper.AutomaticEnv()
-	viper.ReadInConfig()
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func setupLogging() {
