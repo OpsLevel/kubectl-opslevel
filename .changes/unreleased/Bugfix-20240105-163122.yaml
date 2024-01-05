@@ -1,0 +1,3 @@
+kind: Bugfix
+body: Fix bug where user could not generate config unless they had one already
+time: 2024-01-05T16:31:22.391384-05:00
