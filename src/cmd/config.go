@@ -10,6 +10,7 @@ import (
 	yaml "gopkg.in/yaml.v3"
 
 	"github.com/alecthomas/jsonschema"
+	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -83,6 +84,9 @@ func LoadConfig() (*common.Config, error) {
 
 	if commonConfig.Version != common.ConfigCurrentVersion {
 		return nil, fmt.Errorf("supported config version is '%s' but found '%s' | Please update config file or create a new sample with `kubectl opslevel config sample`", common.ConfigCurrentVersion, commonConfig.Version)
+	}
+	if err := defaults.Set(&commonConfig); err != nil {
+		return nil, err
 	}
 
 	return &commonConfig, nil
