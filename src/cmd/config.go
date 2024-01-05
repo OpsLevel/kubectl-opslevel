@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/opslevel/kubectl-opslevel/common"
 
@@ -72,22 +71,16 @@ func init() {
 }
 
 func LoadConfig() (*common.Config, error) {
-	var commonConfig common.Config
-
-	yamlData, err := os.ReadFile(cfgFile)
-	if err != nil {
+	v := common.Config{}
+	if err := viper.Unmarshal(&v); err != nil {
 		return nil, err
 	}
-	if err := yaml.Unmarshal(yamlData, &commonConfig); err != nil {
-		return nil, err
+	if v.Version != common.ConfigCurrentVersion {
+		return nil, fmt.Errorf("supported config version is '%s' but found '%s' | Please update config file or create a new sample with `kubectl opslevel config sample`", common.ConfigCurrentVersion, v.Version)
 	}
 
-	if commonConfig.Version != common.ConfigCurrentVersion {
-		return nil, fmt.Errorf("supported config version is '%s' but found '%s' | Please update config file or create a new sample with `kubectl opslevel config sample`", common.ConfigCurrentVersion, commonConfig.Version)
-	}
-	if err := defaults.Set(&commonConfig); err != nil {
+	if err := defaults.Set(&v); err != nil {
 		return nil, err
 	}
-
-	return &commonConfig, nil
+	return &v, nil
 }
