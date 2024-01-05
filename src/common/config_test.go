@@ -7,10 +7,10 @@ import (
 	"github.com/rocktavious/autopilot/v2023"
 )
 
-func TestGetConfig(t *testing.T) {
-	simple, err := common.GetConfig(common.ConfigSimple)
+func TestParseConfig(t *testing.T) {
+	simple, err := common.ParseConfig(common.ConfigSimple)
 	autopilot.Ok(t, err)
-	sample, err := common.GetConfig(common.ConfigSample)
+	sample, err := common.ParseConfig(common.ConfigSample)
 	autopilot.Ok(t, err)
 
 	autopilot.Equals(t, ".metadata.namespace", simple.Service.Import[0].OpslevelConfig.Owner)

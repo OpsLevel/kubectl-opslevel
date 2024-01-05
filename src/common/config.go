@@ -1,6 +1,7 @@
 package common
 
 import (
+	"github.com/creasty/defaults"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
 	opslevel_k8s_controller "github.com/opslevel/opslevel-k8s-controller/v2023"
 	"gopkg.in/yaml.v3"
@@ -110,8 +111,13 @@ service:
           - .metadata.annotations."opslevel.com/ignore"
 `
 
-func GetConfig(data string) (*Config, error) {
+func ParseConfig(data string) (*Config, error) {
 	var output Config
-	err := yaml.Unmarshal([]byte(data), &output)
-	return &output, err
+	if err := yaml.Unmarshal([]byte(data), &output); err != nil {
+		return nil, err
+	}
+	if err := defaults.Set(&output); err != nil {
+		return nil, err
+	}
+	return &output, nil
 }
