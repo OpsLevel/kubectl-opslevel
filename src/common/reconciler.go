@@ -91,7 +91,7 @@ func (r *ServiceReconciler) ServiceNeedsUpdate(input opslevel.ServiceUpdateInput
 	if input.TierAlias != nil && *input.TierAlias != service.Tier.Alias {
 		return true
 	}
-	if *input.LifecycleAlias != "" && *input.LifecycleAlias != service.Lifecycle.Alias {
+	if input.LifecycleAlias != nil && *input.LifecycleAlias != service.Lifecycle.Alias {
 		return true
 	}
 	if input.OwnerInput != nil && *input.OwnerInput.Alias != service.Owner.Alias {
