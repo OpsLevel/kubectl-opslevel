@@ -61,8 +61,8 @@ func TestReconcilerReconcile(t *testing.T) {
 		Aliases:      []string{"test1", "test2", "test3"},
 		TagAssigns:   []opslevel.TagInput{{Key: "foo", Value: "bar"}, {Key: "hello", Value: "world"}},
 		TagCreates:   []opslevel.TagInput{{Key: "env", Value: "test"}},
-		Tools:        []opslevel.ToolCreateInput{{Category: opslevel.ToolCategoryCode, DisplayName: "test", Url: "https://example.com", Environment: "test"}},
-		Repositories: []opslevel.ServiceRepositoryCreateInput{{Service: *opslevel.NewIdentifier(""), Repository: *opslevel.NewIdentifier(""), DisplayName: "", BaseDirectory: ""}},
+		Tools:        []opslevel.ToolCreateInput{{Category: opslevel.ToolCategoryCode, DisplayName: "test", Url: "https://example.com", Environment: opslevel.RefOf("test")}},
+		Repositories: []opslevel.ServiceRepositoryCreateInput{{Service: *opslevel.NewIdentifier(""), Repository: *opslevel.NewIdentifier(""), DisplayName: opslevel.RefOf(""), BaseDirectory: opslevel.RefOf("")}},
 	}
 	cases := map[string]TestCase{
 		"Missing Aliases Should Error": {
@@ -350,48 +350,48 @@ func Test_Reconciler_ServiceNeedsUpdate(t *testing.T) {
 	cases := map[string]TestCase{
 		"Is True When Input Differs 1": {
 			input: opslevel.ServiceUpdateInput{
-				Name: "Test1",
+				Name: opslevel.RefOf("Test1"),
 			},
 			service: service1,
 			result:  true,
 		},
 		"Is True When Input Differs 2": {
 			input: opslevel.ServiceUpdateInput{
-				Name:     "Test",
-				Language: "Python",
-				Tier:     "tier_2",
+				Name:      opslevel.RefOf("Test"),
+				Language:  opslevel.RefOf("Python"),
+				TierAlias: opslevel.RefOf("tier_2"),
 			},
 			service: service1,
 			result:  true,
 		},
 		"Is True When Input Differs 3": {
 			input: opslevel.ServiceUpdateInput{
-				Name:     "Test",
-				Language: "Python",
-				Owner:    opslevel.NewIdentifier("platform"),
+				Name:       opslevel.RefOf("Test"),
+				Language:   opslevel.RefOf("Python"),
+				OwnerInput: opslevel.NewIdentifier("platform"),
 			},
 			service: service1,
 			result:  true,
 		},
 		"Is False When Input Matches 1": {
 			input: opslevel.ServiceUpdateInput{
-				Id: "XXX",
+				Id: opslevel.NewID("XXX"),
 			},
 			service: service2,
 			result:  false,
 		},
 		"Is False When Input Matches 2": {
 			input: opslevel.ServiceUpdateInput{
-				Name: "Test",
+				Name: opslevel.RefOf("Test"),
 			},
 			service: service2,
 			result:  false,
 		},
 		"Is False When Input Matches 3": {
 			input: opslevel.ServiceUpdateInput{
-				Name:     "Test",
-				Language: "Python",
-				Tier:     "tier_1",
+				Name:      opslevel.RefOf("Test"),
+				Language:  opslevel.RefOf("Python"),
+				TierAlias: opslevel.RefOf("tier_1"),
 			},
 			service: service2,
 			result:  false,

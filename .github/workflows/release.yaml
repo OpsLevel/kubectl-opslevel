@@ -38,6 +38,7 @@ jobs:
         # https://github.com/abiosoft/colima/blob/main/docs/FAQ.md#cannot-connect-to-the-docker-daemon-at-unixvarrundockersock-is-the-docker-daemon-running
         run: |
           brew install docker
+          brew install jq
           colima start
           echo DOCKER_HOST="unix://${HOME}/.colima/default/docker.sock" >> $GITHUB_ENV
       - name: Login to Public ECR

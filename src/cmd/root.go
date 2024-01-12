@@ -54,14 +54,14 @@ func init() {
 	rootCmd.PersistentFlags().StringP("output", "o", "text", "Output format.  One of: json|text")
 	rootCmd.PersistentFlags().Bool("disable-service-create", false, "Turns off automatic service creation (service data will still be reconciled). Overrides environment variable 'OPSLEVEL_DISABLE_SERVICE_CREATE'.")
 
-	viper.BindPFlags(rootCmd.PersistentFlags())
-	viper.BindEnv("log-format", "OPSLEVEL_LOG_FORMAT", "OL_LOG_FORMAT", "OL_LOGFORMAT")
-	viper.BindEnv("log-level", "OPSLEVEL_LOG_LEVEL", "OL_LOG_LEVEL", "OL_LOGLEVEL")
-	viper.BindEnv("api-url", "OPSLEVEL_API_URL", "OL_API_URL", "OL_APIURL", "OPSLEVEL_APP_URL", "OL_APP_URL")
-	viper.BindEnv("api-token", "OPSLEVEL_API_TOKEN", "OL_API_TOKEN", "OL_APITOKEN")
-	viper.BindEnv("api-timeout", "OPSLEVEL_API_TIMEOUT")
-	viper.BindEnv("workers", "OPSLEVEL_WORKERS", "OL_WORKERS")
-	viper.BindEnv("disable-service-create", "OPSLEVEL_DISABLE_SERVICE_CREATE", "OL_DISABLE_SERVICE_CREATE")
+	cobra.CheckErr(viper.BindPFlags(rootCmd.PersistentFlags()))
+	cobra.CheckErr(viper.BindEnv("log-format", "OPSLEVEL_LOG_FORMAT", "OL_LOG_FORMAT", "OL_LOGFORMAT"))
+	cobra.CheckErr(viper.BindEnv("log-level", "OPSLEVEL_LOG_LEVEL", "OL_LOG_LEVEL", "OL_LOGLEVEL"))
+	cobra.CheckErr(viper.BindEnv("api-url", "OPSLEVEL_API_URL", "OL_API_URL", "OL_APIURL", "OPSLEVEL_APP_URL", "OL_APP_URL"))
+	cobra.CheckErr(viper.BindEnv("api-token", "OPSLEVEL_API_TOKEN", "OL_API_TOKEN", "OL_APITOKEN"))
+	cobra.CheckErr(viper.BindEnv("api-timeout", "OPSLEVEL_API_TIMEOUT"))
+	cobra.CheckErr(viper.BindEnv("workers", "OPSLEVEL_WORKERS", "OL_WORKERS"))
+	cobra.CheckErr(viper.BindEnv("disable-service-create", "OPSLEVEL_DISABLE_SERVICE_CREATE", "OL_DISABLE_SERVICE_CREATE"))
 	cobra.OnInitialize(func() {
 		setupEnv()
 		setupLogging()
@@ -117,7 +117,8 @@ func IsTextOutput() bool {
 }
 
 func setupConcurrency() {
-	maxprocs.Set(maxprocs.Logger(log.Debug().Msgf))
+	_, err := maxprocs.Set(maxprocs.Logger(log.Debug().Msgf))
+	cobra.CheckErr(err)
 
 	concurrency = viper.GetInt("workers")
 	if concurrency <= 0 {

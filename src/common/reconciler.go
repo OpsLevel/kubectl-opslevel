@@ -73,28 +73,28 @@ func (r *ServiceReconciler) ContainsAllTags(tagAssigns []opslevel.TagInput, serv
 }
 
 func (r *ServiceReconciler) ServiceNeedsUpdate(input opslevel.ServiceUpdateInput, service *opslevel.Service) bool {
-	if input.Name != "" && input.Name != service.Name {
+	if input.Name != nil && *input.Name != service.Name {
 		return true
 	}
-	if input.Product != "" && input.Product != service.Product {
+	if input.Product != nil && *input.Product != service.Product {
 		return true
 	}
-	if input.Description != "" && input.Description != service.Description {
+	if input.Description != nil && *input.Description != service.Description {
 		return true
 	}
-	if input.Language != "" && input.Language != service.Language {
+	if input.Language != nil && *input.Language != service.Language {
 		return true
 	}
-	if input.Framework != "" && input.Framework != service.Framework {
+	if input.Framework != nil && *input.Framework != service.Framework {
 		return true
 	}
-	if input.Tier != "" && input.Tier != service.Tier.Alias {
+	if input.TierAlias != nil && *input.TierAlias != service.Tier.Alias {
 		return true
 	}
-	if input.Lifecycle != "" && input.Lifecycle != service.Lifecycle.Alias {
+	if input.LifecycleAlias != nil && *input.LifecycleAlias != service.Lifecycle.Alias {
 		return true
 	}
-	if input.Owner != nil && *input.Owner.Alias != service.Owner.Alias {
+	if input.OwnerInput != nil && *input.OwnerInput.Alias != service.Owner.Alias {
 		return true
 	}
 	return false
@@ -162,26 +162,26 @@ func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.Servic
 func (r *ServiceReconciler) createService(registration opslevel_jq_parser.ServiceRegistration) (*opslevel.Service, error) {
 	serviceCreateInput := opslevel.ServiceCreateInput{
 		Name:        registration.Name,
-		Product:     registration.Product,
-		Description: registration.Description,
-		Language:    registration.Language,
-		Framework:   registration.Framework,
+		Product:     opslevel.RefOf[string](registration.Product),
+		Description: opslevel.RefOf[string](registration.Description),
+		Language:    opslevel.RefOf[string](registration.Language),
+		Framework:   opslevel.RefOf[string](registration.Framework),
 	}
 	if registration.System != "" {
 		serviceCreateInput.Parent = opslevel.NewIdentifier(registration.System)
 	}
 	if v, ok := opslevel.Cache.TryGetTier(registration.Tier); ok {
-		serviceCreateInput.Tier = string(v.Alias)
+		serviceCreateInput.TierAlias = opslevel.RefOf(v.Alias)
 	} else if registration.Tier != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", registration.Name, registration.Tier)
 	}
 	if v, ok := opslevel.Cache.TryGetLifecycle(registration.Lifecycle); ok {
-		serviceCreateInput.Lifecycle = string(v.Alias)
+		serviceCreateInput.LifecycleAlias = opslevel.RefOf(v.Alias)
 	} else if registration.Lifecycle != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", registration.Name, registration.Lifecycle)
 	}
 	if v, ok := opslevel.Cache.TryGetTeam(registration.Owner); ok {
-		serviceCreateInput.Owner = opslevel.NewIdentifier(v.Alias)
+		serviceCreateInput.OwnerInput = opslevel.NewIdentifier(v.Alias)
 	} else if registration.Owner != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", registration.Name, registration.Owner)
 	}
@@ -196,27 +196,27 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 
 func (r *ServiceReconciler) updateService(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	updateServiceInput := opslevel.ServiceUpdateInput{
-		Id:          service.Id,
-		Product:     registration.Product,
-		Description: registration.Description,
-		Language:    registration.Language,
-		Framework:   registration.Framework,
+		Id:          &service.Id,
+		Product:     opslevel.RefOf[string](registration.Product),
+		Description: opslevel.RefOf[string](registration.Description),
+		Language:    opslevel.RefOf[string](registration.Language),
+		Framework:   opslevel.RefOf[string](registration.Framework),
 	}
 	if registration.System != "" {
 		updateServiceInput.Parent = opslevel.NewIdentifier(registration.System)
 	}
 	if v, ok := opslevel.Cache.TryGetTier(registration.Tier); ok {
-		updateServiceInput.Tier = string(v.Alias)
+		updateServiceInput.TierAlias = opslevel.RefOf(v.Alias)
 	} else if registration.Tier != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", service.Name, registration.Tier)
 	}
 	if v, ok := opslevel.Cache.TryGetLifecycle(registration.Lifecycle); ok {
-		updateServiceInput.Lifecycle = string(v.Alias)
+		updateServiceInput.LifecycleAlias = opslevel.RefOf(v.Alias)
 	} else if registration.Lifecycle != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", service.Name, registration.Lifecycle)
 	}
 	if v, ok := opslevel.Cache.TryGetTeam(registration.Owner); ok {
-		updateServiceInput.Owner = opslevel.NewIdentifier(v.Alias)
+		updateServiceInput.OwnerInput = opslevel.NewIdentifier(v.Alias)
 	} else if registration.Owner != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", service.Name, registration.Owner)
 	}
@@ -279,7 +279,7 @@ func (r *ServiceReconciler) handleCreateTags(service *opslevel.Service, registra
 			continue
 		}
 		input := opslevel.TagCreateInput{
-			Id:    service.Id,
+			Id:    &service.Id,
 			Key:   tag.Key,
 			Value: tag.Value,
 		}
@@ -294,31 +294,31 @@ func (r *ServiceReconciler) handleCreateTags(service *opslevel.Service, registra
 
 func (r *ServiceReconciler) handleTools(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	for _, tool := range registration.Tools {
-		if service.HasTool(tool.Category, tool.DisplayName, tool.Environment) {
-			log.Debug().Msgf("[%s] Tool '{Category: %s, Environment: %s, Name: %s}' already exists on service ... skipping", service.Name, tool.Category, tool.Environment, tool.DisplayName)
+		if service.HasTool(tool.Category, tool.DisplayName, *tool.Environment) {
+			log.Debug().Msgf("[%s] Tool '{Category: %s, Environment: %s, Name: %s}' already exists on service ... skipping", service.Name, tool.Category, *tool.Environment, tool.DisplayName)
 			continue
 		}
-		tool.ServiceId = service.Id
+		tool.ServiceId = &service.Id
 		err := r.client.CreateTool(tool)
 		if err != nil {
-			log.Error().Msgf("[%s] Failed assigning tool '{Category: %s, Environment: %s, Name: %s}'\n\tREASON: %v", service.Name, tool.Category, tool.Environment, tool.DisplayName, err.Error())
+			log.Error().Msgf("[%s] Failed assigning tool '{Category: %s, Environment: %s, Name: %s}'\n\tREASON: %v", service.Name, tool.Category, *tool.Environment, tool.DisplayName, err.Error())
 		} else {
-			log.Info().Msgf("[%s] Ensured tool '{Category: %s, Environment: %s, Name: %s}'", service.Name, tool.Category, tool.Environment, tool.DisplayName)
+			log.Info().Msgf("[%s] Ensured tool '{Category: %s, Environment: %s, Name: %s}'", service.Name, tool.Category, *tool.Environment, tool.DisplayName)
 		}
 	}
 }
 
 func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	for _, repositoryCreate := range registration.Repositories {
-		repositoryAsString := fmt.Sprintf("{Alias: %s, Directory: %s, Name: %s}", *repositoryCreate.Repository.Alias, repositoryCreate.BaseDirectory, repositoryCreate.DisplayName)
+		repositoryAsString := fmt.Sprintf("{Alias: %s, Directory: %s, Name: %s}", *repositoryCreate.Repository.Alias, *repositoryCreate.BaseDirectory, *repositoryCreate.DisplayName)
 		foundRepository, foundRepositoryErr := r.client.GetRepositoryWithAlias(*repositoryCreate.Repository.Alias)
 		if foundRepositoryErr != nil {
 			log.Warn().Msgf("[%s] Repository with alias: '%s' not found so it cannot be attached to service ... skipping", service.Name, repositoryAsString)
 			continue
 		}
-		serviceRepository := foundRepository.GetService(service.Id, repositoryCreate.BaseDirectory)
+		serviceRepository := foundRepository.GetService(service.Id, *repositoryCreate.BaseDirectory)
 		if serviceRepository != nil {
-			if repositoryCreate.DisplayName != "" && serviceRepository.DisplayName != repositoryCreate.DisplayName {
+			if repositoryCreate.DisplayName != nil && serviceRepository.DisplayName != *repositoryCreate.DisplayName {
 				repositoryUpdate := opslevel.ServiceRepositoryUpdateInput{
 					Id:          serviceRepository.Id,
 					DisplayName: repositoryCreate.DisplayName,

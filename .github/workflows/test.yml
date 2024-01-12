@@ -20,8 +20,17 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21"
-      - name: Run Tests
-        run: |-
-          cd src/
-          go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
+          go-version-file: src/go.mod
+      - name: Install Task
+        uses: arduino/setup-task@v1
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run quality checks and test code
+        run: task ci
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./src/coverage.txt
+          fail_ci_if_error: false
+          verbose: true

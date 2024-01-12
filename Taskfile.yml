@@ -2,6 +2,8 @@
 
 version: '3'
 
+dotenv: ['.env']
+
 env:
   OPSLEVEL_GO_PKG: "github.com/opslevel/opslevel-go/v2023"
   SRC_DIR: "{{.TASKFILE_DIR}}/src"
@@ -12,6 +14,7 @@ tasks:
     cmds:
       - task: workspace
       - task: has-latest-opslevel-go
+      - which jq > /dev/null
       - task: install-gofumpt
       - task: install-golangci-lint
       - task: lint
@@ -39,6 +42,7 @@ tasks:
     cmds:
       - cmd: echo "Installing development tools..."
         silent: true
+      - task: brew-install-jq
       - task: install-changie
       - task: install-gofumpt
       - task: install-golangci-lint
@@ -93,6 +97,14 @@ tasks:
         fi
 
   # internal (not directly called) tasks
+
+  brew-install-jq:
+    internal: true
+    platforms: [darwin]
+    cmds: ["brew install jq"]
+    preconditions:
+      - sh: 'which brew'
+        msg: '"brew" needed to install "jq"- see https://brew.sh'
 
   go-install-tool:
     desc: go install '{{.GO_TOOL}}' and set GOBIN if not set
