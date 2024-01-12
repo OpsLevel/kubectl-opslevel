@@ -8,6 +8,8 @@ builds:
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
       - -trimpath
+    ldflags:
+      - "-s -w"
     goos:
       - darwin
     goarch:

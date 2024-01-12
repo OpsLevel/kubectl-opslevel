@@ -70,7 +70,8 @@ func init() {
 	configCmd.AddCommand(configSchemaCmd, configViewCmd, configSampleCmd)
 
 	configSampleCmd.Flags().Bool("simple", false, "Adjust the sample config to be less complex")
-	viper.BindPFlags(configSampleCmd.Flags())
+	err := viper.BindPFlags(configSampleCmd.Flags())
+	cobra.CheckErr(err)
 }
 
 func readConfig() []byte {

@@ -55,7 +55,8 @@ func init() {
 	collectCmd.Flags().StringP("integration-url", "i", "", "OpsLevel integration url (OPSLEVEL_INTEGRATION_URL)")
 	collectCmd.Flags().IntVar(&collectResyncInterval, "resync", 24, "The amount (in hours) before a full resync of the kubernetes cluster happens with OpsLevel. [default: 24]")
 
-	viper.BindEnv("integration-url", "OPSLEVEL_INTEGRATION_URL")
+	err := viper.BindEnv("integration-url", "OPSLEVEL_INTEGRATION_URL")
+	cobra.CheckErr(err)
 }
 
 func PushPayloads(integrationUrl string, queue <-chan string) {
@@ -63,7 +64,8 @@ func PushPayloads(integrationUrl string, queue <-chan string) {
 		restClient := createRestClient()
 		for {
 			for payload := range queue {
-				restClient.R().SetBody(payload).Post(integrationUrl)
+				_, err := restClient.R().SetBody(payload).Post(integrationUrl)
+				cobra.CheckErr(err)
 			}
 		}
 	}()
