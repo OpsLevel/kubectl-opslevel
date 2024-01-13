@@ -1,4 +1,0 @@
-kind: Feature
-body: Add option to disable automatic Service creation by passing --disable-service-create
-  OR setting OL_DISABLE_SERVICE_CREATE=1
-time: 2023-12-20T20:07:19.590353-05:00
