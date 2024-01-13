@@ -1,3 +1,3 @@
 kind: Bugfix
-body: '--config .' will now correctly read from ./opslevel-k8s.yaml and '--config -' will read from stdin
+body: "'--config .' will now correctly read from ./opslevel-k8s.yaml and '--config -' will read from stdin"
 time: 2024-01-05T16:33:02.994594-05:00
