@@ -409,7 +409,7 @@ func Test_Reconciler_HandleTools(t *testing.T) {
 	var (
 		err      error
 		newTools = func(names ...string) []opslevel.Tool {
-			var tools = make([]opslevel.Tool, len(names))
+			tools := make([]opslevel.Tool, len(names))
 			for i, d := range names {
 				tools[i] = opslevel.Tool{
 					Category:    opslevel.ToolCategoryCode,
@@ -420,7 +420,7 @@ func Test_Reconciler_HandleTools(t *testing.T) {
 			return tools
 		}
 		newToolInputs = func(names ...string) []opslevel.ToolCreateInput {
-			var inputs = make([]opslevel.ToolCreateInput, len(names))
+			inputs := make([]opslevel.ToolCreateInput, len(names))
 			for i, d := range names {
 				inputs[i] = opslevel.ToolCreateInput{
 					Category:    opslevel.ToolCategoryCode,

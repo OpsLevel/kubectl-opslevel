@@ -293,7 +293,7 @@ func (r *ServiceReconciler) handleCreateTags(service *opslevel.Service, registra
 }
 
 func (r *ServiceReconciler) handleTools(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
-	var set = map[string]struct{}{} // necessary for deduplication of tools created
+	set := map[string]struct{}{} // necessary for deduplication of tools created
 	for _, tool := range registration.Tools {
 		var (
 			toolEnv string
