@@ -7,7 +7,7 @@ import (
 	"time"
 
 	opslevel_common "github.com/opslevel/opslevel-common/v2023"
-	opslevel_k8s_controller "github.com/opslevel/opslevel-k8s-controller/v2023"
+	opslevel_k8s_controller "github.com/opslevel/opslevel-k8s-controller/v2024"
 
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/rs/zerolog/log"

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/opslevel/kubectl-opslevel/common"
-	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
+	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2024"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )

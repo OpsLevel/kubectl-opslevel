@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/opslevel/kubectl-opslevel/common"
-	"github.com/opslevel/opslevel-go/v2023"
-	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
+	"github.com/opslevel/opslevel-go/v2024"
+	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2024"
 	"github.com/rocktavious/autopilot/v2023"
 )
 

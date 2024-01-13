@@ -2,8 +2,8 @@ package common
 
 import (
 	"github.com/creasty/defaults"
-	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2023"
-	opslevel_k8s_controller "github.com/opslevel/opslevel-k8s-controller/v2023"
+	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2024"
+	opslevel_k8s_controller "github.com/opslevel/opslevel-k8s-controller/v2024"
 	"gopkg.in/yaml.v3"
 )
 

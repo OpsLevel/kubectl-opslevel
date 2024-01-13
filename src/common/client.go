@@ -1,7 +1,7 @@
 package common
 
 import (
-	"github.com/opslevel/opslevel-go/v2023"
+	"github.com/opslevel/opslevel-go/v2024"
 )
 
 type OpslevelClient struct {
