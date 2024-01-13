@@ -443,25 +443,13 @@ func Test_Reconciler_HandleTools(t *testing.T) {
 				Nodes: newTools("A", "B", "C", "D", "E"),
 			},
 		}
-		inputsReceived = map[string]struct{}{}
-		reconciler     = common.NewServiceReconciler(&common.OpslevelClient{
+		toolsCreated = []opslevel.ToolCreateInput{}
+		reconciler   = common.NewServiceReconciler(&common.OpslevelClient{
 			GetServiceHandler: func(alias string) (*opslevel.Service, error) {
 				return &service, nil
 			},
 			CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
-				var (
-					toolEnv                string
-					key                    string
-					receivedDuplicateInput bool
-				)
-				if tool.Environment != nil {
-					toolEnv = *tool.Environment
-				}
-				key = string(tool.Category) + string(tool.DisplayName) + string(toolEnv)
-				_, receivedDuplicateInput = inputsReceived[key]
-				// Assert
-				autopilot.Assert(t, receivedDuplicateInput == false, "got the same input twice (deduplication broken)")
-				inputsReceived[key] = struct{}{}
+				toolsCreated = append(toolsCreated, tool)
 				return nil
 			},
 		}, false)
@@ -469,4 +457,7 @@ func Test_Reconciler_HandleTools(t *testing.T) {
 	// Act
 	err = reconciler.Reconcile(registration)
 	autopilot.Ok(t, err)
+	// Assert
+	autopilot.Assert(t, len(toolsCreated) == 2 && toolsCreated[0].DisplayName == "F" &&
+		toolsCreated[1].DisplayName == "G", "expected tools created to be ['F','G']")
 }
