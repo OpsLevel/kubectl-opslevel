@@ -4,5 +4,6 @@ src/dist
 .DS_Store
 **/coverage.txt
 **/go.work*
+**/opslevel-k8s.yaml
 src/*.yaml
 **/.vscode
