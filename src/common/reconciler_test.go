@@ -403,3 +403,70 @@ func Test_Reconciler_ServiceNeedsUpdate(t *testing.T) {
 		autopilot.Equals(t, test.result, reconciler.ServiceNeedsUpdate(test.input, &test.service))
 	})
 }
+
+func Test_Reconciler_HandleTools(t *testing.T) {
+	// Arrange
+	var (
+		err      error
+		newTools = func(names ...string) []opslevel.Tool {
+			var tools = make([]opslevel.Tool, len(names))
+			for i, d := range names {
+				tools[i] = opslevel.Tool{
+					Category:    opslevel.ToolCategoryCode,
+					DisplayName: d,
+					Environment: "XXX",
+				}
+			}
+			return tools
+		}
+		newToolInputs = func(names ...string) []opslevel.ToolCreateInput {
+			var inputs = make([]opslevel.ToolCreateInput, len(names))
+			for i, d := range names {
+				inputs[i] = opslevel.ToolCreateInput{
+					Category:    opslevel.ToolCategoryCode,
+					DisplayName: d,
+					Environment: opslevel.RefOf("XXX"),
+				}
+			}
+			return inputs
+		}
+		registration = opslevel_jq_parser.ServiceRegistration{
+			Aliases: []string{"a_test_service"},
+			Tools:   newToolInputs("A", "B", "C", "D", "E", "F", "G", "F", "G", "F", "G", "F", "G"),
+		}
+		service = opslevel.Service{
+			ServiceId: opslevel.ServiceId{
+				Id: opslevel.ID("XXX"),
+			},
+			Name: "ATestService",
+			Tools: &opslevel.ToolConnection{
+				Nodes: newTools("A", "B", "C", "D", "E"),
+			},
+		}
+		inputsReceived = map[string]struct{}{}
+		reconciler     = common.NewServiceReconciler(&common.OpslevelClient{
+			GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+				return &service, nil
+			},
+			CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
+				var (
+					toolEnv                string
+					key                    string
+					receivedDuplicateInput bool
+				)
+				if tool.Environment != nil {
+					toolEnv = *tool.Environment
+				}
+				key = string(tool.Category) + string(tool.DisplayName) + string(toolEnv)
+				_, receivedDuplicateInput = inputsReceived[key]
+				// Assert
+				autopilot.Assert(t, receivedDuplicateInput == false, "got the same input twice (deduplication broken)")
+				inputsReceived[key] = struct{}{}
+				return nil
+			},
+		}, false)
+	)
+	// Act
+	err = reconciler.Reconcile(registration)
+	autopilot.Ok(t, err)
+}
