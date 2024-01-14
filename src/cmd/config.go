@@ -95,13 +95,25 @@ func readConfig() []byte {
 }
 
 func LoadConfig() (*common.Config, error) {
-	configBytes := readConfig()
-	config, err := common.ParseConfig(string(configBytes))
+	var (
+		config      *common.Config
+		configBytes []byte
+		err         error
+		help        string = "Please update the config file or create a new one with a sample from `kubectl opslevel config sample`"
+	)
+	configBytes = readConfig()
+	if len(configBytes) == 0 {
+		return nil, fmt.Errorf("the config file is empty | %s", help)
+	}
+	config, err = common.ParseConfig(string(configBytes))
 	if err != nil {
 		return nil, err
 	}
-	if config.Version != common.ConfigCurrentVersion {
-		return nil, fmt.Errorf("supported config version is '%s' but found '%s' | Please update config file or create a new sample with `kubectl opslevel config sample`", common.ConfigCurrentVersion, config.Version)
+	if config.Version == "" {
+		return nil, fmt.Errorf("could not parse version in the config file | %s", help)
+	} else if config.Version != common.ConfigCurrentVersion {
+		return nil, fmt.Errorf("supported config version is '%s' but found '%s' | %s",
+			common.ConfigCurrentVersion, config.Version, help)
 	}
 	return config, nil
 }
