@@ -1,0 +1,3 @@
+kind: Bugfix
+body: Fix bug where the program would crash with nil pointer when fetching k8s resources.
+time: 2024-01-14T02:21:01.056316-05:00
