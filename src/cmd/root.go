@@ -87,7 +87,7 @@ func setupLogging() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
 	if logFormat == "text" {
-		output := zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}
+		output := zerolog.ConsoleWriter{Out: os.Stderr}
 		log.Logger = log.Output(output)
 	}
 
