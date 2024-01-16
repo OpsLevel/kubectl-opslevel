@@ -21,7 +21,6 @@ var reconcileCmd = &cobra.Command{
 			err    error
 			resync time.Duration = time.Hour * time.Duration(reconcileResyncInterval)
 		)
-		cobra.CheckErr(err)
 		config, err := LoadConfig()
 		cobra.CheckErr(err)
 
