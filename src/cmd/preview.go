@@ -27,11 +27,7 @@ If the optional argument SAMPLES_COUNT=0 this will print out everything.`,
 			sampleCount int = 5
 		)
 		if len(args) == 1 {
-			sampleCount, err = strconv.Atoi(args[0])
-			if sampleCount < 0 {
-				err = fmt.Errorf("SAMPLES_COUNT must be >= 0, got %d", sampleCount)
-			}
-			cobra.CheckErr(err)
+			sampleCount, _ = strconv.Atoi(args[0])
 		}
 
 		config, err := LoadConfig()
@@ -64,17 +60,16 @@ func PrintServices(isTextOutput bool, samples int, queue <-chan opslevel_jq_pars
 	prettyJSON, err := json.MarshalIndent(sampled, "", "    ")
 	cobra.CheckErr(err)
 	fmt.Println(string(prettyJSON))
+	fmt.Println()
 
 	if isTextOutput {
-		var (
-			servicesCount int    = len(*services)
-			midText       string = "a random sample of "
-		)
+		var servicesCount int = len(*services)
 		if samples <= 0 || samples >= servicesCount {
-			samples = servicesCount
-			midText = ""
+			fmt.Println("This is the full list of services detected in your cluster.")
+		} else {
+			fmt.Printf("This is randomly selected list of %d / %d services detected in your cluster.\n", samples, servicesCount)
+			fmt.Println("If you want to see the full list of services detected, pass SAMPLES_COUNT=0.")
 		}
-		fmt.Printf("\nShowing %s%d / %d resources\n", midText, samples, servicesCount)
 		fmt.Println("\nIf you're happy with the above data you can reconcile it with OpsLevel by running:\n\n OPSLEVEL_API_TOKEN=XXX kubectl opslevel service import\n\nOtherwise, please adjust the config file and rerun this command")
 	}
 }

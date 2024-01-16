@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"time"
 
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2024"
@@ -21,9 +20,6 @@ var reconcileCmd = &cobra.Command{
 			err    error
 			resync time.Duration = time.Hour * time.Duration(reconcileResyncInterval)
 		)
-		if resync <= 0 {
-			err = fmt.Errorf("resync interval must be >= 0, got %d", resync)
-		}
 		cobra.CheckErr(err)
 		config, err := LoadConfig()
 		cobra.CheckErr(err)
