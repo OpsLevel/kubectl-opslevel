@@ -1,3 +1,0 @@
-kind: Feature
-body: Allow specifying --resync-minutes for reconciler, which overrides --resync (hours)
-time: 2024-01-15T22:21:07.334634-05:00
