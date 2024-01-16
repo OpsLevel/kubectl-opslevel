@@ -14,15 +14,18 @@ var reconcileResyncInterval int
 
 var reconcileCmd = &cobra.Command{
 	Use:   "reconcile",
-	Short: "Run in the foreground as a kubernetes controller to reconcile data with service entries in OpsLevel",
+	Short: "Run as a kubernetes controller to reconcile data in OpsLevel",
 	Long:  `Run in the foreground as a kubernetes controller to reconcile data with service entries in OpsLevel`,
 	Run: func(cmd *cobra.Command, args []string) {
+		var (
+			err    error
+			resync time.Duration = time.Hour * time.Duration(reconcileResyncInterval)
+		)
 		config, err := LoadConfig()
 		cobra.CheckErr(err)
 
 		client := createOpslevelClient()
 		common.SyncCache(client)
-		resync := time.Hour * time.Duration(reconcileResyncInterval)
 		common.SyncCaches(createOpslevelClient(), resync)
 		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
 		common.SetupControllers(config, queue, resync)
@@ -33,5 +36,5 @@ var reconcileCmd = &cobra.Command{
 
 func init() {
 	serviceCmd.AddCommand(reconcileCmd)
-	reconcileCmd.Flags().IntVar(&reconcileResyncInterval, "resync", 24, "The amount (in hours) before a full resync of the kubernetes cluster happens with OpsLevel. [default: 24]")
+	reconcileCmd.Flags().IntVar(&reconcileResyncInterval, "resync", 24, "The amount (in hours) before a full resync of the kubernetes cluster happens with OpsLevel.")
 }

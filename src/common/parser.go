@@ -51,7 +51,10 @@ func NewParserHandler(config Import, queue chan<- opslevel_jq_parser.ServiceRegi
 
 func SetupControllers(config *Config, queue chan<- opslevel_jq_parser.ServiceRegistration, resync time.Duration) {
 	go func() {
-		var wg sync.WaitGroup
+		var wg *sync.WaitGroup
+		if resync <= 0 {
+			wg = &sync.WaitGroup{}
+		}
 		for _, importConfig := range config.Service.Import {
 			controller, err := opslevel_k8s_controller.NewK8SController(importConfig.SelectorConfig, resync)
 			if err != nil {
@@ -61,7 +64,7 @@ func SetupControllers(config *Config, queue chan<- opslevel_jq_parser.ServiceReg
 			callback := NewParserHandler(importConfig, queue)
 			controller.OnAdd = callback
 			controller.OnUpdate = callback
-			controller.Start(&wg)
+			controller.Start(wg)
 		}
 		if resync <= 0 {
 			wg.Wait()
