@@ -1,3 +1,0 @@
-kind: Feature
-body: Allow setting resync interval in minutes using --resync-minutes
-time: 2024-01-15T12:38:00.89889-05:00

@@ -1,3 +1,0 @@
-kind: Bugfix
-body: Fix bug in `service preview` where SAMPLES_COUNT was not being set
-time: 2024-01-13T23:51:33.914298-05:00

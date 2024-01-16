@@ -1,4 +1,0 @@
-kind: Bugfix
-body: Fix bug where the program would consistently only find 0 or 1 k8s resources
-  at most.
-time: 2024-01-14T02:20:42.914545-05:00
