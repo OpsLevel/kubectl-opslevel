@@ -70,7 +70,7 @@ func PrintServices(isTextOutput bool, samples int, queue <-chan opslevel_jq_pars
 			servicesCount int    = len(*services)
 			midText       string = "a random sample of "
 		)
-		if samples == 0 || samples >= servicesCount {
+		if samples <= 0 || samples >= servicesCount {
 			samples = servicesCount
 			midText = ""
 		}
