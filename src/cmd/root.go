@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-resty/resty/v2"
-
 	"github.com/opslevel/opslevel-go/v2024"
 	"github.com/spf13/cobra"
 
@@ -163,8 +161,4 @@ func createOpslevelClient() *opslevel.Client {
 	)
 	cobra.CheckErr(client.Validate())
 	return client
-}
-
-func createRestClient() *resty.Client {
-	return opslevel.NewRestClient(opslevel.SetURL(viper.GetString("api-url")))
 }
