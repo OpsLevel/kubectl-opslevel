@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"time"
 
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2024"
@@ -27,7 +28,8 @@ var reconcileCmd = &cobra.Command{
 		common.SyncCache(client)
 		common.SyncCaches(createOpslevelClient(), resync)
 		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
-		common.SetupControllers(config, queue, resync)
+		reconcilerCtx, _ := context.WithCancel(context.Background()) // TODO: cancel on SIGINT/SIGTERM
+		common.SetupControllers(config, queue, resync, reconcilerCtx)
 		common.ReconcileServices(client, disableServiceCreation, queue)
 	},
 }

@@ -35,7 +35,7 @@ If the optional argument SAMPLES_COUNT=0 this will print out everything.`,
 		client := createOpslevelClient()
 		common.SyncCache(client)
 		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
-		common.SetupControllers(config, queue, 0)
+		common.SetupControllersSync(config, queue)
 		PrintServices(IsTextOutput(), sampleCount, queue)
 	},
 }

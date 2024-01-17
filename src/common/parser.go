@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -49,26 +50,45 @@ func NewParserHandler(config Import, queue chan<- opslevel_jq_parser.ServiceRegi
 	}
 }
 
-func SetupControllers(config *Config, queue chan<- opslevel_jq_parser.ServiceRegistration, resync time.Duration) {
+func newController(importConfig Import, queue chan<- opslevel_jq_parser.ServiceRegistration, sync time.Duration) (*opslevel_k8s_controller.K8SController, error) {
+	controller, err := opslevel_k8s_controller.NewK8SController(importConfig.SelectorConfig, sync)
+	if err != nil {
+		return nil, err
+	}
+	callback := NewParserHandler(importConfig, queue)
+	controller.OnAdd = callback
+	controller.OnUpdate = callback
+	return controller, err
+}
+
+// SetupControllersSync returns the pointer to a K8sController that will run only once.
+func SetupControllersSync(config *Config, queue chan<- opslevel_jq_parser.ServiceRegistration) {
 	go func() {
-		var wg *sync.WaitGroup
-		if resync <= 0 {
-			wg = &sync.WaitGroup{}
-		}
+		var wg sync.WaitGroup
 		for _, importConfig := range config.Service.Import {
-			controller, err := opslevel_k8s_controller.NewK8SController(importConfig.SelectorConfig, resync)
+			controller, err := newController(importConfig, queue, 0)
 			if err != nil {
 				log.Error().Err(err).Msg("failed to create k8s controller")
 				continue
 			}
-			callback := NewParserHandler(importConfig, queue)
-			controller.OnAdd = callback
-			controller.OnUpdate = callback
-			controller.Start(wg)
+			wg.Add(1)
+			controller.RunOnce(&wg)
 		}
-		if resync <= 0 {
-			wg.Wait()
-			close(queue)
+		wg.Wait()
+		close(queue)
+	}()
+}
+
+// SetupControllers returns the pointer to a K8sController that will run until the context is cancelled.
+func SetupControllers(config *Config, queue chan<- opslevel_jq_parser.ServiceRegistration, resync time.Duration, ctx context.Context) {
+	go func() {
+		for _, importConfig := range config.Service.Import {
+			controller, err := newController(importConfig, queue, resync)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to create k8s controller")
+				continue
+			}
+			controller.Run(ctx)
 		}
 	}()
 }

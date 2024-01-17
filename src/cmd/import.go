@@ -18,7 +18,7 @@ var importCmd = &cobra.Command{
 		client := createOpslevelClient()
 		common.SyncCache(client)
 		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
-		common.SetupControllers(config, queue, 0)
+		common.SetupControllersSync(config, queue)
 		common.ReconcileServices(client, disableServiceCreation, queue)
 		log.Info().Msg("Import Complete")
 	},
