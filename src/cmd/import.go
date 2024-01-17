@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/opslevel/kubectl-opslevel/common"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2024"
 	"github.com/rs/zerolog/log"
@@ -15,10 +17,11 @@ var importCmd = &cobra.Command{
 		config, err := LoadConfig()
 		cobra.CheckErr(err)
 
+		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
+		ctx := InitSignalHandler(context.Background(), queue)
 		client := createOpslevelClient()
 		common.SyncCache(client)
-		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
-		common.SetupControllersSync(config, queue)
+		common.SetupControllers(config, queue, 0, ctx)
 		common.ReconcileServices(client, disableServiceCreation, queue)
 		log.Info().Msg("Import Complete")
 	},
