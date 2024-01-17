@@ -293,23 +293,8 @@ func (r *ServiceReconciler) handleCreateTags(service *opslevel.Service, registra
 }
 
 func (r *ServiceReconciler) handleTools(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
-	set := make(map[string]struct{}) // necessary for deduplication of tools created
-	for _, tool := range registration.Tools {
-		var (
-			toolEnv string
-			key     string
-			ok      bool
-		)
-		if tool.Environment != nil {
-			toolEnv = *tool.Environment
-		}
-		key = string(tool.Category) + string(tool.DisplayName) + string(toolEnv)
-		if _, ok = set[key]; ok {
-			log.Debug().Msgf("[%s] Tool '{Category: %s, Environment: %s, Name: %s}' this is a duplicate entry ... skipping", service.Name, tool.Category, *tool.Environment, tool.DisplayName)
-			continue
-		}
-		set[key] = struct{}{}
-
+	deduplicated := opslevel_jq_parser.DeduplicatedTools(registration.Tools)
+	for _, tool := range deduplicated {
 		if service.HasTool(tool.Category, tool.DisplayName, *tool.Environment) {
 			log.Debug().Msgf("[%s] Tool '{Category: %s, Environment: %s, Name: %s}' already exists on service ... skipping", service.Name, tool.Category, *tool.Environment, tool.DisplayName)
 			continue
