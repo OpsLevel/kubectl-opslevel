@@ -65,6 +65,9 @@ func SetupControllers(config *Config, queue chan<- opslevel_jq_parser.ServiceReg
 			callback := NewParserHandler(importConfig, queue)
 			controller.OnAdd = callback
 			controller.OnUpdate = callback
+			if wg != nil {
+				wg.Add(1)
+			}
 			controller.Start(wg, ctx)
 		}
 		if resync <= 0 {
