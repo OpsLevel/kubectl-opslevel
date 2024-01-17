@@ -18,7 +18,7 @@ var importCmd = &cobra.Command{
 		cobra.CheckErr(err)
 
 		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
-		ctx := InitSignalHandler(context.Background(), queue)
+		ctx := common.InitSignalHandler(context.Background(), queue)
 		client := createOpslevelClient()
 		common.SyncCache(client)
 		common.SetupControllers(config, queue, 0, ctx)
