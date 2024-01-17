@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	opslevel_common "github.com/opslevel/opslevel-common/v2023"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2024"
 
 	"github.com/opslevel/kubectl-opslevel/common"
@@ -25,14 +24,13 @@ var reconcileCmd = &cobra.Command{
 		config, err := LoadConfig()
 		cobra.CheckErr(err)
 
+		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
+		ctx := InitSignalHandler(context.Background(), queue)
 		client := createOpslevelClient()
 		common.SyncCache(client)
 		common.SyncCaches(createOpslevelClient(), resync)
-		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
-		reconcilerCtx, _ := context.WithCancel(context.Background()) // TODO: cancel on SIGINT/SIGTERM
-		common.SetupControllers(config, queue, resync, reconcilerCtx)
+		common.SetupControllers(config, queue, resync, ctx)
 		common.ReconcileServices(client, disableServiceCreation, queue)
-		opslevel_common.Run("Controller")
 	},
 }
 
