@@ -12,13 +12,8 @@ type Import struct {
 	OpslevelConfig opslevel_jq_parser.ServiceRegistrationConfig `yaml:"opslevel" json:"opslevel" mapstructure:"opslevel"`
 }
 
-type Collect struct {
-	SelectorConfig opslevel_k8s_controller.K8SSelector `yaml:"selector" json:"selector" mapstructure:"selector"`
-}
-
 type Service struct {
-	Import  []Import  `json:"import"`
-	Collect []Collect `json:"collect"`
+	Import []Import `json:"import"`
 }
 
 type Config struct {
@@ -50,13 +45,6 @@ service:
             - .metadata.labels
           create: # tag with the same key name but with a different value with be added to the service
             - '{"environment": .spec.template.metadata.labels.environment}'
-  collect:
-    - selector: # This limits what data we look at in Kubernetes
-        apiVersion: "apps/v1" # only supports resources found in 'kubectl api-resources --verbs="get,list"'
-        kind: Deployment
-        excludes: # filters out resources if any expression returns truthy
-          - .metadata.namespace == "kube-system"
-          - .metadata.annotations."opslevel.com/ignore"
 `
 
 var ConfigSample = `#Sample Opslevel CLI Config
@@ -102,13 +90,6 @@ service:
           - .metadata.annotations.repo
           # find annotations with format: opslevel.com/repo.<displayname>.<repo.subpath.dots.turned.to.forwardslash>: <opslevel repo alias>
           - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/repo"))) | map({"name": .key | split(".")[2], "directory": .key | split(".")[3:] | join("/"), "repo": .value})'
-  collect:
-    - selector: # This limits what data we look at in Kubernetes
-        apiVersion: "apps/v1" # only supports resources found in 'kubectl api-resources --verbs="get,list"'
-        kind: Deployment
-        excludes: # filters out resources if any expression returns truthy
-          - .metadata.namespace == "kube-system"
-          - .metadata.annotations."opslevel.com/ignore"
 `
 
 func ParseConfig(data string) (*Config, error) {
