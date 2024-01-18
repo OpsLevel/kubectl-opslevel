@@ -295,16 +295,21 @@ func (r *ServiceReconciler) handleCreateTags(service *opslevel.Service, registra
 func (r *ServiceReconciler) handleTools(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	deduplicated := opslevel_jq_parser.DeduplicatedTools(registration.Tools)
 	for _, tool := range deduplicated {
-		if service.HasTool(tool.Category, tool.DisplayName, *tool.Environment) {
-			log.Debug().Msgf("[%s] Tool '{Category: %s, Environment: %s, Name: %s}' already exists on service ... skipping", service.Name, tool.Category, *tool.Environment, tool.DisplayName)
+		toolEnv := ""
+		if tool.Environment != nil {
+			toolEnv = *tool.Environment
+		}
+
+		if service.HasTool(tool.Category, tool.DisplayName, toolEnv) {
+			log.Debug().Msgf("[%s] Tool '{Category: %s, Environment: %s, Name: %s}' already exists on service ... skipping", service.Name, tool.Category, toolEnv, tool.DisplayName)
 			continue
 		}
 		tool.ServiceId = &service.Id
 		err := r.client.CreateTool(tool)
 		if err != nil {
-			log.Error().Msgf("[%s] Failed assigning tool '{Category: %s, Environment: %s, Name: %s}'\n\tREASON: %v", service.Name, tool.Category, *tool.Environment, tool.DisplayName, err.Error())
+			log.Error().Msgf("[%s] Failed assigning tool '{Category: %s, Environment: %s, Name: %s}'\n\tREASON: %v", service.Name, tool.Category, toolEnv, tool.DisplayName, err.Error())
 		} else {
-			log.Info().Msgf("[%s] Ensured tool '{Category: %s, Environment: %s, Name: %s}'", service.Name, tool.Category, *tool.Environment, tool.DisplayName)
+			log.Info().Msgf("[%s] Ensured tool '{Category: %s, Environment: %s, Name: %s}'", service.Name, tool.Category, toolEnv, tool.DisplayName)
 		}
 	}
 }
