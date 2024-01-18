@@ -11,7 +11,7 @@
 
 Install these:
 
-1. [minikube](https://minikube.sigs.k8s.io/docs/start/)  - this is a suggestion, you can also use **your own dev cluster if you have one.**
+1. [minikube](https://minikube.sigs.k8s.io/docs/start/)  - this is a suggestion, you can also use **your own dev cluster if you have one.** Other options include [kind](https://kind.sigs.k8s.io/) or [k3s](https://k3s.io/).
 1. [task](https://taskfile.dev/) - this will install dependencies for you.
 1. [OpsLevel CLI](https://github.com/OpsLevel/cli) - makes things way easier.
 
@@ -50,6 +50,8 @@ Next add some pods resources for testing and add a config file. You can use what
 kubectl apply -f ../docs/example-pod.yaml
 cp ../docs/example-opslevel-k8s.yaml .
 ```
+
+You can find even more examples of config files by doing `./kubectl-opslevel config sample -h`.
 
 ## Test commands locally
 
