@@ -47,8 +47,8 @@ minikube start
 Next add some pods resources for testing and add a config file. You can use whatever resources and config you'd like, there are some examples provided in this folder.
 
 ```
-kubectl apply -f docs/example-pod.yaml
-cp docs/example-opslevel-k8s.yaml .
+kubectl apply -f ../docs/example-pod.yaml
+cp ../docs/example-opslevel-k8s.yaml .
 ```
 
 ## Test commands locally
