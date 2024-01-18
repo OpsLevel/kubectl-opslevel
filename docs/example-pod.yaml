@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: random-nginx-1
+  labels:
+    app.kubernetes.io/name: proxy
+  annotations:
+    opslevel.com/description: the first nginx service
+    opslevel.com/owner: platform
+    opslevel.com/lifecycle: beta
+    opslevel.com/tier: tier_2
+    opslevel.com/tags.hello: world
+spec:
+  containers:
+  - name: nginx
+    image: nginx:stable
+    ports:
+      - containerPort: 50001
+        name: http-web-svc-1
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: random-nginx-2
+  labels:
+    app.kubernetes.io/name: proxy
+  annotations:
+    opslevel.com/description: the second nginx service
+    opslevel.com/owner: platform
+    opslevel.com/lifecycle: beta
+    opslevel.com/tier: tier_2
+    opslevel.com/tags.hello: world
+spec:
+  containers:
+  - name: nginx
+    image: nginx:stable
+    ports:
+      - containerPort: 50002
+        name: http-web-svc-2
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: random-nginx-3
+  labels:
+    app.kubernetes.io/name: proxy
+  annotations:
+    opslevel.com/description: the third nginx service
+    opslevel.com/owner: platform
+    opslevel.com/lifecycle: beta
+    opslevel.com/tier: tier_2
+    opslevel.com/tags.hello: world
+spec:
+  containers:
+  - name: nginx
+    image: nginx:stable
+    ports:
+      - containerPort: 50003
+        name: http-web-svc-3
