@@ -26,7 +26,7 @@ Then run:
 ```
 task setup
 cd src                       # from now on this tutorial is going to assume you're in the src/ directory.
-go build .
+go build -o kubectl-opslevel .
 ./kubectl-opslevel           # you can also use `go run main.go` or set an alias like `alias ko='./kubectl-opslevel'`
                              # and `alias bko='go build . && ./kubectl-opslevel'`
 ```
