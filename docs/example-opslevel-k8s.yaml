@@ -1,0 +1,20 @@
+version: 1.2.0
+service:
+    import:
+        - selector:
+            apiVersion: v1
+            kind: Pod
+            excludes:
+                - .metadata.namespace == "kube-system"
+                - .metadata.annotations."opslevel.com/ignore"
+          opslevel:
+            name: .metadata.name
+            description: .metadata.annotations."opslevel.com/description"
+            owner: .metadata.annotations."opslevel.com/owner"
+            aliases:
+                - '"\(.metadata.namespace)-\(.metadata.name)"'
+            tags:
+                assign:
+                    - '{"k8s_created": .metadata.creationTimestamp}'
+                    - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tags"))) | map({(.key | split(".")[2]): .value})'
+                    - .metadata.labels

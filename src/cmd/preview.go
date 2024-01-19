@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -32,10 +33,11 @@ If the optional argument SAMPLES_COUNT=0 this will print out everything.`,
 		config, err := LoadConfig()
 		cobra.CheckErr(err)
 
+		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
+		ctx := common.InitSignalHandler(context.Background(), queue)
 		client := createOpslevelClient()
 		common.SyncCache(client)
-		queue := make(chan opslevel_jq_parser.ServiceRegistration, 1)
-		common.SetupControllers(config, queue, 0)
+		common.SetupControllers(ctx, config, queue, 0)
 		PrintServices(IsTextOutput(), sampleCount, queue)
 	},
 }
@@ -64,7 +66,7 @@ func PrintServices(isTextOutput bool, samples int, queue <-chan opslevel_jq_pars
 	if isTextOutput {
 		var servicesCount int = len(*services)
 		if samples <= 0 || samples >= servicesCount {
-			fmt.Println("This is the full list of services detected in your cluster.")
+			fmt.Printf("This is the full list of %d services detected in your cluster.\n", servicesCount)
 		} else {
 			fmt.Printf("This is randomly selected list of %d / %d services detected in your cluster.\n", samples, servicesCount)
 			fmt.Println("If you want to see the full list of services detected, pass SAMPLES_COUNT=0.")

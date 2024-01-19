@@ -20,6 +20,8 @@
 <p align="center">
  <a href="#prerequisite">Prerequisite</a> |
  <a href="#installation">Installation</a> |
+ <a href="./src/CONTRIBUTING.md">CONTRIBUTING</a> |
+ <a href="./src/docs/Local-Development.md">Local Dev/Testing Instructions</a> |
  <a href="#quickstart">Quickstart</a> |
  <a href="https://docs.opslevel.com/docs/kubernetes-integration">Documentation</a> |
  <a href="#troubleshooting">Troubleshooting</a>
@@ -38,6 +40,7 @@
 ## Installation
 
 ```sh
+# OR - manually copy the binary to /usr/bin/local
 brew install opslevel/tap/kubectl
 ```
 
