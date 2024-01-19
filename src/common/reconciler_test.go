@@ -406,58 +406,57 @@ func Test_Reconciler_ServiceNeedsUpdate(t *testing.T) {
 
 func Test_Reconciler_HandleTools(t *testing.T) {
 	// Arrange
-	var (
-		err      error
-		newTools = func(names ...string) []opslevel.Tool {
-			tools := make([]opslevel.Tool, len(names))
-			for i, d := range names {
-				tools[i] = opslevel.Tool{
-					Category:    opslevel.ToolCategoryCode,
-					DisplayName: d,
-					Environment: "XXX",
-				}
-			}
-			return tools
-		}
-		newToolInputs = func(names ...string) []opslevel.ToolCreateInput {
-			inputs := make([]opslevel.ToolCreateInput, len(names))
-			for i, d := range names {
-				inputs[i] = opslevel.ToolCreateInput{
-					Category:    opslevel.ToolCategoryCode,
-					DisplayName: d,
-					Environment: opslevel.RefOf("XXX"),
-				}
-			}
-			return inputs
-		}
-		registration = opslevel_jq_parser.ServiceRegistration{
-			Aliases: []string{"a_test_service"},
-			Tools:   newToolInputs("A", "B", "C", "D", "E", "F", "G", "F", "G", "F", "G", "F", "G"),
-		}
-		service = opslevel.Service{
-			ServiceId: opslevel.ServiceId{
-				Id: opslevel.ID("XXX"),
-			},
-			Name: "ATestService",
-			Tools: &opslevel.ToolConnection{
-				Nodes: newTools("A", "B", "C", "D", "E"),
-			},
-		}
-		toolsCreated = []opslevel.ToolCreateInput{}
-		reconciler   = common.NewServiceReconciler(&common.OpslevelClient{
-			GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-				return &service, nil
-			},
-			CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
-				toolsCreated = append(toolsCreated, tool)
-				return nil
-			},
-		}, false)
-	)
+	registration := opslevel_jq_parser.ServiceRegistration{
+		Aliases: []string{"a_test_service"},
+		Tools:   newToolInputs("A", "B", "C", "D", "E", "F", "G", "F", "G", "F", "G", "F", "G"),
+	}
+	service := opslevel.Service{
+		ServiceId: opslevel.ServiceId{
+			Id: opslevel.ID("XXX"),
+		},
+		Name: "ATestService",
+		Tools: &opslevel.ToolConnection{
+			Nodes: newTools("A", "B", "C", "D", "E"),
+		},
+	}
+	toolsCreated := []opslevel.ToolCreateInput{}
+	reconciler := common.NewServiceReconciler(&common.OpslevelClient{
+		GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+			return &service, nil
+		},
+		CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
+			toolsCreated = append(toolsCreated, tool)
+			return nil
+		},
+	}, false)
 	// Act
-	err = reconciler.Reconcile(registration)
+	err := reconciler.Reconcile(registration)
 	autopilot.Ok(t, err)
 	// Assert
 	autopilot.Assert(t, len(toolsCreated) == 2 && toolsCreated[0].DisplayName == "F" &&
 		toolsCreated[1].DisplayName == "G", "expected tools created to be ['F','G']")
+}
+
+func newToolInputs(names ...string) []opslevel.ToolCreateInput {
+	inputs := make([]opslevel.ToolCreateInput, len(names))
+	for i, d := range names {
+		inputs[i] = opslevel.ToolCreateInput{
+			Category:    opslevel.ToolCategoryCode,
+			DisplayName: d,
+			Environment: opslevel.RefOf("XXX"),
+		}
+	}
+	return inputs
+}
+
+func newTools(names ...string) []opslevel.Tool {
+	tools := make([]opslevel.Tool, len(names))
+	for i, d := range names {
+		tools[i] = opslevel.Tool{
+			Category:    opslevel.ToolCategoryCode,
+			DisplayName: d,
+			Environment: "XXX",
+		}
+	}
+	return tools
 }
