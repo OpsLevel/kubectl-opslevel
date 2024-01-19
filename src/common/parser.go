@@ -50,7 +50,7 @@ func NewParserHandler(config Import, queue chan<- opslevel_jq_parser.ServiceRegi
 	}
 }
 
-func SetupControllers(config *Config, queue chan<- opslevel_jq_parser.ServiceRegistration, resync time.Duration, ctx context.Context) {
+func SetupControllers(ctx context.Context, config *Config, queue chan<- opslevel_jq_parser.ServiceRegistration, resync time.Duration) {
 	go func() {
 		var wg *sync.WaitGroup
 		if resync <= 0 {
