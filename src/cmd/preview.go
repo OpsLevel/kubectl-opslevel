@@ -37,7 +37,7 @@ If the optional argument SAMPLES_COUNT=0 this will print out everything.`,
 		ctx := common.InitSignalHandler(context.Background(), queue)
 		client := createOpslevelClient()
 		common.SyncCache(client)
-		common.SetupControllers(config, queue, 0, ctx)
+		common.SetupControllers(ctx, config, queue, 0)
 		PrintServices(IsTextOutput(), sampleCount, queue)
 	},
 }

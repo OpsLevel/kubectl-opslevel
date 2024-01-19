@@ -68,7 +68,7 @@ func SetupControllers(ctx context.Context, config *Config, queue chan<- opslevel
 			if wg != nil {
 				wg.Add(1)
 			}
-			controller.Start(wg, ctx)
+			controller.Start(ctx, wg)
 		}
 		if resync <= 0 {
 			wg.Wait()

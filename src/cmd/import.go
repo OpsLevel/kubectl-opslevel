@@ -21,7 +21,7 @@ var importCmd = &cobra.Command{
 		ctx := common.InitSignalHandler(context.Background(), queue)
 		client := createOpslevelClient()
 		common.SyncCache(client)
-		common.SetupControllers(config, queue, 0, ctx)
+		common.SetupControllers(ctx, config, queue, 0)
 		common.ReconcileServices(client, disableServiceCreation, queue)
 		log.Info().Msg("Import Complete")
 	},
