@@ -26,6 +26,13 @@ jobs:
         id: version
         run: |
           echo "RELEASE_VERSION=$(date +v%Y.%-m.%-d)" >> $GITHUB_OUTPUT
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
       - name: Import GPG Key
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v6
