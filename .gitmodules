@@ -1,9 +1,6 @@
 [submodule "src/submodules/opslevel-go"]
 	path = src/submodules/opslevel-go
 	url = git@github.com:OpsLevel/opslevel-go.git
-[submodule "src/submodules/opslevel-common"]
-	path = src/submodules/opslevel-common
-	url = git@github.com:OpsLevel/opslevel-common.git
 [submodule "src/submodules/opslevel-k8s-controller"]
 	path = src/submodules/opslevel-k8s-controller
 	url = git@github.com:OpsLevel/opslevel-k8s-controller.git

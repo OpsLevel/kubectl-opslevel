@@ -5,9 +5,7 @@ go 1.21.0
 require (
 	github.com/alecthomas/jsonschema v0.0.0-20220216202328-9eeeec9d044b
 	github.com/creasty/defaults v1.7.0
-	github.com/go-resty/resty/v2 v2.11.0
 	github.com/google/go-cmp v0.6.0
-	github.com/opslevel/opslevel-common/v2023 v2023.11.16
 	github.com/opslevel/opslevel-go/v2024 v2024.1.13
 	github.com/opslevel/opslevel-jq-parser/v2024 v2024.1.13
 	github.com/opslevel/opslevel-k8s-controller/v2024 v2024.1.13
@@ -35,6 +33,7 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.17.0 // indirect
+	github.com/go-resty/resty/v2 v2.11.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
@@ -104,4 +103,3 @@ require (
 //replace github.com/opslevel/opslevel-k8s-controller/v2024 => ./submodules/opslevel-k8s-controller
 //replace github.com/opslevel/opslevel-jq-parser/v2024 => ./submodules/opslevel-jq-parser
 //replace github.com/opslevel/opslevel-go/v2024 => ./submodules/opslevel-go
-//replace github.com/opslevel/opslevel-common/v2023 => ./submodules/opslevel-common

@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/opslevel/kubectl-opslevel/common"
-	opslevel_common "github.com/opslevel/opslevel-common/v2023"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2024"
 	_ "github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -50,7 +49,7 @@ func PrintServices(isTextOutput bool, samples int, queue <-chan opslevel_jq_pars
 	// Deduplicate ServiceRegistrations
 
 	// Sample the data
-	sampled := opslevel_common.GetSample[opslevel_jq_parser.ServiceRegistration](samples, *services)
+	sampled := common.GetSample[opslevel_jq_parser.ServiceRegistration](samples, *services)
 
 	// Print
 	if isTextOutput {
