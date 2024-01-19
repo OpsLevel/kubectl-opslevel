@@ -408,7 +408,7 @@ func Test_Reconciler_HandleTools(t *testing.T) {
 	// Arrange
 	registration := opslevel_jq_parser.ServiceRegistration{
 		Aliases: []string{"a_test_service"},
-		Tools:   newToolInputs("A", "B", "C", "D", "E", "F", "G", "F", "G", "F", "G", "F", "G"),
+		Tools:   newToolInputs("A", "B", "C", "D", "E", "F", "G"),
 	}
 	service := opslevel.Service{
 		ServiceId: opslevel.ServiceId{
