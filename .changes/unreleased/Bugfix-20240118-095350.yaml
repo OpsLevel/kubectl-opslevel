@@ -1,0 +1,3 @@
+kind: Bugfix
+body: Fix bug where logging tools would cause nil pointer exceptions
+time: 2024-01-18T09:53:50.81081-05:00
