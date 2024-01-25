@@ -5,6 +5,10 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+    paths:
+      - '.github/workflows/test.yml'
+      - 'src/**.go'
+      - 'go.mod'
 
 jobs:
   test:

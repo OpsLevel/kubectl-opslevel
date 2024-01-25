@@ -15,9 +15,8 @@ tasks:
   ci:
     desc: Workflow to run in CI
     cmds:
+      - task: workspace
       - task: has-latest-opslevel-dependencies
-      - defer: { task: undo-ignore-go-work-files }
-      - task: tmp-ignore-go-work-file
       - which jq > /dev/null
       - task: install-gofumpt
       - task: install-golangci-lint
@@ -73,7 +72,7 @@ tasks:
     cmds:
       - cmd: echo "Setting up opslevel-go workspace..."
         silent: true
-      - git submodule update --init --remote
+      - git -C .. submodule update --init --remote
       - go work init || true
       - go work use . $(git submodule | awk '{print $2}')
       - cmd: echo "submodules ready!"
