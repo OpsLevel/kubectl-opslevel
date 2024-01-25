@@ -1,0 +1,24 @@
+# https://taskfile.dev/
+
+version: '3'
+
+tasks:
+  lint:
+    desc: Formatting and linting
+    cmds:
+      - gofumpt -d .
+      - go vet ./...
+      - golangci-lint run
+
+  lintfix:
+    desc: Fix formatting and linting
+    cmds:
+      - go mod tidy
+      - gofumpt -w .
+      - golangci-lint run --fix
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test -v -cover -race ./... {{ .CLI_ARGS }}
+    silent: true

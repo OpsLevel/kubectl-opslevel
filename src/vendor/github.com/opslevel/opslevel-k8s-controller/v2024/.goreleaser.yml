@@ -1,0 +1,13 @@
+project_name: opslevel-k8s-controller
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - skip: true
+checksum:
+  disable: true
+changelog:
+  sort: desc
+  filters:
+    exclude:
+      - "^Merge"

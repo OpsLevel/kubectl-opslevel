@@ -1,0 +1,17 @@
+changesDir: .changes
+unreleasedDir: unreleased
+headerPath: header.tpl.md
+versionHeaderPath: ""
+changelogPath: CHANGELOG.md
+versionExt: md
+versionFormat: '## [{{.Time.Format "January 02, 2006"}}]((https://github.com/rocktavious/autopilot/compare/{{.PreviousVersion}}...{{.Version}}))'
+kindFormat: '### {{.Kind}}'
+changeFormat: '* {{.Body}}'
+kinds:
+- label: Feature
+- label: Refactor
+- label: Deprecated
+- label: Removed
+- label: Bugfix
+- label: Docs
+- label: Security

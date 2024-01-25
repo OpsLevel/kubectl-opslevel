@@ -1,0 +1,10 @@
+project_name: autopilot
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - skip: true
+checksum:
+  disable: true
+changelog:
+  skip: true

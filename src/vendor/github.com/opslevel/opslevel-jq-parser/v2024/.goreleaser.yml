@@ -1,0 +1,13 @@
+project_name: opslevel-jq-parser
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - skip: true
+checksum:
+  disable: true
+changelog:
+  sort: desc
+  filters:
+    exclude:
+      - "^Merge"

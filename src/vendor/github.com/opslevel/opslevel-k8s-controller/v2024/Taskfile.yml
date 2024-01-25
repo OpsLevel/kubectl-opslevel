@@ -1,0 +1,97 @@
+
+
+version: '3'
+
+dotenv: ['.env']
+
+tasks:
+  ci:
+    desc: Workflow to run in CI
+    deps:
+      - install-gofumpt
+      - install-golangci-lint
+    cmds:
+      - which jq > /dev/null
+      - task: lint
+      - task: test
+
+  lint:
+    desc: Formatting and linting
+    dir: "{{.SRC_DIR}}"
+    cmds:
+      - test -z "$(gofumpt -d -e . | tee /dev/stderr)"
+      - go vet ./...
+      - golangci-lint run
+
+  fix:
+    desc: Fix formatting, linting, go.mod, and update submodule
+    dir: "{{.SRC_DIR}}"
+    cmds:
+      - gofumpt -w .
+      - go get -u
+      - go mod tidy
+      - golangci-lint run --fix
+
+  setup:
+    desc: Setup linter, formatter, etc. for local testing and CI
+    cmds:
+      - cmd: echo "Installing development tools..."
+        silent: true
+      - task: brew-install-jq
+      - task: install-changie
+      - task: install-gofumpt
+      - task: install-golangci-lint
+      - cmd: echo "Development tools installed!"
+        silent: true
+
+  test:
+    desc: Run tests
+    dir: "{{.SRC_DIR}}"
+    cmds:
+      - go test -race -coverprofile=coverage.txt -covermode=atomic -v ./... {{ .CLI_ARGS }}
+
+  # internal (not directly called) tasks
+
+  brew-install-jq:
+    internal: true
+    platforms: [darwin]
+    cmds: ["brew install jq"]
+    preconditions:
+      - sh: 'which brew'
+        msg: '"brew" needed to install "jq"- see https://brew.sh'
+
+  go-install-tool:
+    desc: go install '{{.GO_TOOL}}' and set GOBIN if not set
+    internal: true
+    silent: true
+    vars:
+      IS_TOOL_INSTALLED:
+        sh: which {{.GO_TOOL}} > /dev/null || echo "1"
+    cmds:
+      - test -z "{{.IS_TOOL_INSTALLED}}" || echo "Installing {{.GO_TOOL}}..."
+      - test -z "{{.IS_TOOL_INSTALLED}}" || go install {{.GO_TOOL_PATH}}
+      - test -n $(go env GOBIN) || go env -w GOBIN=$(go env GOPATH)/bin
+      - echo "  '{{.GO_TOOL}}' is installed."
+    requires:
+      vars: [GO_TOOL, GO_TOOL_PATH]
+
+  install-changie:
+    desc: go install "changie"
+    internal: true
+    cmds:
+      - task: go-install-tool
+        vars: { GO_TOOL: "changie", GO_TOOL_PATH: "github.com/miniscruff/changie@latest" }
+
+  install-gofumpt:
+    desc: go install "gofumpt"
+    internal: true
+    cmds:
+      - task: go-install-tool
+        vars: { GO_TOOL: "gofumpt", GO_TOOL_PATH: "mvdan.cc/gofumpt@latest" }
+
+  install-golangci-lint:
+    desc: go install "golangci-lint"
+    internal: true
+    cmds:
+      - task: go-install-tool
+        vars: { GO_TOOL: "golangci-lint", GO_TOOL_PATH: "github.com/golangci/golangci-lint/cmd/golangci-lint@latest" }
