@@ -83,9 +83,6 @@ tasks:
     desc: Check if opslevel dependencies are up to date in go.mod
     dir: "{{.SRC_DIR}}"
     silent: true
-    vars:
-      GO_WORK: "go.work"
-      TMP_GO_WORK: "tmp_go.work"
     cmds:
       - defer: { task: undo-ignore-go-work-files }
       - task: tmp-ignore-go-work-file
