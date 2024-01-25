@@ -100,21 +100,15 @@ tasks:
     dir: "{{.SRC_DIR}}"
     internal: true
     silent: true
-    vars:
-      GO_WORK: "go.work"
-      TMP_GO_WORK: "tmp_go.work"
     cmds:
-      - if [[ -f {{.GO_WORK}} ]]; then mv {{.GO_WORK}} {{.TMP_GO_WORK}}; fi
+      - if [[ -f "go.work" ]]; then mv "go.work"  "tmp_go.work"; fi
 
   undo-ignore-go-work-files:
     dir: "{{.SRC_DIR}}"
     internal: true
     silent: true
-    vars:
-      GO_WORK: "go.work"
-      TMP_GO_WORK: "tmp_go.work"
     cmds:
-      - if [[ -f {{.TMP_GO_WORK}} ]]; then mv {{.TMP_GO_WORK}} {{.GO_WORK}}; fi
+      - if [[ -f "tmp_go.work" ]]; then mv "tmp_go.work" "go.work"; fi
 
   has-latest-opslevel-dep:
     dir: "{{.SRC_DIR}}"
