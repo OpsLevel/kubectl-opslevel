@@ -40,7 +40,6 @@ tasks:
       - gofumpt -w .
       - go mod tidy
       - golangci-lint run --fix
-      - golangci-lint run --fix
 
   setup:
     desc: Setup linter, formatter, etc. for local testing and CI
