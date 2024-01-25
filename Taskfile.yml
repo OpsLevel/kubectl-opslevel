@@ -72,7 +72,7 @@ tasks:
     cmds:
       - cmd: echo "Setting up opslevel-go workspace..."
         silent: true
-      - git submodule update --init --remote
+      - git -C .. submodule update --init --remote
       - go work init || true
       - go work use . $(git submodule | awk '{print $2}')
       - cmd: echo "submodules ready!"
