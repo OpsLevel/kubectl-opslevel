@@ -7,8 +7,26 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  release-version:
+    runs-on: ubuntu-latest
+    outputs:
+      release_version: ${{ steps.version.outputs.RELEASE_VERSION }}
+    steps:
+      - name: Set Release Version
+        id: version
+        run: |
+          echo "RELEASE_VERSION=$(date +v%Y.%-m.%-d)" >> $GITHUB_OUTPUT
+      - name: Ensure Release Does Not Exist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete $RELEASE_VERSION || true
+
+  release-brew:
     runs-on: macos-latest
+    needs: release-version
+    env:
+      RELEASE_VERSION: ${{ needs.release-version.outputs.release_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,11 +39,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21"
-      - name: Set Release Version
-        id: version
-        run: |
-          echo "RELEASE_VERSION=$(date +v%Y.%-m.%-d)" >> $GITHUB_OUTPUT
+          go-version-file: src/go.mod
       - name: Cache Go modules
         uses: actions/cache@v4
         with:
@@ -39,15 +53,45 @@ jobs:
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
-      - name: Setup Docker macOS
-        if: runner.os == 'macos'
-        # https://github.com/actions/runner-images/issues/17#issuecomment-1537238473
-        # https://github.com/abiosoft/colima/blob/main/docs/FAQ.md#cannot-connect-to-the-docker-daemon-at-unixvarrundockersock-is-the-docker-daemon-running
+      - name: Ensure Changelog
         run: |
-          brew install docker
-          brew install jq
-          colima start
-          echo DOCKER_HOST="unix://${HOME}/.colima/default/docker.sock" >> $GITHUB_ENV
+          git config user.name "OpsLevel Bots"
+          git config user.email "bots@opslevel.com"
+          if test -f ./.changes/$RELEASE_VERSION.md
+          then
+            echo "Skip Changie..."
+          else
+            go install github.com/miniscruff/changie@latest
+            changie batch $RELEASE_VERSION
+            changie merge
+            git add .
+            git commit -m "Cut Release '$RELEASE_VERSION'"
+            git push origin HEAD
+          fi
+          git tag -f $RELEASE_VERSION -m "Cut Release '$RELEASE_VERSION'"
+          git push -f origin refs/tags/$RELEASE_VERSION
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5.0.0
+        with:
+          args: release --clean --release-notes=../.changes/$RELEASE_VERSION.md
+          workdir: ./src
+        env:
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
+
+  release-docker:
+    runs-on: ubuntu-latest
+    needs: release-version
+    env:
+      RELEASE_VERSION: ${{ needs.release-version.outputs.RELEASE_VERSION }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.ORG_GITHUB_TOKEN }}
+      - name: Fetch All Tags
+        run: git fetch --force --tags
       - name: Login to Public ECR
         uses: docker/login-action@v3
         with:
@@ -56,47 +100,22 @@ jobs:
           password: ${{ secrets.ECR_PUBLIC_AWS_SECRET_ACCESS_KEY }}
         env:
           AWS_REGION: us-east-1
-      - name: Ensure Release Does Not Exist
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release delete ${{ steps.version.outputs.RELEASE_VERSION }} || true
-      - name: Ensure Changelog
-        run: |
-          git config user.name "OpsLevel Bots"
-          git config user.email "bots@opslevel.com"
-          if test -f ./.changes/${{ steps.version.outputs.RELEASE_VERSION }}.md
-          then
-            echo "Skip Changie..."
-          else
-            go install github.com/miniscruff/changie@latest
-            changie batch ${{ steps.version.outputs.RELEASE_VERSION }}
-            changie merge
-            git add .
-            git commit -m "Cut Release '${{ steps.version.outputs.RELEASE_VERSION }}'"
-            git push origin HEAD
-          fi
-          git tag -f ${{ steps.version.outputs.RELEASE_VERSION }} -m "Cut Release '${{ steps.version.outputs.RELEASE_VERSION }}'"
-          git push -f origin refs/tags/${{ steps.version.outputs.RELEASE_VERSION }}
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5.0.0
-        with:
-          args: release --clean --release-notes=../.changes/${{ steps.version.outputs.RELEASE_VERSION }}.md
-          workdir: ./src
-        env:
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
       - name: Docker Build And Push
         env:
           IMAGE: "public.ecr.aws/opslevel/kubectl-opslevel"
-          TAG: ${{ steps.version.outputs.RELEASE_VERSION }}
+          TAG: $RELEASE_VERSION
         run: |
-          docker build -t "${IMAGE}:latest" -t "${IMAGE}:{TAG}" .
+          cd ./src
+          docker build -t "${IMAGE}:latest" -t "${IMAGE}:${TAG}" .
           docker push "${IMAGE}:latest"
           docker push "${IMAGE}:${TAG}"
-      - name: Report Release To OpsLevel
-        uses: opslevel/report-deploy-github-action@v0.7.0
-        with:
-          integration_url: ${{ secrets.DEPLOY_INTEGRATION_URL }}
-          service: "opslevel_kubernetes_sync"
+
+  report-release:
+    needs: [release-brew, release-docker]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Report Release To OpsLevel
+      uses: opslevel/report-deploy-github-action@v0.7.0
+      with:
+        integration_url: ${{ secrets.DEPLOY_INTEGRATION_URL }}
+        service: "opslevel_kubernetes_sync"
