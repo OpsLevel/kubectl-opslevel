@@ -16,8 +16,8 @@ tasks:
     desc: Workflow to run in CI
     cmds:
       - task: has-latest-opslevel-dependencies
-      - task: tmp-ignore-go-work-file
       - defer: { task: undo-ignore-go-work-files }
+      - task: tmp-ignore-go-work-file
       - which jq > /dev/null
       - task: install-gofumpt
       - task: install-golangci-lint
@@ -87,8 +87,8 @@ tasks:
       GO_WORK: "go.work"
       TMP_GO_WORK: "tmp_go.work"
     cmds:
-      - task: tmp-ignore-go-work-file
       - defer: { task: undo-ignore-go-work-files }
+      - task: tmp-ignore-go-work-file
       - for: [ "{{.OPSLEVEL_GO_PKG}}", "{{.OPSLEVEL_JQ_PARSER_PKG}}", "{{.OPSLEVEL_K8S_CONTROLLER_PKG}}" ]
         task: has-latest-opslevel-dep
         vars:
