@@ -1,3 +1,0 @@
-kind: Feature
-body: Add support for clean exit on SIGINT/SIGTERM
-time: 2024-01-17T14:34:24.999559-05:00

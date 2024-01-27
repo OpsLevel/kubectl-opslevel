@@ -1,4 +1,0 @@
-kind: Removed
-body: Remove 'collect' subcommand that sends custom check events to an integration
-  URL
-time: 2024-01-16T11:08:12.773464-05:00

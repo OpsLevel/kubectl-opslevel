@@ -1,4 +1,0 @@
-kind: Bugfix
-body: Fix bug where service reconcile only ran once at the start of the program regardless
-  of selected resync interval
-time: 2024-01-15T22:24:13.526613-05:00
