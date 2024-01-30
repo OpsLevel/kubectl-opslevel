@@ -157,9 +157,9 @@ func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.Servic
 	case serviceAliasesResult_MultipleServicesFound:
 		aliases := ""
 		if service != nil {
-			aliases = strings.Join(service.Aliases, "\", \"")
+			aliases = fmt.Sprintf(`"%s"`, strings.Join(service.Aliases, `", "`))
 		}
-		return nil, fmt.Errorf("[%s] found multiple services with aliases = [\"%s\"].  cannot know which service to target for update ... skipping reconciliation", registration.Name, aliases)
+		return nil, fmt.Errorf("[%s] found multiple services with aliases = [%s].  cannot know which service to target for update ... skipping reconciliation", registration.Name, aliases)
 	case serviceAliasesResult_APIErrorHappened:
 		return nil, fmt.Errorf("[%s] api error during service lookup by alias.  unable to guarantee service was found or not ... skipping reconciliation", registration.Name)
 	}
