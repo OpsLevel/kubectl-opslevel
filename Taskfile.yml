@@ -13,11 +13,16 @@ env:
 
 tasks:
   ci:
-    desc: Workflow to run in CI
+    desc: Workflow to run in CI - MacOS only
+    deps: [brew-install-jq]
+    vars:
+      CGO_CFLAGS:
+        sh: echo -I$(dirname $(dirname $(which jq)))/include
+      CGO_LDFLAGS:
+        sh: echo -L$(dirname $(dirname $(which jq)))/lib
     cmds:
       - task: workspace
       - task: has-latest-opslevel-dependencies
-      - which jq > /dev/null
       - task: install-gofumpt
       - task: install-golangci-lint
       - task: lint
@@ -128,7 +133,7 @@ tasks:
   brew-install-jq:
     internal: true
     platforms: [darwin]
-    cmds: ["brew install jq"]
+    cmds: ["which jq > /dev/null || brew install jq"]
     preconditions:
       - sh: 'which brew'
         msg: '"brew" needed to install "jq"- see https://brew.sh'
