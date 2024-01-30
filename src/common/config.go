@@ -23,7 +23,6 @@ type Config struct {
 
 var ConfigCurrentVersion = "1.2.0"
 
-// Make sure we only use spaces inside of these samples
 var ConfigSimple = `#Simple Opslevel CLI Config
 version: "1.2.0"
 service:
@@ -73,7 +72,7 @@ service:
         tags:
           assign: # tag with the same key name but with a different value will be updated on the service
             - '{"imported": "kubectl-opslevel"}'
-            # find annoations with format: opslevel.com/tags.<key name>: <value>
+            # find annotations with format: opslevel.com/tags.<key name>: <value>
             - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tags"))) | map({(.key | split(".")[2]): .value})'
             - .metadata.labels
           create: # tag with the same key name but with a different value with be added to the service

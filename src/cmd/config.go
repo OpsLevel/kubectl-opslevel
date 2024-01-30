@@ -8,7 +8,7 @@ import (
 
 	"github.com/opslevel/kubectl-opslevel/common"
 
-	yaml "gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v3"
 
 	"github.com/alecthomas/jsonschema"
 	"github.com/spf13/cobra"
@@ -99,7 +99,7 @@ func LoadConfig() (*common.Config, error) {
 		config      *common.Config
 		configBytes []byte
 		err         error
-		help        string = "Please update the config file or create a new one with a sample from `kubectl opslevel config sample`"
+		help        = "Please update the config file or create a new one with a sample from `kubectl opslevel config sample`"
 	)
 	configBytes = readConfig()
 	if len(configBytes) == 0 {

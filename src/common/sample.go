@@ -9,8 +9,8 @@ import (
 // The elements are copied using assignment, so this is a shallow clone.
 func GetSample[T any](sampleCount int, data []T) []T {
 	var (
-		keys = make([]int, len(data))
-		copy []T
+		keys   = make([]int, len(data))
+		copied []T
 	)
 	if sampleCount < 1 || sampleCount >= len(data) {
 		return slices.Clone(data)
@@ -23,9 +23,9 @@ func GetSample[T any](sampleCount int, data []T) []T {
 	})
 	keys = keys[:sampleCount]
 	slices.Sort(keys)
-	copy = make([]T, sampleCount)
+	copied = make([]T, sampleCount)
 	for i := range keys {
-		copy[i] = data[keys[i]]
+		copied[i] = data[keys[i]]
 	}
-	return copy
+	return copied
 }

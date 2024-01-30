@@ -189,7 +189,7 @@ Generally speaking if we detect a json `null` value we do build any data for tha
 
 ### String interpolation has NULL in it
 
-There is a special edgecase with string interpolation and null values that we cannot handle that is documented [here](/../../issues/36)
+There is a special edgecase with string interpolation and null values that we cannot handle that is documented [here](https://github.com/OpsLevel/kubectl-opslevel/issues/36)
 
 ### Unable to list all Namespaces
 
