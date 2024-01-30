@@ -23,6 +23,7 @@ tasks:
     cmds:
       - task: install-gofumpt
       - task: install-golangci-lint
+      - task: install-nilaway
       - task: lint
       - task: workspace
       - task: has-latest-opslevel-dependencies
@@ -55,6 +56,7 @@ tasks:
       - task: install-changie
       - task: install-gofumpt
       - task: install-golangci-lint
+      - task: install-nilaway
       - cmd: echo "Development tools installed!"
         silent: true
       - task: workspace
@@ -160,6 +162,13 @@ tasks:
     cmds:
       - task: go-install-tool
         vars: { GO_TOOL: "changie", GO_TOOL_PATH: "github.com/miniscruff/changie@latest" }
+
+  install-nilaway:
+    desc: go install "nilaway"
+    internal: true
+    cmds:
+      - task: go-install-tool
+        vars: { GO_TOOL: "changie", GO_TOOL_PATH: "go.uber.org/nilaway@latest" }
 
   install-gofumpt:
     desc: go install "gofumpt"
