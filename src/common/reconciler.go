@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"golang.org/x/exp/maps"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/opslevel/opslevel-go/v2024"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2024"
@@ -126,17 +128,14 @@ func (r *ServiceReconciler) lookupService(registration opslevel_jq_parser.Servic
 		return nil, serviceAliasesResult_APIErrorHappened
 	}
 	foundServicesCount := len(foundServices)
-	if foundServicesCount > 1 {
+	if foundServicesCount == 1 {
+		key := maps.Keys(foundServices)[0]
+		return foundServices[key], serviceAliasesResult_AliasMatched
+	} else if foundServicesCount > 1 {
 		return nil, serviceAliasesResult_MultipleServicesFound
-	}
-	if foundServicesCount < 1 {
+	} else {
 		return nil, serviceAliasesResult_NoAliasesMatched
 	}
-	output := make([]*opslevel.Service, 0)
-	for _, value := range foundServices {
-		output = append(output, value)
-	}
-	return output[0], serviceAliasesResult_AliasMatched
 }
 
 func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.ServiceRegistration) (*opslevel.Service, error) {
