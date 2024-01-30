@@ -419,7 +419,7 @@ func Test_Reconciler_HandleTools(t *testing.T) {
 			Nodes: newTools("A", "B", "C", "D", "E"),
 		},
 	}
-	toolsCreated := []opslevel.ToolCreateInput{}
+	toolsCreated := make([]opslevel.ToolCreateInput, 0)
 	reconciler := common.NewServiceReconciler(&common.OpslevelClient{
 		GetServiceHandler: func(alias string) (*opslevel.Service, error) {
 			return &service, nil

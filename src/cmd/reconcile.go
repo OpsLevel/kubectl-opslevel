@@ -19,7 +19,7 @@ var reconcileCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var (
 			err    error
-			resync time.Duration = time.Hour * time.Duration(reconcileResyncInterval)
+			resync = time.Hour * time.Duration(reconcileResyncInterval)
 		)
 		config, err := LoadConfig()
 		cobra.CheckErr(err)

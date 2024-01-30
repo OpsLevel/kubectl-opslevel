@@ -24,7 +24,7 @@ If the optional argument SAMPLES_COUNT=0 this will print out everything.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var (
 			err         error
-			sampleCount int = 5
+			sampleCount = 5
 		)
 		if len(args) == 1 {
 			sampleCount, _ = strconv.Atoi(args[0])
@@ -64,7 +64,7 @@ func PrintServices(isTextOutput bool, samples int, queue <-chan opslevel_jq_pars
 	fmt.Println()
 
 	if isTextOutput {
-		var servicesCount int = len(*services)
+		servicesCount := len(*services)
 		if samples <= 0 || samples >= servicesCount {
 			fmt.Printf("This is the full list of %d services detected in your cluster.\n", servicesCount)
 		} else {
