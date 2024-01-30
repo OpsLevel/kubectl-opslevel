@@ -21,11 +21,11 @@ tasks:
       CGO_LDFLAGS:
         sh: echo -L$(dirname $(dirname $(which jq)))/lib
     cmds:
-      - task: workspace
-      - task: has-latest-opslevel-dependencies
       - task: install-gofumpt
       - task: install-golangci-lint
       - task: lint
+      - task: workspace
+      - task: has-latest-opslevel-dependencies
       - task: test
 
   lint:
