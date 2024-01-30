@@ -33,7 +33,7 @@ tasks:
     dir: "{{.SRC_DIR}}"
     cmds:
       - test -z "$(gofumpt -d -e . | tee /dev/stderr)"
-      - golangci-lint run
+      - golangci-lint run --exclude submodules/**
       - nilaway -test=false -include-pkgs='github.com/opslevel/kubectl-opslevel' ./...
 
   fix:
@@ -43,7 +43,7 @@ tasks:
       - task: update-opslevel-deps
       - gofumpt -w .
       - go mod tidy
-      - golangci-lint run --fix
+      - golangci-lint run --exclude submodules/** --fix
       - nilaway -fix -test=false -include-pkgs='github.com/opslevel/kubectl-opslevel' ./...
 
   setup:
