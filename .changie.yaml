@@ -15,6 +15,7 @@ kinds:
   - label: Bugfix
   - label: Security
   - label: Deprecated
+  - label: Dependency
   - label: Removed
   - label: Docs
 newlines:
