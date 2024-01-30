@@ -237,12 +237,10 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 		updatedService, updateServiceErr := r.client.UpdateService(updateServiceInput)
 		if updateServiceErr != nil {
 			log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
-		} else if updatedService != nil {
-			if diff := cmp.Diff(service, updatedService); diff != "" {
-				log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
-			}
-		} else {
+		} else if updatedService == nil {
 			log.Warn().Msgf("[%s] unexpected happened: updated service but the result is nil", service.Name)
+		} else if diff := cmp.Diff(service, updatedService); diff != "" {
+			log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
 		}
 	} else {
 		log.Info().Msgf("[%s] No changes detected to fields - skipping update", service.Name)
