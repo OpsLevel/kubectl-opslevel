@@ -33,8 +33,8 @@ tasks:
     dir: "{{.SRC_DIR}}"
     cmds:
       - test -z "$(gofumpt -d -e . | tee /dev/stderr)"
-      - go vet ./...
       - golangci-lint run
+      - nilaway -test=false -include-pkgs='github.com/opslevel/kubectl-opslevel' ./...
 
   fix:
     desc: Fix formatting and linting
@@ -44,6 +44,7 @@ tasks:
       - gofumpt -w .
       - go mod tidy
       - golangci-lint run --fix
+      - nilaway -fix -test=false -include-pkgs='github.com/opslevel/kubectl-opslevel' ./...
 
   setup:
     desc: Setup linter, formatter, etc. for local testing and CI
