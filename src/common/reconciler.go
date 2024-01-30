@@ -114,14 +114,14 @@ func (r *ServiceReconciler) lookupService(registration opslevel_jq_parser.Servic
 		foundService, err := r.client.GetService(alias)
 		if err != nil {
 			gotError = err
-		} else if foundService != nil {
-			if foundService.Id != "" {
-				foundServices[string(foundService.Id)] = foundService
-			} else {
-				log.Warn().Msgf("unexpected happened: got service with alias '%s' but the result has no ID", alias)
-			}
-		} else {
+			log.Warn().Err(err).Msgf("got an error when trying to get service with alias '%s'", alias)
+		} else if foundService == nil {
 			log.Warn().Msgf("unexpected happened: got service with alias '%s' but the result is nil", alias)
+		} else if foundService.Id == "" {
+			log.Warn().Msgf("unexpected happened: got service with alias '%s' but the result has no ID", alias)
+		} else {
+			// happy path
+			foundServices[string(foundService.Id)] = foundService
 		}
 	}
 	if gotError != nil {
