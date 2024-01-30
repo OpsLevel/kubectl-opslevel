@@ -64,7 +64,7 @@ func PrintServices(isTextOutput bool, samples int, queue <-chan opslevel_jq_pars
 	fmt.Println()
 
 	if isTextOutput {
-		var servicesCount = len(*services)
+		servicesCount := len(*services)
 		if samples <= 0 || samples >= servicesCount {
 			fmt.Printf("This is the full list of %d services detected in your cluster.\n", servicesCount)
 		} else {
