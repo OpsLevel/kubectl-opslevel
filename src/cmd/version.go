@@ -8,7 +8,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var commit, version string
+var (
+	commit, version  string
+	shortVersionFlag bool
+)
 
 type Build struct {
 	Version string `json:"version,omitempty"`
@@ -31,6 +34,10 @@ var versionCmd = &cobra.Command{
 }
 
 func runVersion(cmd *cobra.Command, args []string) error {
+	if shortVersionFlag {
+		fmt.Printf("%s-%s\n", version, commit)
+		return nil
+	}
 	goInfo := GoInfo{
 		Version:  runtime.Version(),
 		Compiler: runtime.Compiler,
@@ -48,4 +55,5 @@ func runVersion(cmd *cobra.Command, args []string) error {
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
+	versionCmd.PersistentFlags().BoolVar(&shortVersionFlag, "short", false, "Print only version number")
 }
