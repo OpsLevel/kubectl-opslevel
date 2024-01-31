@@ -23,6 +23,7 @@ tasks:
     cmds:
       - task: install-gofumpt
       - task: install-golangci-lint
+      - task: install-nilaway
       - task: lint
       - task: workspace
       - task: has-latest-opslevel-dependencies
@@ -33,8 +34,8 @@ tasks:
     dir: "{{.SRC_DIR}}"
     cmds:
       - test -z "$(gofumpt -d -e . | tee /dev/stderr)"
-      - go vet ./...
-      - golangci-lint run
+      - golangci-lint run --timeout 5m
+      - nilaway -test=false -include-pkgs='github.com/opslevel/kubectl-opslevel' ./...
 
   fix:
     desc: Fix formatting and linting
@@ -43,7 +44,8 @@ tasks:
       - task: update-opslevel-deps
       - gofumpt -w .
       - go mod tidy
-      - golangci-lint run --fix
+      - golangci-lint run --timeout 5m --fix
+      - nilaway -fix -test=false -include-pkgs='github.com/opslevel/kubectl-opslevel' ./...
 
   setup:
     desc: Setup linter, formatter, etc. for local testing and CI
@@ -54,6 +56,7 @@ tasks:
       - task: install-changie
       - task: install-gofumpt
       - task: install-golangci-lint
+      - task: install-nilaway
       - cmd: echo "Development tools installed!"
         silent: true
       - task: workspace
@@ -159,6 +162,13 @@ tasks:
     cmds:
       - task: go-install-tool
         vars: { GO_TOOL: "changie", GO_TOOL_PATH: "github.com/miniscruff/changie@latest" }
+
+  install-nilaway:
+    desc: go install "nilaway"
+    internal: true
+    cmds:
+      - task: go-install-tool
+        vars: { GO_TOOL: "nilaway", GO_TOOL_PATH: "go.uber.org/nilaway/cmd/nilaway@latest" }
 
   install-gofumpt:
     desc: go install "gofumpt"

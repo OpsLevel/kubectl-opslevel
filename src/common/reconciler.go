@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"golang.org/x/exp/maps"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/opslevel/opslevel-go/v2024"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2024"
@@ -112,27 +114,28 @@ func (r *ServiceReconciler) lookupService(registration opslevel_jq_parser.Servic
 		foundService, err := r.client.GetService(alias)
 		if err != nil {
 			gotError = err
+			log.Warn().Err(err).Msgf("got an error when trying to get service with alias '%s'", alias)
+		} else if foundService == nil {
+			log.Warn().Msgf("unexpected happened: got service with alias '%s' but the result is nil", alias)
+		} else if foundService.Id == "" {
+			log.Warn().Msgf("unexpected happened: got service with alias '%s' but the result has no ID", alias)
 		} else {
-			if foundService.Id != "" {
-				foundServices[string(foundService.Id)] = foundService
-			}
+			// happy path
+			foundServices[string(foundService.Id)] = foundService
 		}
 	}
 	if gotError != nil {
 		return nil, serviceAliasesResult_APIErrorHappened
 	}
 	foundServicesCount := len(foundServices)
-	if foundServicesCount > 1 {
+	if foundServicesCount == 1 {
+		key := maps.Keys(foundServices)[0]
+		return foundServices[key], serviceAliasesResult_AliasMatched
+	} else if foundServicesCount > 1 {
 		return nil, serviceAliasesResult_MultipleServicesFound
-	}
-	if foundServicesCount < 1 {
+	} else {
 		return nil, serviceAliasesResult_NoAliasesMatched
 	}
-	var output []*opslevel.Service
-	for _, value := range foundServices {
-		output = append(output, value)
-	}
-	return output[0], serviceAliasesResult_AliasMatched
 }
 
 func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.ServiceRegistration) (*opslevel.Service, error) {
@@ -152,7 +155,11 @@ func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.Servic
 	case serviceAliasesResult_AliasMatched:
 		r.updateService(service, registration)
 	case serviceAliasesResult_MultipleServicesFound:
-		return nil, fmt.Errorf("[%s] found multiple services with aliases = [\"%s\"].  cannot know which service to target for update ... skipping reconciliation", registration.Name, strings.Join(service.Aliases, "\", \""))
+		aliases := ""
+		if service != nil {
+			aliases = fmt.Sprintf(`"%s"`, strings.Join(service.Aliases, `", "`))
+		}
+		return nil, fmt.Errorf("[%s] found multiple services with aliases = [%s].  cannot know which service to target for update ... skipping reconciliation", registration.Name, aliases)
 	case serviceAliasesResult_APIErrorHappened:
 		return nil, fmt.Errorf("[%s] api error during service lookup by alias.  unable to guarantee service was found or not ... skipping reconciliation", registration.Name)
 	}
@@ -188,13 +195,19 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 	service, err := r.client.CreateService(serviceCreateInput)
 	if err != nil {
 		return service, fmt.Errorf("[%s] Failed creating service\n\tREASON: %v", registration.Name, err.Error())
-	} else {
+	} else if service != nil {
 		log.Info().Msgf("[%s] Created new service", service.Name)
+		return service, nil
+	} else {
+		return nil, fmt.Errorf("[%s] unexpected happened: created service but the result is nil", registration.Name)
 	}
-	return service, err
 }
 
 func (r *ServiceReconciler) updateService(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
+	if service == nil {
+		log.Warn().Msgf("[%s] unexpected happened: service passed to be updated is nil", registration.Name)
+		return
+	}
 	updateServiceInput := opslevel.ServiceUpdateInput{
 		Id:          &service.Id,
 		Product:     opslevel.RefOf[string](registration.Product),
@@ -224,10 +237,10 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 		updatedService, updateServiceErr := r.client.UpdateService(updateServiceInput)
 		if updateServiceErr != nil {
 			log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
-		} else {
-			if diff := cmp.Diff(service, updatedService); diff != "" {
-				log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
-			}
+		} else if updatedService == nil {
+			log.Warn().Msgf("[%s] unexpected happened: updated service but the result is nil", service.Name)
+		} else if diff := cmp.Diff(service, updatedService); diff != "" {
+			log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
 		}
 	} else {
 		log.Info().Msgf("[%s] No changes detected to fields - skipping update", service.Name)
