@@ -46,15 +46,6 @@ func runVersion(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func getGoInfo() GoInfo {
-	return GoInfo{
-		Version:  runtime.Version(),
-		Compiler: runtime.Compiler,
-		OS:       runtime.GOOS,
-		Arch:     runtime.GOARCH,
-	}
-}
-
 func init() {
 	rootCmd.AddCommand(versionCmd)
 }
