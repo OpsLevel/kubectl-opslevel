@@ -1,10 +1,6 @@
 package main
 
-import (
-	"fmt"
-
-	"github.com/opslevel/kubectl-opslevel/cmd"
-)
+import "github.com/opslevel/kubectl-opslevel/cmd"
 
 var (
 	version = "dev"
@@ -12,5 +8,5 @@ var (
 )
 
 func main() {
-	cmd.Execute(fmt.Sprintf("%s-%0.12s", version, commit))
+	cmd.Execute(commit, version)
 }
