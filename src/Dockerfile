@@ -12,8 +12,10 @@ RUN go mod download
 
 COPY . /src
 
+ARG COMMIT
+ARG VERSION
 RUN GOOS=linux \
-    go build -ldflags="-s -w" -o kubectl-opslevel main.go
+  go build -ldflags="-s -w -X main.version=${VERSION} -X main.commit=${COMMIT}" -o kubectl-opslevel main.go
 
 FROM golang:1.21 as release
 COPY --from=builder /src/kubectl-opslevel /usr/local/bin

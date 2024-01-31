@@ -32,7 +32,7 @@ brews:
       ENV["CGO_CFLAGS"] = "-I#{Formula["jq"].opt_include}"
       ENV["CGO_LDFLAGS"] = "-L#{Formula["jq"].opt_lib}"
 
-      system "go", "build", *std_go_args(output: bin/"kubectl-opslevel", ldflags: "-s -w"), "./src"
+      system "go", "build", *std_go_args(output: bin/"kubectl-opslevel", ldflags: "-s -w -X main.version={{.Tag}} -X main.commit={{.ShortCommit}}"), "./src"
     test: |
       system "#{bin}/kubectl-opslevel", "version"
     repository:
