@@ -79,6 +79,23 @@ jobs:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: OpsLevel/homebrew-tap
+          token: ${{ secrets.ORG_GITHUB_TOKEN }}
+          path: homebrew-tap
+      - name: Update homebrew
+        working-directory: homebrew-tap
+        run: |
+          cd Formula
+          awk -v ver="2024.2.4" '/version/ {sub(/[0-9]+\.[0-9]+\.[0-9]+/, ver)} {print}' kubectl.rb > tmp.rb
+          mv tmp.rb kubectl.rb
+          git config user.name "OpsLevel Bots"
+          git config user.email "bots@opslevel.com"
+          git add .
+          git commit -m "Cut Release '$RELEASE_VERSION'"
+          git push -f origin HEAD
 
   release-docker:
     runs-on: ubuntu-latest
