@@ -21,10 +21,10 @@ type Config struct {
 	Service Service `json:"service"`
 }
 
-var ConfigCurrentVersion = "1.2.0"
+var ConfigCurrentVersion = "1.3.0"
 
 var ConfigSimple = `#Simple Opslevel CLI Config
-version: "1.2.0"
+version: "1.3.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
@@ -50,7 +50,7 @@ service:
 `
 
 var ConfigSample = `#Sample Opslevel CLI Config
-version: "1.2.0"
+version: "1.3.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
