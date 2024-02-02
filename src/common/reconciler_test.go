@@ -437,6 +437,54 @@ func Test_Reconciler_HandleTools(t *testing.T) {
 		toolsCreated[1].DisplayName == "G", "expected tools created to be ['F','G']")
 }
 
+func Test_Reconciler_HandleProperties(t *testing.T) {
+	// Arrange
+	type TestCase struct {
+		DefAlias string
+		Value    string
+	}
+	testCases := []TestCase{
+		{DefAlias: "prop_bool", Value: "true"},
+		{DefAlias: "prop_empty_object", Value: "{}"},
+		{DefAlias: "prop_empty_string", Value: ""},
+		{DefAlias: "prop_object", Value: `{"message":"hello world","condition":true}`},
+		{DefAlias: "prop_string", Value: "hello world"},
+	}
+	props := make(map[string]string)
+	for _, x := range testCases {
+		props[x.DefAlias] = x.Value
+	}
+	registration := opslevel_jq_parser.ServiceRegistration{
+		Aliases:    []string{"a_test_service_with_properties"},
+		Properties: props,
+	}
+	service := opslevel.Service{
+		ServiceId: opslevel.ServiceId{
+			Id: opslevel.ID("XXX"),
+		},
+		Name:       "ATestServiceWithProperties",
+		Properties: nil,
+	}
+	results := make([]opslevel.PropertyInput, 0)
+	reconciler := common.NewServiceReconciler(&common.OpslevelClient{
+		GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+			return &service, nil
+		},
+		AssignPropertyHandler: func(input opslevel.PropertyInput) error {
+			results = append(results, input)
+			return nil
+		},
+	}, false)
+	// Act
+	err := reconciler.Reconcile(registration)
+	autopilot.Ok(t, err)
+	// Assert
+	autopilot.Assert(t, len(results) == len(testCases), fmt.Sprintf("expected %d property assignments", len(testCases)))
+	for _, x := range results {
+		autopilot.Assert(t, x.Owner.Id == opslevel.NewID(), fmt.Sprintf("unexpected owner id '%s' - should match service", service.Id))
+	}
+}
+
 func newToolInputs(names ...string) []opslevel.ToolCreateInput {
 	inputs := make([]opslevel.ToolCreateInput, len(names))
 	for i, d := range names {
