@@ -52,6 +52,7 @@ func (r *ServiceReconciler) Reconcile(registration opslevel_jq_parser.ServiceReg
 	r.handleCreateTags(service, registration)
 	r.handleTools(service, registration)
 	r.handleRepositories(service, registration)
+	r.handleProperties(service, registration)
 	return nil
 }
 
@@ -358,6 +359,25 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 			log.Error().Msgf("[%s] Failed assigning repository '%s'\n\tREASON: %v", service.Name, repositoryAsString, err.Error())
 		} else {
 			log.Info().Msgf("[%s] Attached repository '%s'", service.Name, repositoryAsString)
+		}
+	}
+}
+
+func (r *ServiceReconciler) handleProperties(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
+	for def, val := range registration.Properties {
+		definition := opslevel.NewIdentifier(def)
+		owner := opslevel.NewIdentifier(string(service.Id))
+		value := opslevel.JsonString(val)
+		toString := fmt.Sprintf("prop{def='%s' owner='%s' value='%s'}", *definition.Alias, *owner.Id, value)
+		fmt.Println(toString)
+		input := opslevel.PropertyInput{
+			Definition: *definition,
+			Owner:      *owner,
+			Value:      value,
+		}
+		err := r.client.AssignPropertyHandler(input)
+		if err != nil {
+			log.Error().Msgf("[%s] Failed assigning property '%s'\n\tREASON: %v", service.Name, toString, err)
 		}
 	}
 }

@@ -439,20 +439,12 @@ func Test_Reconciler_HandleTools(t *testing.T) {
 
 func Test_Reconciler_HandleProperties(t *testing.T) {
 	// Arrange
-	type TestCase struct {
-		DefAlias string
-		Value    string
-	}
-	testCases := []TestCase{
-		{DefAlias: "prop_bool", Value: "true"},
-		{DefAlias: "prop_empty_object", Value: "{}"},
-		{DefAlias: "prop_empty_string", Value: ""},
-		{DefAlias: "prop_object", Value: `{"message":"hello world","condition":true}`},
-		{DefAlias: "prop_string", Value: "hello world"},
-	}
-	props := make(map[string]string)
-	for _, x := range testCases {
-		props[x.DefAlias] = x.Value
+	props := map[string]string{
+		"prop_bool":         "true",
+		"prop_empty_object": "{}",
+		"prop_empty_string": "",
+		"prop_object":       `{"message":"hello world","condition":true}`,
+		"prop_string":       "hello world",
 	}
 	registration := opslevel_jq_parser.ServiceRegistration{
 		Aliases:    []string{"a_test_service_with_properties"},
@@ -460,7 +452,7 @@ func Test_Reconciler_HandleProperties(t *testing.T) {
 	}
 	service := opslevel.Service{
 		ServiceId: opslevel.ServiceId{
-			Id: opslevel.ID("XXX"),
+			Id: opslevel.ID("Z2lkOi8vb3BzbGV2ZWwvU2VydmljZS85NzAyMg"),
 		},
 		Name:       "ATestServiceWithProperties",
 		Properties: nil,
@@ -475,13 +467,25 @@ func Test_Reconciler_HandleProperties(t *testing.T) {
 			return nil
 		},
 	}, false)
+
 	// Act
 	err := reconciler.Reconcile(registration)
 	autopilot.Ok(t, err)
+
 	// Assert
-	autopilot.Assert(t, len(results) == len(testCases), fmt.Sprintf("expected %d property assignments", len(testCases)))
+	expLen, gotLen := len(props), len(results)
+	autopilot.Assert(t, gotLen == expLen, fmt.Sprintf("expected to get %d property assignments got %d", expLen, gotLen))
 	for _, x := range results {
-		autopilot.Assert(t, x.Owner.Id == opslevel.NewID(), fmt.Sprintf("unexpected owner id '%s' - should match service", service.Id))
+		def := *x.Definition.Alias
+		expId, gotId := service.ServiceId.Id, *x.Owner.Id
+		autopilot.Assert(t, gotId == expId, fmt.Sprintf("[%s] unexpected owner ID '%s' - does not match service ID '%s'", def, gotId, expId))
+
+		if expVal, ok := props[def]; ok {
+			gotVal := string(x.Value)
+			autopilot.Assert(t, gotVal == expVal, fmt.Sprintf("[%s] expected value for to be: '%s' got: '%s'", def, expVal, gotVal))
+		} else {
+			autopilot.Ok(t, fmt.Errorf("unexpected property definition alias: '%s'", def))
+		}
 	}
 }
 

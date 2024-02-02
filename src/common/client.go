@@ -10,6 +10,7 @@ type OpslevelClient struct {
 	UpdateServiceHandler           func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error)
 	CreateAliasHandler             func(input opslevel.AliasCreateInput) error
 	AssignTagsHandler              func(service *opslevel.Service, tags map[string]string) error
+	AssignPropertyHandler          func(input opslevel.PropertyInput) error
 	CreateTagHandler               func(input opslevel.TagCreateInput) error
 	CreateToolHandler              func(tool opslevel.ToolCreateInput) error
 	GetRepositoryWithAliasHandler  func(alias string) (*opslevel.Repository, error)
@@ -50,6 +51,13 @@ func (c *OpslevelClient) AssignTags(service *opslevel.Service, tags map[string]s
 		return nil
 	}
 	return c.AssignTagsHandler(service, tags)
+}
+
+func (c *OpslevelClient) AssignProperty(input opslevel.PropertyInput) error {
+	if c.AssignPropertyHandler == nil {
+		return nil
+	}
+	return c.AssignPropertyHandler(input)
 }
 
 func (c *OpslevelClient) CreateTag(input opslevel.TagCreateInput) error {
@@ -104,6 +112,10 @@ func NewOpslevelClient(client *opslevel.Client) *OpslevelClient {
 		},
 		AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
 			_, err := client.AssignTags(string(service.Id), tags)
+			return err
+		},
+		AssignPropertyHandler: func(input opslevel.PropertyInput) error {
+			_, err := client.PropertyAssign(input)
 			return err
 		},
 		CreateTagHandler: func(input opslevel.TagCreateInput) error {
