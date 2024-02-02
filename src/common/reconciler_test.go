@@ -2,7 +2,10 @@ package common_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/opslevel-go/v2024"
@@ -480,7 +483,20 @@ func Test_Reconciler_HandleProperties(t *testing.T) {
 		expId, gotId := service.ServiceId.Id, *x.Owner.Id
 		autopilot.Assert(t, gotId == expId, fmt.Sprintf("[%s] unexpected owner ID '%s' - does not match service ID '%s'", def, gotId, expId))
 
-		if expVal, ok := props[def]; ok {
+		if val, ok := props[def]; ok {
+			// TODO: hack to get around NewJSONInput not reading strings properly.
+			var value opslevel.JsonString
+			if strings.HasPrefix(val, "{") && strings.HasSuffix(val, "}") {
+				value = opslevel.JsonString(val)
+			} else {
+				valuePtr, err := opslevel.NewJSONInput(val)
+				if err != nil {
+					log.Error().Err(err).Msgf("[%s] Failed parsing property: '%s'", service.Name, def)
+					continue
+				}
+				value = *valuePtr
+			}
+			expVal := string(value)
 			gotVal := string(x.Value)
 			autopilot.Assert(t, gotVal == expVal, fmt.Sprintf("[%s] expected value for to be: '%s' got: '%s'", def, expVal, gotVal))
 		} else {

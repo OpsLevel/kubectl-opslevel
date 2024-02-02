@@ -10,6 +10,7 @@ metadata:
     opslevel.com/lifecycle: beta
     opslevel.com/tier: tier_2
     opslevel.com/tags.hello: world
+    selected_color: 'green'
 spec:
   containers:
   - name: nginx
@@ -30,6 +31,7 @@ metadata:
     opslevel.com/lifecycle: beta
     opslevel.com/tier: tier_2
     opslevel.com/tags.hello: world
+    selected_color: 'turquoise' # invalid value (validation rules - expects enum)
 spec:
   containers:
   - name: nginx
@@ -50,6 +52,7 @@ metadata:
     opslevel.com/lifecycle: beta
     opslevel.com/tier: tier_2
     opslevel.com/tags.hello: world
+    key1key2: '{"key1": "val1", "key2": "val2"}'
 spec:
   containers:
   - name: nginx
@@ -57,3 +60,24 @@ spec:
     ports:
       - containerPort: 50003
         name: http-web-svc-3
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: random-nginx-4
+  labels:
+    app.kubernetes.io/name: proxy
+  annotations:
+    opslevel.com/description: the fourth nginx service
+    opslevel.com/owner: platform
+    opslevel.com/lifecycle: beta
+    opslevel.com/tier: tier_2
+    opslevel.com/tags.hello: world
+    key1key2: 'hello world' # invalid value (wrong type - expects object)
+spec:
+  containers:
+    - name: nginx
+      image: nginx:stable
+      ports:
+        - containerPort: 50004
+          name: http-web-svc-4
