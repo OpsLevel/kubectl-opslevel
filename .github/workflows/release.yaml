@@ -89,12 +89,12 @@ jobs:
         working-directory: homebrew-tap
         run: |
           cd Formula
-          awk -v ver="2024.2.4" '/version/ {sub(/[0-9]+\.[0-9]+\.[0-9]+/, ver)} {print}' kubectl.rb > tmp.rb
+          awk -v ver="${RELEASE_VERSION}" '/version/, /tags/ {sub(/[0-9]+\.[0-9]+\.[0-9]+/, ver)} {print}' kubectl.rb > tmp.rb
           mv tmp.rb kubectl.rb
           git config user.name "OpsLevel Bots"
           git config user.email "bots@opslevel.com"
           git add .
-          git commit -m "Cut Release '$RELEASE_VERSION'"
+          git commit -m "Brew formula update for kubectl-opslevel version v$RELEASE_VERSION"
           git push -f origin HEAD
 
   release-docker:
