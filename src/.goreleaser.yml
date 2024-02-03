@@ -17,28 +17,6 @@ builds:
     binary: '{{ .ProjectName }}'
 archives:
   - name_template: '{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}'
-brews:
-  - name: kubectl
-    homepage: "https://www.opslevel.com/"
-    description: "Command line tool that enables you to import & reconcile services with OpsLevel"
-    license: "MIT"
-    folder: Formula
-    dependencies:
-      - name: go
-        version: ">=1.21.0"
-      - name: jq
-    install: |
-      ENV["CGO_ENABLED"] = "1"
-      ENV["CGO_CFLAGS"] = "-I#{Formula["jq"].opt_include}"
-      ENV["CGO_LDFLAGS"] = "-L#{Formula["jq"].opt_lib}"
-
-      system "go", "build", *std_go_args(output: bin/"kubectl-opslevel", ldflags: "-s -w -X main.version={{.Tag}} -X main.commit={{.ShortCommit}}"), "./src"
-    test: |
-      system "#{bin}/kubectl-opslevel", "version"
-    repository:
-      owner: opslevel
-      name: homebrew-tap
-      token: "{{ .Env.ORG_GITHUB_TOKEN }}"
 checksum:
   name_template: '{{ .ProjectName }}.sha256'
   algorithm: sha256
