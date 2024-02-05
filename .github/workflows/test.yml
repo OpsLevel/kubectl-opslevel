@@ -40,7 +40,7 @@ jobs:
       - name: Run quality checks and test code
         run: task ci
       - name: Upload Coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./src/coverage.txt
           fail_ci_if_error: false
