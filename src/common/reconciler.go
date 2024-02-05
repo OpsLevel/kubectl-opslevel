@@ -367,25 +367,18 @@ func (r *ServiceReconciler) handleProperties(service *opslevel.Service, registra
 	for def, val := range registration.Properties {
 		definition := opslevel.NewIdentifier(def)
 		owner := opslevel.NewIdentifier(string(service.Id))
-		// TODO: hack to get around NewJSONInput not reading strings properly.
-		var value opslevel.JsonString
-		if strings.HasPrefix(val, "{") && strings.HasSuffix(val, "}") {
-			value = opslevel.JsonString(val)
-		} else {
-			valuePtr, err := opslevel.NewJSONInput(val)
-			if err != nil {
-				log.Error().Err(err).Msgf("[%s] Failed parsing property: '%s'", service.Name, def)
-				continue
-			}
-			value = *valuePtr
+		value, err := opslevel.NewJSONInput(val)
+		if err != nil {
+			log.Error().Err(err).Msgf("[%s] Failed parsing property: '%s'", service.Name, def)
+			continue
 		}
-		toString := fmt.Sprintf("prop{def='%s', value='%s'}", *definition.Alias, value)
+		toString := fmt.Sprintf("prop{def='%s', value='%s'}", *definition.Alias, *value)
 		input := opslevel.PropertyInput{
 			Definition: *definition,
 			Owner:      *owner,
-			Value:      value,
+			Value:      *value,
 		}
-		err := r.client.AssignPropertyHandler(input)
+		err = r.client.AssignPropertyHandler(input)
 		if err != nil {
 			log.Error().Err(err).Msgf("[%s] Failed assigning property: %s", service.Name, toString)
 			continue
