@@ -1,0 +1,3 @@
+kind: Dependency
+body: Bump github.com/rs/zerolog from 1.31.0 to 1.32.0 in /src
+time: 2024-02-05T14:35:06.802368473Z
