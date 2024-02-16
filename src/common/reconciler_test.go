@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/opslevel-go/v2024"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2024"
@@ -435,6 +437,64 @@ func Test_Reconciler_HandleTools(t *testing.T) {
 	// Assert
 	autopilot.Assert(t, len(toolsCreated) == 2 && toolsCreated[0].DisplayName == "F" &&
 		toolsCreated[1].DisplayName == "G", "expected tools created to be ['F','G']")
+}
+
+func Test_Reconciler_HandleProperties(t *testing.T) {
+	// Arrange
+	props := map[string]string{
+		"prop_bool":         "true",
+		"prop_empty_object": "{}",
+		"prop_empty_string": "",
+		"prop_object":       `{"message":"hello world","condition":true}`,
+		"prop_string":       "hello world",
+	}
+	registration := opslevel_jq_parser.ServiceRegistration{
+		Aliases:    []string{"a_test_service_with_properties"},
+		Properties: props,
+	}
+	service := opslevel.Service{
+		ServiceId: opslevel.ServiceId{
+			Id: opslevel.ID("Z2lkOi8vb3BzbGV2ZWwvU2VydmljZS85NzAyMg"),
+		},
+		Name:       "ATestServiceWithProperties",
+		Properties: nil,
+	}
+	results := make([]opslevel.PropertyInput, 0)
+	reconciler := common.NewServiceReconciler(&common.OpslevelClient{
+		GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+			return &service, nil
+		},
+		AssignPropertyHandler: func(input opslevel.PropertyInput) error {
+			results = append(results, input)
+			return nil
+		},
+	}, false)
+
+	// Act
+	err := reconciler.Reconcile(registration)
+	autopilot.Ok(t, err)
+
+	// Assert
+	expLen, gotLen := len(props), len(results)
+	autopilot.Assert(t, gotLen == expLen, fmt.Sprintf("expected to get %d property assignments got %d", expLen, gotLen))
+	for _, x := range results {
+		def := *x.Definition.Alias
+		expId, gotId := service.ServiceId.Id, *x.Owner.Id
+		autopilot.Assert(t, gotId == expId, fmt.Sprintf("[%s] unexpected owner ID '%s' - does not match service ID '%s'", def, gotId, expId))
+
+		if val, ok := props[def]; ok {
+			value, err := opslevel.NewJSONInput(val)
+			if err != nil {
+				log.Error().Err(err).Msgf("[%s] Failed parsing property: '%s'", service.Name, def)
+				continue
+			}
+			expVal := string(*value)
+			gotVal := string(x.Value)
+			autopilot.Assert(t, gotVal == expVal, fmt.Sprintf("[%s] expected value for to be: '%s' got: '%s'", def, expVal, gotVal))
+		} else {
+			autopilot.Ok(t, fmt.Errorf("unexpected property definition alias: '%s'", def))
+		}
+	}
 }
 
 func newToolInputs(names ...string) []opslevel.ToolCreateInput {

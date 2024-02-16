@@ -21,10 +21,10 @@ type Config struct {
 	Service Service `json:"service"`
 }
 
-var ConfigCurrentVersion = "1.2.0"
+var ConfigCurrentVersion = "1.3.0"
 
 var ConfigSimple = `#Simple Opslevel CLI Config
-version: "1.2.0"
+version: "1.3.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
@@ -38,6 +38,9 @@ service:
         owner: .metadata.namespace
         aliases: # This are how we identify the services again during reconciliation - please make sure they are very unique
           - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
+        properties:
+          # assign the value of a property named 'prop_string' onto this service
+          prop_string: .metadata.annotations.prop_string
         tags:
           assign: # tag with the same key name but with a different value will be updated on the service
             - '{"imported": "kubectl-opslevel"}'
@@ -47,7 +50,7 @@ service:
 `
 
 var ConfigSample = `#Sample Opslevel CLI Config
-version: "1.2.0"
+version: "1.3.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
@@ -69,6 +72,9 @@ service:
         aliases: # This are how we identify the services again during reconciliation - please make sure they are very unique
           - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
           - '"\(.metadata.namespace)-\(.metadata.name)"'
+        properties:
+          # assign the value of a property named 'prop_object' (is a JSON object) onto this service
+          prop_object: .metadata.annotations.prop_object
         tags:
           assign: # tag with the same key name but with a different value will be updated on the service
             - '{"imported": "kubectl-opslevel"}'
