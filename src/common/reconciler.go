@@ -363,6 +363,9 @@ func (r *ServiceReconciler) handleTools(service *opslevel.Service, registration 
 
 func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	for _, repositoryCreate := range registration.Repositories {
+		if repositoryCreate.Repository.Alias == nil || *repositoryCreate.Repository.Alias == "null" {
+			continue
+		}
 		repoCreateString := "repoCreate{}"
 		b, err := json.Marshal(repositoryCreate)
 		if err == nil {
@@ -376,7 +379,10 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 			log.Warn().Msgf("[%s] Repository with alias: '%s' call to GetRepositoryWithAlias unexpectedly returned nil - please submit a bug report ... skipping", service.Name, repoCreateString)
 			continue
 		}
-		serviceRepository := foundRepository.GetService(service.Id, *repositoryCreate.BaseDirectory)
+		var serviceRepository *opslevel.ServiceRepository
+		if repositoryCreate.BaseDirectory != nil {
+			serviceRepository = foundRepository.GetService(service.Id, *repositoryCreate.BaseDirectory)
+		}
 		if serviceRepository != nil {
 			if repositoryCreate.DisplayName != nil && serviceRepository.DisplayName != *repositoryCreate.DisplayName {
 				repositoryUpdate := opslevel.ServiceRepositoryUpdateInput{
