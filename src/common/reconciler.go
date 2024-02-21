@@ -363,6 +363,10 @@ func (r *ServiceReconciler) handleTools(service *opslevel.Service, registration 
 
 func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	for _, repositoryCreate := range registration.Repositories {
+		if repositoryCreate.BaseDirectory == nil {
+			log.Warn().Msgf("[%s] Repository with alias: '%+v' has no base directory so it cannot be looked up ... skipping", service.Name, repositoryCreate)
+			continue
+		}
 		foundRepository, foundRepositoryErr := r.client.GetRepositoryWithAlias(*repositoryCreate.Repository.Alias)
 		if foundRepositoryErr != nil {
 			log.Warn().Msgf("[%s] Repository with alias: '%+v' not found so it cannot be attached to service ... skipping", service.Name, repositoryCreate)
