@@ -24,8 +24,8 @@ tasks:
       - task: install-gofumpt
       - task: install-golangci-lint
       - task: install-nilaway
-      - task: lint
       - task: workspace
+      - task: lint
       - task: has-latest-opslevel-dependencies
       - task: test
 
