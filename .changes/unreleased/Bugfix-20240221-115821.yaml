@@ -1,0 +1,3 @@
+kind: Bugfix
+body: Catch more instances that cause nil pointer exceptions
+time: 2024-02-21T11:58:21.904049-05:00
