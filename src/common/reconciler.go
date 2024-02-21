@@ -406,10 +406,9 @@ func (r *ServiceReconciler) handleProperties(service *opslevel.Service, registra
 		owner := opslevel.NewIdentifier(string(service.Id))
 		value, err := opslevel.NewJSONInput(val)
 		if err != nil {
-			log.Error().Err(err).Msgf("[%s] Failed parsing property: '%s'", service.Name, def)
+			log.Error().Err(err).Msgf("[%s] NewJSONInput failed parsing property value: '%s' on definition: '%s'", service.Name, val, def)
 			continue
 		}
-		toString := fmt.Sprintf("prop{def='%s', value='%s'}", *definition.Alias, *value)
 		input := opslevel.PropertyInput{
 			Definition: *definition,
 			Owner:      *owner,
@@ -417,9 +416,9 @@ func (r *ServiceReconciler) handleProperties(service *opslevel.Service, registra
 		}
 		err = r.client.AssignPropertyHandler(input)
 		if err != nil {
-			log.Error().Err(err).Msgf("[%s] Failed assigning property: %s", service.Name, toString)
+			log.Error().Err(err).Msgf("[%s] Failed assigning property with definition: '%s' and value: '%s'", service.Name, def, val)
 			continue
 		}
-		log.Info().Msgf("[%s] Successfully assigned property: %s", service.Name, toString)
+		log.Info().Msgf("[%s] Successfully assigned property with definition: '%s' and value: '%s'", service.Name, def, val)
 	}
 }
