@@ -1,0 +1,3 @@
+kind: Bugfix
+body: Fix bug where logging repositories creates would cause a nil pointer exception
+time: 2024-02-21T12:40:53.827857-05:00
