@@ -20,6 +20,7 @@ const (
 	serviceAliasesResult_AliasMatched          serviceAliasesResult = "AliasMatched"
 	serviceAliasesResult_MultipleServicesFound serviceAliasesResult = "MultipleServicesFound"
 	serviceAliasesResult_APIErrorHappened      serviceAliasesResult = "APIErrorHappened"
+	serviceAliasesResult_FoundServiceNoAlias   serviceAliasesResult = "FoundServiceNoAlias"
 )
 
 type ServiceReconciler struct {
@@ -108,6 +109,7 @@ func (r *ServiceReconciler) ServiceNeedsUpdate(input opslevel.ServiceUpdateInput
 // serviceAliasesResult_AliasMatched - means that all the API calls succeeded and a single service was found matching 1 of N aliases
 // serviceAliasesResult_MultipleServicesFound - means that all API calls succeeded but multiple services were returning means the list of aliases does not definitively describe a single service and might be a configuration problem
 // serviceAliasesResult_APIErrorHappened - means that 1 of N aliases got an 4xx/5xx and thereforce we cannot say 100% that the services doesn't exist
+// serviceAliasesResult_FoundServiceNoAlias - means that a service was found but that service has no alias (this should not be possible and can only happen from a bad code change.)
 func (r *ServiceReconciler) lookupService(registration opslevel_jq_parser.ServiceRegistration) (*opslevel.Service, serviceAliasesResult) {
 	var gotError error
 	foundServices := map[string]*opslevel.Service{}
@@ -130,7 +132,11 @@ func (r *ServiceReconciler) lookupService(registration opslevel_jq_parser.Servic
 	}
 	foundServicesCount := len(foundServices)
 	if foundServicesCount == 1 {
-		key := maps.Keys(foundServices)[0]
+		keys := maps.Keys(foundServices)
+		if len(keys) == 0 {
+			return nil, serviceAliasesResult_FoundServiceNoAlias
+		}
+		key := keys[0]
 		return foundServices[key], serviceAliasesResult_AliasMatched
 	} else if foundServicesCount > 1 {
 		return nil, serviceAliasesResult_MultipleServicesFound
@@ -163,6 +169,8 @@ func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.Servic
 		return nil, fmt.Errorf("[%s] found multiple services with aliases = [%s].  cannot know which service to target for update ... skipping reconciliation", registration.Name, aliases)
 	case serviceAliasesResult_APIErrorHappened:
 		return nil, fmt.Errorf("[%s] api error during service lookup by alias.  unable to guarantee service was found or not ... skipping reconciliation", registration.Name)
+	case serviceAliasesResult_FoundServiceNoAlias:
+		return nil, fmt.Errorf("[%s] found matching service but it has no alias.  this situation can only happen because of a bad code change. ... skipping reconciliation", registration.Name)
 	}
 	return service, nil
 }
