@@ -170,7 +170,7 @@ func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.Servic
 	case serviceAliasesResult_APIErrorHappened:
 		return nil, fmt.Errorf("[%s] api error during service lookup by alias.  unable to guarantee service was found or not ... skipping reconciliation", registration.Name)
 	case serviceAliasesResult_FoundServiceNoAlias:
-		return nil, fmt.Errorf("[%s] found matching service but it has no alias.  this situation can only happen because of a bad code change. ... skipping reconciliation", registration.Name)
+		return nil, fmt.Errorf("[%s] found matching service but it unexpectedly has no alias.  please submit a bug report. ... skipping reconciliation", registration.Name)
 	}
 	return service, nil
 }
@@ -187,16 +187,28 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 		serviceCreateInput.Parent = opslevel.NewIdentifier(registration.System)
 	}
 	if v, ok := opslevel.Cache.TryGetTier(registration.Tier); ok {
+		if v == nil {
+			err := fmt.Errorf("the cache unexpectedly returned a tier that is nil - please submit a bug report")
+			return nil, fmt.Errorf("[%s] Failed creating service\n\tREASON: %v", registration.Name, err.Error())
+		}
 		serviceCreateInput.TierAlias = opslevel.RefOf(v.Alias)
 	} else if registration.Tier != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", registration.Name, registration.Tier)
 	}
 	if v, ok := opslevel.Cache.TryGetLifecycle(registration.Lifecycle); ok {
+		if v == nil {
+			err := fmt.Errorf("the cache unexpectedly returned a lifecycle that is nil - please submit a bug report")
+			return nil, fmt.Errorf("[%s] Failed creating service\n\tREASON: %v", registration.Name, err.Error())
+		}
 		serviceCreateInput.LifecycleAlias = opslevel.RefOf(v.Alias)
 	} else if registration.Lifecycle != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", registration.Name, registration.Lifecycle)
 	}
 	if v, ok := opslevel.Cache.TryGetTeam(registration.Owner); ok {
+		if v == nil {
+			err := fmt.Errorf("the cache unexpectedly returned a team that is nil - please submit a bug report")
+			return nil, fmt.Errorf("[%s] Failed creating service\n\tREASON: %v", registration.Name, err.Error())
+		}
 		serviceCreateInput.OwnerInput = opslevel.NewIdentifier(v.Alias)
 	} else if registration.Owner != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", registration.Name, registration.Owner)
@@ -228,17 +240,32 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 		updateServiceInput.Parent = opslevel.NewIdentifier(registration.System)
 	}
 	if v, ok := opslevel.Cache.TryGetTier(registration.Tier); ok {
-		updateServiceInput.TierAlias = opslevel.RefOf(v.Alias)
+		if v == nil {
+			err := fmt.Errorf("the cache unexpectedly returned a tier that is nil - please submit a bug report")
+			log.Warn().Msgf("[%s] unexpected happened: %v", service.Name, err)
+		} else {
+			updateServiceInput.TierAlias = opslevel.RefOf(v.Alias)
+		}
 	} else if registration.Tier != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", service.Name, registration.Tier)
 	}
 	if v, ok := opslevel.Cache.TryGetLifecycle(registration.Lifecycle); ok {
-		updateServiceInput.LifecycleAlias = opslevel.RefOf(v.Alias)
+		if v == nil {
+			err := fmt.Errorf("the cache unexpectedly returned a lifecycle that is nil - please submit a bug report")
+			log.Warn().Msgf("[%s] unexpected happened: %v", service.Name, err)
+		} else {
+			updateServiceInput.LifecycleAlias = opslevel.RefOf(v.Alias)
+		}
 	} else if registration.Lifecycle != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", service.Name, registration.Lifecycle)
 	}
 	if v, ok := opslevel.Cache.TryGetTeam(registration.Owner); ok {
-		updateServiceInput.OwnerInput = opslevel.NewIdentifier(v.Alias)
+		if v == nil {
+			err := fmt.Errorf("the cache unexpectedly returned a team that is nil - please submit a bug report")
+			log.Warn().Msgf("[%s] unexpected happened: %v", service.Name, err)
+		} else {
+			updateServiceInput.OwnerInput = opslevel.NewIdentifier(v.Alias)
+		}
 	} else if registration.Owner != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", service.Name, registration.Owner)
 	}
@@ -247,7 +274,7 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 		if updateServiceErr != nil {
 			log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
 		} else if updatedService == nil {
-			log.Warn().Msgf("[%s] unexpected happened: updated service but the result is nil", service.Name)
+			log.Warn().Msgf("[%s] unexpected happened: updated service but the result is nil - please submit a bug report", service.Name)
 		} else if diff := cmp.Diff(service, updatedService); diff != "" {
 			log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
 		}
@@ -340,6 +367,9 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 		foundRepository, foundRepositoryErr := r.client.GetRepositoryWithAlias(*repositoryCreate.Repository.Alias)
 		if foundRepositoryErr != nil {
 			log.Warn().Msgf("[%s] Repository with alias: '%s' not found so it cannot be attached to service ... skipping", service.Name, repositoryAsString)
+			continue
+		} else if foundRepository == nil {
+			log.Warn().Msgf("[%s] Repository with alias: '%s' call to GetRepositoryWithAlias unexpectedly returned nil - please submit a bug report ... skipping", service.Name, repositoryAsString)
 			continue
 		}
 		serviceRepository := foundRepository.GetService(service.Id, *repositoryCreate.BaseDirectory)
