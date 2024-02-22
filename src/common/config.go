@@ -90,7 +90,7 @@ service:
           # OR find annotations with format: opslevel.com/tools.<category>.<environment>.<displayname>: <url>
           # - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tools"))) | map({"category": .key | split(".")[2], "environment": .key | split(".")[3], "displayName": .key | split(".")[4], "url": .value})'
         repositories: # attach repositories to the service using the opslevel repo alias - IE github.com:hashicorp/vault
-          - '{"name": "My Cool Repo", "directory": "/", "repo": .metadata.annotations.repo} | if .repo then . else empty end'
+          - '{"name": "My Cool Repo", "directory": "", "repo": .metadata.annotations.repo} | if .repo then . else empty end'
           # if just the alias is returned as a single string we'll build the name for you and set the directory to "/"
           - .metadata.annotations.repo
           # find annotations with format: opslevel.com/repo.<displayname>.<repo.subpath.dots.turned.to.forwardslash>: <opslevel repo alias>
