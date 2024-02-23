@@ -1,3 +1,0 @@
-kind: Bugfix
-body: Fix bug where service repos were never renamed if base dir was /
-time: 2024-02-21T19:16:52.351803-05:00
