@@ -5,3 +5,4 @@ src/dist
 **/coverage.txt
 **/go.work*
 **/opslevel-k8s.yaml
+**/kubectl-opslevel
