@@ -145,6 +145,8 @@ github.com/opslevel/opslevel-jq-parser/v2024 v2024.2.26 h1:v3xGULA5pSIfCZSmnzPJq
 github.com/opslevel/opslevel-jq-parser/v2024 v2024.2.26/go.mod h1:ButgLGp/NosIOTdy92+2ZHk8WSWK5rXJ09kogWjZSJg=
 github.com/opslevel/opslevel-k8s-controller/v2024 v2024.1.25 h1:gpMCYEjmb1A5PIo89WE+lYj9f2a5ipmmW4yVjuoixy0=
 github.com/opslevel/opslevel-k8s-controller/v2024 v2024.1.25/go.mod h1:jE3ln0XShyrDvm30OtEyYGGUmO6baVIQKQ26vLaOy+0=
+github.com/opslevel/opslevel-k8s-controller/v2024 v2024.2.26 h1:AiTfUvYt3goHsPXq0ml+f/vHazSflTAhGgjVJU3cfJw=
+github.com/opslevel/opslevel-k8s-controller/v2024 v2024.2.26/go.mod h1:FHo2Y2URxj+mLlSDizSoT4FDDskVf6azCSlYXmosEcw=
 github.com/pelletier/go-toml/v2 v2.1.1 h1:LWAJwfNvjQZCFIDKWYQaM62NcYeYViCmWIwmOStowAI=
 github.com/pelletier/go-toml/v2 v2.1.1/go.mod h1:tJU2Z3ZkXwnxa4DPO899bsyIoywizdUvyaeZurnPPDc=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=

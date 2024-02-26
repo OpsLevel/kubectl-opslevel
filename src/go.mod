@@ -8,7 +8,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/opslevel/opslevel-go/v2024 v2024.2.26
 	github.com/opslevel/opslevel-jq-parser/v2024 v2024.2.26
-	github.com/opslevel/opslevel-k8s-controller/v2024 v2024.1.25
+	github.com/opslevel/opslevel-k8s-controller/v2024 v2024.2.26
 	github.com/rocktavious/autopilot/v2023 v2023.12.7
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.8.0
