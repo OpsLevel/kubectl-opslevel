@@ -75,6 +75,7 @@ jobs:
           git push -f origin refs/tags/$RELEASE_VERSION
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5.0.0
+        id: goreleaser
         with:
           args: release --clean --release-notes=../.changes/${{ needs.release-version.outputs.release_version }}.md
           workdir: ./src
@@ -90,10 +91,14 @@ jobs:
           path: homebrew-tap
       - name: Update homebrew
         working-directory: homebrew-tap
+        env:
+          GORELEASER_ARTIFACTS: "${{ steps.goreleaser.outputs.artifacts }}"
         run: |
+          RELEASE_SHA256=$(echo $GORELEASER_ARTIFACTS | jq -r '.[] | select(.type == "Archive") | .extra.Checksum | split(":")[1]')
+          [ -z "$RELEASE_SHA256" ] && exit 1
           cd Formula
-          awk -v ver="${RELEASE_VERSION:1}" '/version/, /tags/ {sub(/[0-9]+\.[0-9]+\.[0-9]+/, ver)} {print}' kubectl.rb > tmp.rb
-          mv tmp.rb kubectl.rb
+          awk -v ver="${RELEASE_VERSION:1}" '/version/, /_version/ {sub(/[0-9]+\.[0-9]+\.[0-9]+/, ver)} {print}' kubectl.rb > tmp.rb
+          awk -v new_sha="${RELEASE_SHA256}" '/sha256/ {sub(/[0-9a-f]{10}+/, new_sha)} {print}' tmp.rb > kubectl.rb
           git config user.name "OpsLevel Bots"
           git config user.email "bots@opslevel.com"
           git add .
