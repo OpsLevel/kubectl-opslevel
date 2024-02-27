@@ -68,7 +68,7 @@ kubectl opslevel config sample > ./opslevel-k8s.yaml
 ### Current Sample Configuration
 
 ```yaml
-version: 1.3.0
+version: "1.3.0"
 service:
   import:
     - selector:
@@ -172,7 +172,7 @@ in a cluster to use as a batching mechanism.  This functionality can be skipped 
 the explict list `namespaces` in the selector which skips the API call to Kubernetes to list all Namespaces.
 
 ```yaml
-version: 1.3.0
+version: "1.3.0"
 service:
   import:
     - selector: # This limits what data we look at in Kubernetes
