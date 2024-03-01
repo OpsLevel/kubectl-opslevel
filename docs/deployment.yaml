@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-opslevel-deployment
+  labels:
+    app: nginx
+  annotations:
+    opslevel.com/description: this was made for testing k8s sync
+    opslevel.com/lifecycle: beta
+    opslevel.com/owner: platform
+    opslevel.com/tags.from_kubernetes: "True"
+    opslevel.com/tags.hello: world
+    opslevel.com/tags.image: "1.24"
+    opslevel.com/tags.is_public: "True"
+    opslevel.com/tags.vpc_enabled: "True"
+    opslevel.com/tier: tier_2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.24
+          ports:
+            - containerPort: 8080

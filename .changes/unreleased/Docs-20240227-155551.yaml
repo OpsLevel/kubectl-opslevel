@@ -1,0 +1,4 @@
+kind: Docs
+body: Replaced local dev docs with more brief instructions and a real deployment.yaml
+  for sample config
+time: 2024-02-27T15:55:51.04703-05:00
