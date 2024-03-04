@@ -97,11 +97,12 @@ jobs:
           RELEASE_SHA256=$(echo $GORELEASER_ARTIFACTS | jq -r '.[] | select(.type == "Archive") | .extra.Checksum | split(":")[1]')
           [ -z "$RELEASE_SHA256" ] && exit 1
           cd Formula
-          awk -v ver="${RELEASE_VERSION:1}" '/version/, /ldflags/ {sub(/[0-9]+\.[0-9]+\.[0-9]+/, ver)} {print}' kubectl.rb > tmp.rb
+          awk -v ver="${RELEASE_VERSION:1}" '/version/, /ldflags/ {sub(/[0-9]+\.[0-9]+\.[0-9]+/, ver)} {print}' kubectl.rb > tmp.txt
           awk -v new_sha="${RELEASE_SHA256}" \
               -v new_commit="${GITHUB_SHA::12}" \
               '/commit/ {sub(/[0-9a-f]{12}/, new_commit)} /sha256/ {sub(/[0-9a-f]{10}+/, new_sha)} {print}' \
-              tmp.rb > kubectl.rb
+              tmp.txt > kubectl.rb
+          rm tmp.txt
           git config user.name "OpsLevel Bots"
           git config user.email "bots@opslevel.com"
           git add .
