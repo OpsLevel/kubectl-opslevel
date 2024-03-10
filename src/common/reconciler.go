@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/rs/zerolog"
 	"strings"
 
 	"golang.org/x/exp/maps"
@@ -24,12 +25,15 @@ const (
 )
 
 type ServiceReconciler struct {
+	log                    *zerolog.Logger
 	client                 *OpslevelClient
 	disableServiceCreation bool
 }
 
 func NewServiceReconciler(client *OpslevelClient, disableServiceCreation bool) *ServiceReconciler {
+	logger := log.With().Str("from", "service_reconciler").Logger()
 	return &ServiceReconciler{
+		log:                    &logger,
 		client:                 client,
 		disableServiceCreation: disableServiceCreation,
 	}
@@ -111,17 +115,19 @@ func (r *ServiceReconciler) ServiceNeedsUpdate(input opslevel.ServiceUpdateInput
 // serviceAliasesResult_APIErrorHappened - means that 1 of N aliases got a 4xx/5xx and thereforce we cannot say 100% that the services doesn't exist
 // serviceAliasesResult_FoundServiceNoAlias - means that a service was found but that service has no alias (this should not be possible and can only happen from a bad code change.)
 func (r *ServiceReconciler) lookupService(registration opslevel_jq_parser.ServiceRegistration) (*opslevel.Service, serviceAliasesResult) {
+	lookupLog := r.log.With().Str("where", "lookupService").Logger()
 	var gotError error
 	foundServices := map[string]*opslevel.Service{}
 	for _, alias := range registration.Aliases {
+		aliasLog := lookupLog.With().Str("alias", alias).Logger()
 		foundService, err := r.client.GetService(alias)
 		if err != nil {
 			gotError = err
-			log.Warn().Err(err).Msgf("got an error when trying to get service with alias '%s'", alias)
+			aliasLog.Warn().Err(err).Msg("got an error when trying to get service with alias")
 		} else if foundService == nil {
-			log.Warn().Msgf("unexpected happened: got service with alias '%s' but the result is nil", alias)
+			aliasLog.Warn().Msg("unexpected happened: got service with alias but the result is nil")
 		} else if foundService.Id == "" {
-			log.Warn().Msgf("unexpected happened: got service with alias '%s' but the result has no ID", alias)
+			aliasLog.Warn().Msg("unexpected happened: got service with alias but the result has no ID")
 		} else {
 			// happy path
 			foundServices[string(foundService.Id)] = foundService
@@ -150,7 +156,7 @@ func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.Servic
 	switch status {
 	case serviceAliasesResult_NoAliasesMatched:
 		if r.disableServiceCreation {
-			log.Info().Msgf("[%s] Avoided creating a new service\n\tREASON: service creation is disabled", registration.Name)
+			r.log.Info().Msgf("[%s] Avoided creating a new service\n\tREASON: service creation is disabled", registration.Name)
 			return nil, nil
 		}
 
@@ -193,7 +199,7 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 		}
 		serviceCreateInput.TierAlias = opslevel.RefOf(v.Alias)
 	} else if registration.Tier != "" {
-		log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", registration.Name, registration.Tier)
+		r.log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", registration.Name, registration.Tier)
 	}
 	if v, ok := opslevel.Cache.TryGetLifecycle(registration.Lifecycle); ok {
 		if v == nil {
@@ -202,7 +208,7 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 		}
 		serviceCreateInput.LifecycleAlias = opslevel.RefOf(v.Alias)
 	} else if registration.Lifecycle != "" {
-		log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", registration.Name, registration.Lifecycle)
+		r.log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", registration.Name, registration.Lifecycle)
 	}
 	if v, ok := opslevel.Cache.TryGetTeam(registration.Owner); ok {
 		if v == nil {
@@ -211,13 +217,13 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 		}
 		serviceCreateInput.OwnerInput = opslevel.NewIdentifier(v.Alias)
 	} else if registration.Owner != "" {
-		log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", registration.Name, registration.Owner)
+		r.log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", registration.Name, registration.Owner)
 	}
 	service, err := r.client.CreateService(serviceCreateInput)
 	if err != nil {
 		return service, fmt.Errorf("[%s] Failed creating service\n\tREASON: %v", registration.Name, err.Error())
 	} else if service != nil {
-		log.Info().Msgf("[%s] Created new service", service.Name)
+		r.log.Info().Msgf("[%s] Created new service", service.Name)
 		return service, nil
 	} else {
 		return nil, fmt.Errorf("[%s] unexpected happened: created service but the result is nil", registration.Name)
@@ -226,7 +232,7 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 
 func (r *ServiceReconciler) updateService(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	if service == nil {
-		log.Warn().Msgf("[%s] unexpected happened: service passed to be updated is nil", registration.Name)
+		r.log.Warn().Msgf("[%s] unexpected happened: service passed to be updated is nil", registration.Name)
 		return
 	}
 	updateServiceInput := opslevel.ServiceUpdateInput{
@@ -242,44 +248,44 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 	if v, ok := opslevel.Cache.TryGetTier(registration.Tier); ok {
 		if v == nil {
 			err := fmt.Errorf("the cache unexpectedly returned a tier that is nil - please submit a bug report")
-			log.Warn().Msgf("[%s] unexpected happened: %v", service.Name, err)
+			r.log.Warn().Msgf("[%s] unexpected happened: %v", service.Name, err)
 		} else {
 			updateServiceInput.TierAlias = opslevel.RefOf(v.Alias)
 		}
 	} else if registration.Tier != "" {
-		log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", service.Name, registration.Tier)
+		r.log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", service.Name, registration.Tier)
 	}
 	if v, ok := opslevel.Cache.TryGetLifecycle(registration.Lifecycle); ok {
 		if v == nil {
 			err := fmt.Errorf("the cache unexpectedly returned a lifecycle that is nil - please submit a bug report")
-			log.Warn().Msgf("[%s] unexpected happened: %v", service.Name, err)
+			r.log.Warn().Msgf("[%s] unexpected happened: %v", service.Name, err)
 		} else {
 			updateServiceInput.LifecycleAlias = opslevel.RefOf(v.Alias)
 		}
 	} else if registration.Lifecycle != "" {
-		log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", service.Name, registration.Lifecycle)
+		r.log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", service.Name, registration.Lifecycle)
 	}
 	if v, ok := opslevel.Cache.TryGetTeam(registration.Owner); ok {
 		if v == nil {
 			err := fmt.Errorf("the cache unexpectedly returned a team that is nil - please submit a bug report")
-			log.Warn().Msgf("[%s] unexpected happened: %v", service.Name, err)
+			r.log.Warn().Msgf("[%s] unexpected happened: %v", service.Name, err)
 		} else {
 			updateServiceInput.OwnerInput = opslevel.NewIdentifier(v.Alias)
 		}
 	} else if registration.Owner != "" {
-		log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", service.Name, registration.Owner)
+		r.log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", service.Name, registration.Owner)
 	}
 	if r.ServiceNeedsUpdate(updateServiceInput, service) {
 		updatedService, updateServiceErr := r.client.UpdateService(updateServiceInput)
 		if updateServiceErr != nil {
-			log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
+			r.log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
 		} else if updatedService == nil {
-			log.Warn().Msgf("[%s] unexpected happened: updated service but the result is nil - please submit a bug report", service.Name)
+			r.log.Warn().Msgf("[%s] unexpected happened: updated service but the result is nil - please submit a bug report", service.Name)
 		} else if diff := cmp.Diff(service, updatedService); diff != "" {
-			log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
+			r.log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
 		}
 	} else {
-		log.Info().Msgf("[%s] No changes detected to fields - skipping update", service.Name)
+		r.log.Info().Msgf("[%s] No changes detected to fields - skipping update", service.Name)
 	}
 }
 
@@ -293,9 +299,9 @@ func (r *ServiceReconciler) handleAliases(service *opslevel.Service, registratio
 			OwnerId: service.Id,
 		})
 		if err != nil {
-			log.Error().Msgf("[%s] Failed assigning alias '%s'\n\tREASON: %v", service.Name, alias, err.Error())
+			r.log.Error().Msgf("[%s] Failed assigning alias '%s'\n\tREASON: %v", service.Name, alias, err.Error())
 		} else {
-			log.Info().Msgf("[%s] Assigned alias '%s'", service.Name, alias)
+			r.log.Info().Msgf("[%s] Assigned alias '%s'", service.Name, alias)
 		}
 	}
 }
@@ -313,12 +319,12 @@ func (r *ServiceReconciler) handleAssignTags(service *opslevel.Service, registra
 		err := r.client.AssignTags(service, tags)
 		jsonBytes, _ := json.Marshal(registration.TagAssigns)
 		if err != nil {
-			log.Error().Msgf("[%s] Failed assigning tags: %s\n\tREASON: %v", service.Name, string(jsonBytes), err.Error())
+			r.log.Error().Msgf("[%s] Failed assigning tags: %s\n\tREASON: %v", service.Name, string(jsonBytes), err.Error())
 		} else {
-			log.Info().Msgf("[%s] Assigned tags: %s", service.Name, string(jsonBytes))
+			r.log.Info().Msgf("[%s] Assigned tags: %s", service.Name, string(jsonBytes))
 		}
 	} else {
-		log.Info().Msgf("[%s] All tags already assigned to service.", service.Name)
+		r.log.Info().Msgf("[%s] All tags already assigned to service.", service.Name)
 	}
 }
 
@@ -334,9 +340,9 @@ func (r *ServiceReconciler) handleCreateTags(service *opslevel.Service, registra
 		}
 		err := r.client.CreateTag(input)
 		if err != nil {
-			log.Error().Msgf("[%s] Failed creating tag '%s = %s'\n\tREASON: %v", service.Name, tag.Key, tag.Value, err.Error())
+			r.log.Error().Msgf("[%s] Failed creating tag '%s = %s'\n\tREASON: %v", service.Name, tag.Key, tag.Value, err.Error())
 		} else {
-			log.Info().Msgf("[%s] Created tag '%s = %s'", service.Name, tag.Key, tag.Value)
+			r.log.Info().Msgf("[%s] Created tag '%s = %s'", service.Name, tag.Key, tag.Value)
 		}
 	}
 }
@@ -348,15 +354,15 @@ func (r *ServiceReconciler) handleTools(service *opslevel.Service, registration 
 			toolEnv = *tool.Environment
 		}
 		if service.HasTool(tool.Category, tool.DisplayName, toolEnv) {
-			log.Debug().Msgf("[%s] Tool '{Category: %s, Environment: %s, Name: %s}' already exists on service ... skipping", service.Name, tool.Category, toolEnv, tool.DisplayName)
+			r.log.Debug().Msgf("[%s] Tool '{Category: %s, Environment: %s, Name: %s}' already exists on service ... skipping", service.Name, tool.Category, toolEnv, tool.DisplayName)
 			continue
 		}
 		tool.ServiceId = &service.Id
 		err := r.client.CreateTool(tool)
 		if err != nil {
-			log.Error().Msgf("[%s] Failed assigning tool '{Category: %s, Environment: %s, Name: %s}'\n\tREASON: %v", service.Name, tool.Category, toolEnv, tool.DisplayName, err.Error())
+			r.log.Error().Msgf("[%s] Failed assigning tool '{Category: %s, Environment: %s, Name: %s}'\n\tREASON: %v", service.Name, tool.Category, toolEnv, tool.DisplayName, err.Error())
 		} else {
-			log.Info().Msgf("[%s] Ensured tool '{Category: %s, Environment: %s, Name: %s}'", service.Name, tool.Category, toolEnv, tool.DisplayName)
+			r.log.Info().Msgf("[%s] Ensured tool '{Category: %s, Environment: %s, Name: %s}'", service.Name, tool.Category, toolEnv, tool.DisplayName)
 		}
 	}
 }
@@ -373,10 +379,10 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 		}
 		foundRepository, foundRepositoryErr := r.client.GetRepositoryWithAlias(*repositoryCreate.Repository.Alias)
 		if foundRepositoryErr != nil {
-			log.Warn().Msgf("[%s] Repository with alias: '%s' not found so it cannot be attached to service ... skipping", service.Name, repoCreateString)
+			r.log.Warn().Msgf("[%s] Repository with alias: '%s' not found so it cannot be attached to service ... skipping", service.Name, repoCreateString)
 			continue
 		} else if foundRepository == nil {
-			log.Warn().Msgf("[%s] Repository with alias: '%s' call to GetRepositoryWithAlias unexpectedly returned nil - please submit a bug report ... skipping", service.Name, repoCreateString)
+			r.log.Warn().Msgf("[%s] Repository with alias: '%s' call to GetRepositoryWithAlias unexpectedly returned nil - please submit a bug report ... skipping", service.Name, repoCreateString)
 			continue
 		}
 		var serviceRepository *opslevel.ServiceRepository
@@ -391,22 +397,22 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 				}
 				err := r.client.UpdateServiceRepository(repositoryUpdate)
 				if err != nil {
-					log.Error().Msgf("[%s] Failed updating repository '%s'\n\tREASON: %v", service.Name, repoCreateString, err.Error())
+					r.log.Error().Msgf("[%s] Failed updating repository '%s'\n\tREASON: %v", service.Name, repoCreateString, err.Error())
 					continue
 				} else {
-					log.Info().Msgf("[%s] Updated repository '%s'", service.Name, repoCreateString)
+					r.log.Info().Msgf("[%s] Updated repository '%s'", service.Name, repoCreateString)
 					continue
 				}
 			}
-			log.Debug().Msgf("[%s] Repository '%s' already attached to service ... skipping", service.Name, repoCreateString)
+			r.log.Debug().Msgf("[%s] Repository '%s' already attached to service ... skipping", service.Name, repoCreateString)
 			continue
 		}
 		repositoryCreate.Service = opslevel.IdentifierInput{Id: &service.Id}
 		err = r.client.CreateServiceRepository(repositoryCreate)
 		if err != nil {
-			log.Error().Msgf("[%s] Failed assigning repository '%s'\n\tREASON: %v", service.Name, repoCreateString, err.Error())
+			r.log.Error().Msgf("[%s] Failed assigning repository '%s'\n\tREASON: %v", service.Name, repoCreateString, err.Error())
 		} else {
-			log.Info().Msgf("[%s] Attached repository '%s'", service.Name, repoCreateString)
+			r.log.Info().Msgf("[%s] Attached repository '%s'", service.Name, repoCreateString)
 		}
 	}
 }
@@ -417,7 +423,7 @@ func (r *ServiceReconciler) handleProperties(service *opslevel.Service, registra
 		owner := opslevel.NewIdentifier(string(service.Id))
 		value, err := opslevel.NewJSONInput(val)
 		if err != nil {
-			log.Error().Err(err).Msgf("[%s] NewJSONInput failed parsing property value: '%s' on definition: '%s'", service.Name, val, def)
+			r.log.Error().Err(err).Msgf("[%s] NewJSONInput failed parsing property value: '%s' on definition: '%s'", service.Name, val, def)
 			continue
 		}
 		input := opslevel.PropertyInput{
@@ -427,9 +433,9 @@ func (r *ServiceReconciler) handleProperties(service *opslevel.Service, registra
 		}
 		err = r.client.AssignPropertyHandler(input)
 		if err != nil {
-			log.Error().Err(err).Msgf("[%s] Failed assigning property with definition: '%s' and value: '%s'", service.Name, def, val)
+			r.log.Error().Err(err).Msgf("[%s] Failed assigning property with definition: '%s' and value: '%s'", service.Name, def, val)
 			continue
 		}
-		log.Info().Msgf("[%s] Successfully assigned property with definition: '%s' and value: '%s'", service.Name, def, val)
+		r.log.Info().Msgf("[%s] Successfully assigned property with definition: '%s' and value: '%s'", service.Name, def, val)
 	}
 }

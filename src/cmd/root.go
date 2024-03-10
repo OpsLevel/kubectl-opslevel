@@ -90,14 +90,14 @@ func setupLogging() {
 		log.Logger = log.Output(output)
 	}
 
-	switch {
-	case logLevel == "error":
+	switch logLevel {
+	case "error":
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-	case logLevel == "warn":
+	case "warn":
 		zerolog.SetGlobalLevel(zerolog.WarnLevel)
-	case logLevel == "debug":
+	case "debug":
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	case logLevel == "trace":
+	case "trace":
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	default:
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
@@ -116,7 +116,8 @@ func IsTextOutput() bool {
 }
 
 func setupConcurrency() {
-	_, err := maxprocs.Set(maxprocs.Logger(log.Debug().Msgf))
+	maxProcsLogger := log.With().Str("from", "maxprocs").Logger()
+	_, err := maxprocs.Set(maxprocs.Logger(maxProcsLogger.Debug().Msgf))
 	cobra.CheckErr(err)
 
 	concurrency = viper.GetInt("workers")

@@ -36,14 +36,15 @@ func NewParserHandler(config Import, queue chan<- opslevel_jq_parser.ServiceRegi
 
 	parser := opslevel_jq_parser.NewJQServiceParser(config.OpslevelConfig)
 	return func(item interface{}) {
+		logLocal := log.With().Str("where", "parser_handler_func").Str("id", id).Logger()
 		data, err := json.Marshal(item)
 		if err != nil {
-			log.Error().Err(err).Msgf("%s - failed to marshal k8s resource", id)
+			logLocal.Error().Err(err).Msg("failed to marshal k8s resource")
 			return
 		}
 		registration, err := parser.Run(string(data))
 		if err != nil {
-			log.Error().Err(err).Msgf("%s - failed to parse k8s resource", id)
+			logLocal.Error().Err(err).Msg("failed to parse k8s resource")
 			return
 		}
 		queue <- *registration
@@ -57,7 +58,8 @@ func SetupControllers(ctx context.Context, config *Config, queue chan<- opslevel
 			wg = &sync.WaitGroup{}
 		}
 		for _, importConfig := range config.Service.Import {
-			controller, err := opslevel_k8s_controller.NewK8SController(importConfig.SelectorConfig, resync)
+			logger := log.Logger.With().Str("from", "opslevel-k8s-controller").Logger()
+			controller, err := opslevel_k8s_controller.NewK8SController(&logger, importConfig.SelectorConfig, resync)
 			if err != nil {
 				log.Error().Err(err).Msg("failed to create k8s controller")
 				continue
