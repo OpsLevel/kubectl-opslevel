@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/opslevel/kubectl-opslevel/common"
 
@@ -58,11 +59,22 @@ var configSampleCmd = &cobra.Command{
 		} else {
 			cfg, err = common.ParseConfig(common.ConfigSample)
 		}
+		pretty, err := PrettyConfig(cfg)
 		cobra.CheckErr(err)
-		output, err := yaml.Marshal(cfg)
-		cobra.CheckErr(err)
-		fmt.Println(string(output))
+		fmt.Println(pretty)
 	},
+}
+
+func PrettyConfig(cfg *common.Config) (string, error) {
+	var buffer bytes.Buffer
+	encoder := yaml.NewEncoder(&buffer)
+	encoder.SetIndent(2)
+	err := encoder.Encode(&cfg)
+	if err != nil {
+		return "", err
+	}
+	output := strings.Replace(buffer.String(), "VER_STRING", fmt.Sprintf("\"%s\"", common.ConfigCurrentVersion), 1)
+	return output, err
 }
 
 func init() {

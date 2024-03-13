@@ -1,0 +1,23 @@
+version: VER_STRING
+service:
+  import:
+    - selector: # This limits what data we look at in Kubernetes
+        apiVersion: "apps/v1" # only supports resources found in 'kubectl api-resources --verbs="get,list"'
+        kind: Deployment
+        excludes: # filters out resources if any expression returns truthy
+          - .metadata.namespace == "kube-system"
+          - .metadata.annotations."opslevel.com/ignore"
+      opslevel: # This is how you map your kubernetes data to opslevel service
+        name: .metadata.name
+        owner: .metadata.namespace
+        aliases: # This is how we identify the services again during reconciliation - please make sure they are unique
+          - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
+        properties:
+          # assign the value of a property named 'prop_string' onto this service
+          prop_string: .metadata.annotations.prop_string
+        tags:
+          assign: # tag with the same key name but with a different value will be updated on the service
+            - '{"imported": "kubectl-opslevel"}'
+            - .metadata.labels
+          create: # tag with the same key name but with a different value with be added to the service
+            - '{"environment": .spec.template.metadata.labels.environment}'

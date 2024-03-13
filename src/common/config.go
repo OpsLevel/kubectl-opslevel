@@ -15,12 +15,12 @@ type Import struct {
 }
 
 type Service struct {
-	Import []Import `json:"import"`
+	Import []Import `json:"import" yaml:"import"`
 }
 
 type Config struct {
-	Version string  `json:"version"`
-	Service Service `json:"service"`
+	Version string  `json:"version" yaml:"version"`
+	Service Service `json:"service" yaml:"service"`
 }
 
 var ConfigCurrentVersion = "1.3.0"
@@ -36,6 +36,7 @@ func ParseConfig(data string) (*Config, error) {
 	if err := yaml.Unmarshal([]byte(data), &output); err != nil {
 		return nil, err
 	}
+	// TODO: are we even using defaults anywhere?
 	if err := defaults.Set(&output); err != nil {
 		return nil, err
 	}
