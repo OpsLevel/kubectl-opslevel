@@ -28,7 +28,7 @@ var configSchemaCmd = &cobra.Command{
 	Long:  "Print the jsonschema for configuration file",
 	Run: func(cmd *cobra.Command, args []string) {
 		schema := jsonschema.Reflect(&common.Config{})
-		jsonBytes, err := json.MarshalIndent(schema, "", "  ")
+		jsonBytes, err := json.MarshalIndent(schema, "", "    ")
 		cobra.CheckErr(err)
 		fmt.Println(string(jsonBytes))
 	},
@@ -41,9 +41,9 @@ var configViewCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		conf, err := LoadConfig()
 		cobra.CheckErr(err)
-		output, err := yaml.Marshal(conf)
+		output, err := PrettyConfig(conf)
 		cobra.CheckErr(err)
-		fmt.Println(string(output))
+		fmt.Println(output)
 	},
 }
 
@@ -73,7 +73,12 @@ func PrettyConfig(cfg *common.Config) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	output := strings.Replace(buffer.String(), "VER_STRING", fmt.Sprintf("\"%s\"", common.ConfigCurrentVersion), 1)
+	output := buffer.String()
+
+	// wrap the version in quotes - assumes version is in format X.X.X (3 single digits)
+	output = strings.Replace(output, "VER_STRING", common.ConfigCurrentVersion, 1)
+	versionSubstring := output[9:14]
+	output = strings.Replace(output, versionSubstring, fmt.Sprintf("\"%s\"", versionSubstring), 1)
 	return output, err
 }
 

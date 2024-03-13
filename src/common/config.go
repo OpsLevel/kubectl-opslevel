@@ -24,10 +24,10 @@ type Config struct {
 
 var ConfigCurrentVersion = "1.3.0"
 
-//go:embed config_sample.yaml
+//go:embed configs/config_sample.yaml
 var ConfigSample string
 
-//go:embed config_simple.yaml
+//go:embed configs/config_simple.yaml
 var ConfigSimple string
 
 func ParseConfig(data string) (*Config, error) {
