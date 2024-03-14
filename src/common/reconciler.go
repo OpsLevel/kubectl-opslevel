@@ -47,7 +47,7 @@ func (r *ServiceReconciler) Reconcile(registration opslevel_jq_parser.ServiceReg
 		return fmt.Errorf("[%s] found multiple services with aliases = [%s]. cannot know which service to target for update ... skipping reconciliation", registration.Name, registration.Aliases)
 	case serviceAliasesResult_AliasMatched:
 		if service == nil {
-			return fmt.Errorf("[%s] unexpected nil - submit a bug report ... skipping reconciliation", registration.Name)
+			return fmt.Errorf("[%s] unexpected nil before update - submit a bug report ... skipping reconciliation", registration.Name)
 		}
 		r.updateService(service, registration)
 	default:
@@ -61,10 +61,12 @@ func (r *ServiceReconciler) Reconcile(registration opslevel_jq_parser.ServiceReg
 			return err
 		}
 		service = newService
+		if service == nil {
+			return fmt.Errorf("[%s] unexpected nil after create - submit a bug report ... skipping reconciliation", registration.Name)
+		}
 	}
 
 	// We don't care about errors at this point because they will just be logged
-	// TODO: we could handle errors to make logging better.
 	r.handleAliases(service, registration)
 	r.handleAssignTags(service, registration)
 	r.handleCreateTags(service, registration)
@@ -229,16 +231,12 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 	} else if registration.Tier != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", service.Name, registration.Tier)
 	}
-	// TODO: which of these situations are actually possible when it comes to <returned object> being nil?
 	if !r.ServiceNeedsUpdate(serviceInput, service) {
 		log.Info().Msgf("[%s] No changes detected to fields - skipping update", service.Name)
 	}
 	updatedService, updateServiceErr := r.client.UpdateService(serviceInput)
 	if updateServiceErr != nil {
 		log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
-		return
-	} else if updatedService == nil {
-		log.Warn().Msgf("[%s] unexpected happened: updated service but the result is nil - please submit a bug report", service.Name)
 		return
 	}
 	diff := cmp.Diff(service, updatedService)
@@ -330,9 +328,6 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 		foundRepository, foundRepositoryErr := r.client.GetRepositoryWithAlias(*repositoryCreate.Repository.Alias)
 		if foundRepositoryErr != nil {
 			log.Warn().Msgf("[%s] Repository with alias: '%s' not found so it cannot be attached to service ... skipping", service.Name, repoCreateString)
-			continue
-		} else if foundRepository == nil {
-			log.Warn().Msgf("[%s] Repository with alias: '%s' call to GetRepositoryWithAlias unexpectedly returned nil - please submit a bug report ... skipping", service.Name, repoCreateString)
 			continue
 		}
 		var serviceRepository *opslevel.ServiceRepository
