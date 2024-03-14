@@ -77,28 +77,37 @@ func (r *ServiceReconciler) ContainsAllTags(tagAssigns []opslevel.TagInput, serv
 }
 
 func (r *ServiceReconciler) ServiceNeedsUpdate(input opslevel.ServiceUpdateInput, service *opslevel.Service) bool {
-	if input.Name != nil && *input.Name != service.Name {
-		return true
-	}
-	if input.Product != nil && *input.Product != service.Product {
-		return true
-	}
+	needsUpdateLog := log.With().Str("where", "ServiceNeedsUpdate").Str("name", service.Name).Logger()
 	if input.Description != nil && *input.Description != service.Description {
-		return true
-	}
-	if input.Language != nil && *input.Language != service.Language {
+		needsUpdateLog.Debug().Msgf("got description '%s' expected '%s'", service.Description, *input.Description)
 		return true
 	}
 	if input.Framework != nil && *input.Framework != service.Framework {
+		needsUpdateLog.Debug().Msgf("got framework '%s' expected '%s'", service.Framework, *input.Framework)
 		return true
 	}
-	if input.TierAlias != nil && *input.TierAlias != service.Tier.Alias {
+	if input.Language != nil && *input.Language != service.Language {
+		needsUpdateLog.Debug().Msgf("got language '%s' expected '%s'", service.Language, *input.Language)
 		return true
 	}
 	if input.LifecycleAlias != nil && *input.LifecycleAlias != service.Lifecycle.Alias {
+		needsUpdateLog.Debug().Msgf("got lifecycle '%s' expected '%s'", service.Lifecycle.Alias, *input.LifecycleAlias)
+		return true
+	}
+	if input.Name != nil && *input.Name != service.Name {
+		needsUpdateLog.Debug().Msgf("got name '%s' expected '%s'", service.Name, *input.Name)
 		return true
 	}
 	if input.OwnerInput != nil && *input.OwnerInput.Alias != service.Owner.Alias {
+		needsUpdateLog.Debug().Msgf("got owner '%s' expected '%s'", service.Owner.Alias, *input.OwnerInput.Alias)
+		return true
+	}
+	if input.Product != nil && *input.Product != service.Product {
+		needsUpdateLog.Debug().Msgf("got product '%s' expected '%s'", service.Product, *input.Product)
+		return true
+	}
+	if input.TierAlias != nil && *input.TierAlias != service.Tier.Alias {
+		needsUpdateLog.Debug().Msgf("got tier '%s' expected '%s'", service.Tier.Alias, *input.TierAlias)
 		return true
 	}
 	return false
