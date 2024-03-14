@@ -26,7 +26,7 @@ func ReconcileServices(client *opslevel.Client, disableServiceCreation bool, que
 	for registration := range queue {
 		err := reconciler.Reconcile(registration)
 		if err != nil {
-			log.Error().Err(err).Msg("failed when reconciling service")
+			log.Error().Err(err).Strs("service_aliases", registration.Aliases).Msg("failed when reconciling service")
 		}
 	}
 }

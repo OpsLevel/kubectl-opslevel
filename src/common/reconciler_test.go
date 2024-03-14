@@ -20,6 +20,8 @@ var testServiceJSON []byte
 //go:embed testdata/testRegistration.json
 var testRegistrationJSON []byte
 
+var gotService = false
+
 func TestReconcilerReconcile(t *testing.T) {
 	// Arrange
 	type TestCase struct {
@@ -52,6 +54,10 @@ func TestReconcilerReconcile(t *testing.T) {
 			registration: testRegistration,
 			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
 				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+					if gotService == true {
+						return nil, nil
+					}
+					gotService = true
 					return &testService, nil
 				},
 				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
@@ -112,7 +118,7 @@ func TestReconcilerReconcile(t *testing.T) {
 			registration: testRegistration,
 			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
 				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return &opslevel.Service{}, nil // This returns a nil service as if the alias lookup didn't find anything
+					return nil, nil // This returns a nil service as if the alias lookup didn't find anything
 				},
 				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
 					return &testService, nil
@@ -150,7 +156,7 @@ func TestReconcilerReconcile(t *testing.T) {
 			registration: testRegistration,
 			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
 				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return &opslevel.Service{}, nil // This returns a nil service as if the alias lookup didn't find anything
+					return nil, nil
 				},
 				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
 					panic("should not be called")

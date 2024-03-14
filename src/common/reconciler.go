@@ -3,11 +3,8 @@ package common
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
-
 	"github.com/google/go-cmp/cmp"
-
-	"golang.org/x/exp/maps"
+	"strings"
 
 	"github.com/opslevel/opslevel-go/v2024"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2024"
@@ -16,12 +13,12 @@ import (
 
 type serviceAliasesResult string
 
+// TODO: we could be better served using error types and wrapping them
 const (
 	serviceAliasesResult_NoAliasesMatched      serviceAliasesResult = "NoAliasesMatched"
 	serviceAliasesResult_AliasMatched          serviceAliasesResult = "AliasMatched"
 	serviceAliasesResult_MultipleServicesFound serviceAliasesResult = "MultipleServicesFound"
 	serviceAliasesResult_APIErrorHappened      serviceAliasesResult = "APIErrorHappened"
-	serviceAliasesResult_FoundServiceNoAlias   serviceAliasesResult = "FoundServiceNoAlias"
 )
 
 type ServiceReconciler struct {
@@ -36,21 +33,36 @@ func NewServiceReconciler(client *OpslevelClient, disableServiceCreation bool) *
 	}
 }
 
+// Reconcile looks up services matching the aliases provided in the registration. If it does not find one, it will create one.
+// Reconcile is push-only, meaning it will never remove data contained in the service but not defined in the registration.
 func (r *ServiceReconciler) Reconcile(registration opslevel_jq_parser.ServiceRegistration) error {
 	if len(registration.Aliases) <= 0 {
 		return fmt.Errorf("[%s] found 0 aliases from kubernetes data", registration.Name)
 	}
-	service, err := r.handleService(registration)
-	if err != nil {
-		return err
-	}
-	// TODO: why return nil instead of returning an error if the service handled is nil?
-	if service == nil {
-		return nil
+
+	service, status := r.lookupService(registration)
+	switch status {
+	case serviceAliasesResult_APIErrorHappened:
+		return fmt.Errorf("[%s] api error during service lookup by alias.  unable to guarantee service was found or not ... skipping reconciliation", registration.Name)
+	case serviceAliasesResult_MultipleServicesFound:
+		return fmt.Errorf("found multiple services with alias.  cannot know which one to update (this is caused by misconfiguration)")
+	case serviceAliasesResult_AliasMatched:
+		r.updateService(service, registration)
+	default:
+		// happy path
+		if r.disableServiceCreation {
+			log.Info().Msgf("avoiding creating a new service.  service creation is disabled")
+			return nil
+		}
+		newService, err := r.createService(registration)
+		if err != nil {
+			return err
+		}
+		service = newService
 	}
 
 	// We don't care about errors at this point because they will just be logged
-	// TODO: we should handle errors to make logging better.
+	// TODO: we could handle errors to make logging better.
 	r.handleAliases(service, registration)
 	r.handleAssignTags(service, registration)
 	r.handleCreateTags(service, registration)
@@ -61,19 +73,15 @@ func (r *ServiceReconciler) Reconcile(registration opslevel_jq_parser.ServiceReg
 }
 
 func (r *ServiceReconciler) ContainsAllTags(tagAssigns []opslevel.TagInput, serviceTags []opslevel.Tag) bool {
-	// TODO: do we really need to use a map of ints?
-	found := make(map[int]bool)
-	for i, expected := range tagAssigns {
-		found[i] = false
-		for _, match := range serviceTags {
-			if expected.Key == match.Key && expected.Value == match.Value {
-				found[i] = true
-				break
-			}
-		}
+	if len(tagAssigns) > len(serviceTags) {
+		return false
 	}
-	for _, value := range found {
-		if !value {
+	serviceTagsMap := make(map[string]bool)
+	for _, tag := range serviceTags {
+		serviceTagsMap[tag.Key+tag.Value] = true
+	}
+	for _, tag := range tagAssigns {
+		if _, ok := serviceTagsMap[tag.Key+tag.Value]; !ok {
 			return false
 		}
 	}
@@ -109,46 +117,32 @@ func (r *ServiceReconciler) ServiceNeedsUpdate(input opslevel.ServiceUpdateInput
 	return false
 }
 
-// This function has 4 outcomes that can happen while looping over the aliases list
+// lookupService has 4 outcomes that can happen while looping over the aliases list
 // serviceAliasesResult_NoAliasesMatched - means that all API calls succeeded and none of the aliases matched an existing service
 // serviceAliasesResult_AliasMatched - means that all the API calls succeeded and a single service was found matching 1 of N aliases
 // serviceAliasesResult_MultipleServicesFound - means that all API calls succeeded but multiple services were returning means the list of aliases does not definitively describe a single service and might be a configuration problem
 // serviceAliasesResult_APIErrorHappened - means that 1 of N aliases got a 4xx/5xx and thereforce we cannot say 100% that the services doesn't exist
-// serviceAliasesResult_FoundServiceNoAlias - means that a service was found but that service has no alias (this should not be possible and can only happen from a bad code change.)
 func (r *ServiceReconciler) lookupService(registration opslevel_jq_parser.ServiceRegistration) (*opslevel.Service, serviceAliasesResult) {
-	// TODO: gotError should not be checked so late - function can be shorter.
-	var gotError error
-	foundServices := map[string]*opslevel.Service{}
+	var foundService *opslevel.Service
 	for _, alias := range registration.Aliases {
-		foundService, err := r.client.GetService(alias)
+		gotService, err := r.client.GetService(alias)
 		if err != nil {
-			gotError = err
 			log.Warn().Err(err).Msgf("got an error when trying to get service with alias '%s'", alias)
-		} else if foundService == nil {
-			log.Warn().Msgf("unexpected happened: got service with alias '%s' but the result is nil", alias)
-		} else if foundService.Id == "" {
-			log.Warn().Msgf("unexpected happened: got service with alias '%s' but the result has no ID", alias)
-		} else {
-			// happy path
-			foundServices[string(foundService.Id)] = foundService
+			return nil, serviceAliasesResult_APIErrorHappened
+		} else if gotService == nil {
+			log.Debug().Msgf("did not find a service with alias '%s'", alias)
+			continue
+		} else if foundService != nil {
+			log.Warn().Msgf("found another service with the same alias '%s' (%s)", alias, gotService.Id)
+			return nil, serviceAliasesResult_MultipleServicesFound
 		}
+		// happy path
+		foundService = gotService
 	}
-	if gotError != nil {
-		return nil, serviceAliasesResult_APIErrorHappened
-	}
-	foundServicesCount := len(foundServices)
-	if foundServicesCount == 1 {
-		keys := maps.Keys(foundServices)
-		if len(keys) == 0 {
-			return nil, serviceAliasesResult_FoundServiceNoAlias
-		}
-		key := keys[0]
-		return foundServices[key], serviceAliasesResult_AliasMatched
-	} else if foundServicesCount > 1 {
-		return nil, serviceAliasesResult_MultipleServicesFound
-	} else {
+	if foundService == nil {
 		return nil, serviceAliasesResult_NoAliasesMatched
 	}
+	return foundService, serviceAliasesResult_AliasMatched // happy path
 }
 
 func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.ServiceRegistration) (*opslevel.Service, error) {
@@ -175,8 +169,6 @@ func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.Servic
 		return nil, fmt.Errorf("[%s] found multiple services with aliases = [%s].  cannot know which service to target for update ... skipping reconciliation", registration.Name, aliases)
 	case serviceAliasesResult_APIErrorHappened:
 		return nil, fmt.Errorf("[%s] api error during service lookup by alias.  unable to guarantee service was found or not ... skipping reconciliation", registration.Name)
-	case serviceAliasesResult_FoundServiceNoAlias:
-		return nil, fmt.Errorf("[%s] found matching service but it unexpectedly has no alias.  please submit a bug report. ... skipping reconciliation", registration.Name)
 	}
 	return service, nil
 }
@@ -215,16 +207,14 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 	} else if registration.Tier != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", registration.Name, registration.Tier)
 	}
-	// TODO: happy path remaining lines
 	service, err := r.client.CreateService(serviceInput)
 	if err != nil {
 		return service, fmt.Errorf("[%s] Failed creating service\n\tREASON: %v", registration.Name, err.Error())
-	} else if service != nil {
-		log.Info().Msgf("[%s] Created new service", service.Name)
-		return service, nil
-	} else {
+	} else if service == nil {
 		return nil, fmt.Errorf("[%s] unexpected happened: created service but the result is nil", registration.Name)
 	}
+	log.Info().Msgf("[%s] Created new service", service.Name)
+	return service, nil
 }
 
 func (r *ServiceReconciler) updateService(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
@@ -269,20 +259,20 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 	} else if registration.Tier != "" {
 		log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", service.Name, registration.Tier)
 	}
-	// TODO: use happy path on remaining lines
 	// TODO: which of these situations are actually possible when it comes to <returned object> being nil?
-	if r.ServiceNeedsUpdate(serviceInput, service) {
-		updatedService, updateServiceErr := r.client.UpdateService(serviceInput)
-		if updateServiceErr != nil {
-			log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
-		} else if updatedService == nil {
-			log.Warn().Msgf("[%s] unexpected happened: updated service but the result is nil - please submit a bug report", service.Name)
-		} else if diff := cmp.Diff(service, updatedService); diff != "" {
-			log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
-		}
-	} else {
+	if !r.ServiceNeedsUpdate(serviceInput, service) {
 		log.Info().Msgf("[%s] No changes detected to fields - skipping update", service.Name)
 	}
+	updatedService, updateServiceErr := r.client.UpdateService(serviceInput)
+	if updateServiceErr != nil {
+		log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
+		return
+	} else if updatedService == nil {
+		log.Warn().Msgf("[%s] unexpected happened: updated service but the result is nil - please submit a bug report", service.Name)
+		return
+	}
+	diff := cmp.Diff(service, updatedService)
+	log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
 }
 
 func (r *ServiceReconciler) handleAliases(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
