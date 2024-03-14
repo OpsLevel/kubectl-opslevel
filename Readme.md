@@ -78,21 +78,26 @@ service:
           - .metadata.namespace == "kube-system"
           - .metadata.annotations."opslevel.com/ignore"
       opslevel: # This is how you map your kubernetes data to opslevel service
-        name: .metadata.name
-        description: .metadata.annotations."opslevel.com/description"
-        owner: .metadata.annotations."opslevel.com/owner"
-        lifecycle: .metadata.annotations."opslevel.com/lifecycle"
-        tier: .metadata.annotations."opslevel.com/tier"
-        product: .metadata.annotations."opslevel.com/product"
-        language: .metadata.annotations."opslevel.com/language"
-        framework: .metadata.annotations."opslevel.com/framework"
-        system: .metadata.annotations."opslevel.com/system"
         aliases: # This is how we identify the services again during reconciliation - please make sure they are unique
           - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
           - '"\(.metadata.namespace)-\(.metadata.name)"'
+        description: .metadata.annotations."opslevel.com/description"
+        framework: .metadata.annotations."opslevel.com/framework"
+        language: .metadata.annotations."opslevel.com/language"
+        lifecycle: .metadata.annotations."opslevel.com/lifecycle"
+        name: .metadata.name
+        owner: .metadata.annotations."opslevel.com/owner"
+        product: .metadata.annotations."opslevel.com/product"
         properties:
           # assign the value of a property named 'prop_object' (is a JSON object) onto this service
           prop_object: .metadata.annotations.prop_object
+        repositories: # attach repositories to the service using the opslevel repo alias - IE github.com:hashicorp/vault
+          - '{"name": "My Cool Repo", "directory": "", "repo": .metadata.annotations.repository} | if .repo then . else empty end'
+          # if just the alias is returned as a single string we'll build the name for you and set the directory to "/"
+          - .metadata.annotations.repo
+          # find annotations with format: opslevel.com/repo.<displayname>.<repo.subpath.dots.turned.to.forwardslash>: <opslevel repo alias>
+          - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/repo"))) | map({"name": .key | split(".")[2], "directory": .key | split(".")[3:] | join("/"), "repo": .value})'
+        system: .metadata.annotations."opslevel.com/system"
         tags:
           assign: # tag with the same key name but with a different value will be updated on the service
             - '{"imported": "kubectl-opslevel"}'
@@ -101,18 +106,13 @@ service:
             - .metadata.labels
           create: # tag with the same key name but with a different value with be added to the service
             - '{"environment": .spec.template.metadata.labels.environment}'
+        tier: .metadata.annotations."opslevel.com/tier"
         tools:
           - '{"category": "other", "environment": "production", "displayName": "my-cool-tool", "url": .metadata.annotations."example.com/my-cool-tool"} | if .url then . else empty end'
           # find annotations with format: opslevel.com/tools.<category>.<displayname>: <url>
           - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tools"))) | map({"category": .key | split(".")[2], "displayName": .key | split(".")[3], "url": .value})'
           # OR find annotations with format: opslevel.com/tools.<category>.<environment>.<displayname>: <url>
           # - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/tools"))) | map({"category": .key | split(".")[2], "environment": .key | split(".")[3], "displayName": .key | split(".")[4], "url": .value})'
-        repositories: # attach repositories to the service using the opslevel repo alias - IE github.com:hashicorp/vault
-          - '{"name": "My Cool Repo", "directory": "", "repo": .metadata.annotations.repository} | if .repo then . else empty end'
-          # if just the alias is returned as a single string we'll build the name for you and set the directory to "/"
-          - .metadata.annotations.repo
-          # find annotations with format: opslevel.com/repo.<displayname>.<repo.subpath.dots.turned.to.forwardslash>: <opslevel repo alias>
-          - '.metadata.annotations | to_entries |  map(select(.key | startswith("opslevel.com/repo"))) | map({"name": .key | split(".")[2], "directory": .key | split(".")[3:] | join("/"), "repo": .value})'
 ```
 
 ### Enable shell autocompletion
