@@ -45,6 +45,7 @@ tasks:
       - gofumpt -w .
       - go mod tidy
       - golangci-lint run --timeout 5m --fix
+      - nilaway -fix -test=false -include-pkgs='github.com/opslevel/kubectl-opslevel' ./...
 
   setup:
     desc: Setup linter, formatter, etc. for local testing and CI
