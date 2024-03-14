@@ -60,6 +60,7 @@ var configSampleCmd = &cobra.Command{
 		} else {
 			cfg, err = common.ParseConfig(common.ConfigSample)
 		}
+		cobra.CheckErr(err)
 		pretty, err := PrettyConfig(cfg)
 		cobra.CheckErr(err)
 		fmt.Println(pretty)
@@ -101,14 +102,17 @@ func readConfig() []byte {
 		}
 		return buf.Bytes()
 	}
+	_, err := os.Stat(cfgFile)
+	if err != nil && errors.Is(err, os.ErrNotExist) {
+		// send a gentle error message instead of panicking if user forgot their config file
+		fmt.Printf("config file not found: '%s' - try running:\n  kubectl opslevel config sample [--simple] > %s\n", cfgFile, cfgFile)
+		fmt.Printf("make sure to edit and then preview it afterwards:\n  kubectl opslevel service preview\n")
+		os.Exit(1)
+	} else if err != nil {
+		panic(err)
+	}
 	res, err := os.ReadFile(cfgFile)
 	if err != nil {
-		// send a gentle error message instead of panicking if user forgot their config file
-		if errors.As(os.ErrNotExist, &err) {
-			fmt.Printf("config file not found: '%s' - try running:\n  kubectl opslevel config sample [--simple] > %s\n", cfgFile, cfgFile)
-			fmt.Printf("make sure to edit and then preview it afterwards:\n  kubectl opslevel service preview\n")
-			os.Exit(1)
-		}
 		panic(err)
 	}
 	return res
