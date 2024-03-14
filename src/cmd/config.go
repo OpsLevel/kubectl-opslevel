@@ -105,7 +105,7 @@ func readConfig() []byte {
 	if err != nil {
 		// send a gentle error message instead of panicking if user forgot their config file
 		if errors.As(os.ErrNotExist, &err) {
-			fmt.Printf("config file not found: '%s' - try running:\n  try running: kubectl opslevel config sample [--simple] > %s\n", cfgFile, cfgFile)
+			fmt.Printf("config file not found: '%s' - try running:\n  kubectl opslevel config sample [--simple] > %s\n", cfgFile, cfgFile)
 			fmt.Printf("make sure to edit and then preview it afterwards:\n  kubectl opslevel service preview\n")
 			os.Exit(1)
 		}
