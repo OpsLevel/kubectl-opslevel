@@ -35,7 +35,7 @@ tasks:
     cmds:
       - test -z "$(gofumpt -d -e . | tee /dev/stderr)"
       - golangci-lint run --timeout 5m
-      - nilaway -test=false ./...
+      - nilaway -test=false -include-pkgs='github.com/opslevel/kubectl-opslevel' ./...
 
   fix:
     desc: Fix formatting and linting
@@ -45,7 +45,6 @@ tasks:
       - gofumpt -w .
       - go mod tidy
       - golangci-lint run --timeout 5m --fix
-      - nilaway -fix -test=false -include-pkgs='github.com/opslevel/kubectl-opslevel' ./...
 
   setup:
     desc: Setup linter, formatter, etc. for local testing and CI
