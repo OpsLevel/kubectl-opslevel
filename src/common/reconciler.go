@@ -3,8 +3,9 @@ package common
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/go-cmp/cmp"
 	"strings"
+
+	"github.com/google/go-cmp/cmp"
 
 	"golang.org/x/exp/maps"
 
@@ -49,6 +50,7 @@ func (r *ServiceReconciler) Reconcile(registration opslevel_jq_parser.ServiceReg
 	}
 
 	// We don't care about errors at this point because they will just be logged
+	// TODO: we should handle errors to make logging better.
 	r.handleAliases(service, registration)
 	r.handleAssignTags(service, registration)
 	r.handleCreateTags(service, registration)
