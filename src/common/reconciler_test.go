@@ -54,6 +54,7 @@ func TestReconcilerReconcile(t *testing.T) {
 			registration: testRegistration,
 			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
 				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+					// TODO: this global var is a hack to get a service to be returned only once
 					if gotService == true {
 						return nil, nil
 					}
@@ -66,12 +67,29 @@ func TestReconcilerReconcile(t *testing.T) {
 				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
 					return &testService, nil
 				},
+			}, false),
+			assert: func(t *testing.T, err error) {
+				autopilot.Ok(t, err)
+			},
+		},
+		"Multiple Matching Aliases Should Halt": {
+			registration: testRegistration,
+			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
+				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+					return &testService, nil
+				},
+				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+					panic("should not be called")
+				},
+				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+					panic("should not be called")
+				},
 				GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
 					return nil, fmt.Errorf("api error")
 				},
 			}, false),
 			assert: func(t *testing.T, err error) {
-				autopilot.Ok(t, err)
+				autopilot.Equals(t, "[test] found multiple services with aliases = [[test1 test2 test3]]. cannot know which service to target for update ... skipping reconciliation", err.Error())
 			},
 		},
 		"API Error On Get Service Should Halt": {
@@ -82,6 +100,12 @@ func TestReconcilerReconcile(t *testing.T) {
 			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
 				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
 					return nil, fmt.Errorf("api error")
+				},
+				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+					panic("should not be called")
+				},
+				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+					panic("should not be called")
 				},
 			}, false),
 			assert: func(t *testing.T, err error) {
@@ -95,10 +119,13 @@ func TestReconcilerReconcile(t *testing.T) {
 			},
 			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
 				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return &testService, nil
+					return nil, nil
 				},
 				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
 					return nil, fmt.Errorf("api error")
+				},
+				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+					panic("should not be called")
 				},
 				CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
 					panic("should not be called")
@@ -111,7 +138,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				},
 			}, false),
 			assert: func(t *testing.T, err error) {
-				autopilot.Ok(t, err)
+				autopilot.Equals(t, "[test] Failed creating service\n\tREASON: api error", err.Error())
 			},
 		},
 		"Happy Path": {
@@ -192,10 +219,15 @@ func TestReconcilerReconcile(t *testing.T) {
 		},
 	}
 	// Act
-	autopilot.RunTableTests(t, cases, func(t *testing.T, test TestCase) {
-		// Assert
-		test.assert(t, test.reconciler.Reconcile(test.registration))
-	})
+	for k, tc := range cases {
+		t.Run(k, func(t *testing.T) {
+			if k == "Single Matching Alias Should Call Service Update" {
+				gotService = false
+			}
+			result := tc.reconciler.Reconcile(tc.registration)
+			tc.assert(t, result)
+		})
+	}
 }
 
 func Test_Reconciler_ContainsAllTags(t *testing.T) {

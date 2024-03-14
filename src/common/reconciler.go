@@ -321,6 +321,10 @@ func (r *ServiceReconciler) handleTools(service *opslevel.Service, registration 
 func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	for _, repositoryCreate := range registration.Repositories {
 		repoCreateString := "repoCreate{}"
+		if repositoryCreate.Repository.Alias == nil || *repositoryCreate.Repository.Alias == "" {
+			log.Warn().Msgf("[%s] Repository with alias: '%s' not found so it cannot be attached to service ... skipping", service.Name, repoCreateString)
+			continue
+		}
 		b, err := json.Marshal(repositoryCreate)
 		if err == nil {
 			repoCreateString = string(b)
