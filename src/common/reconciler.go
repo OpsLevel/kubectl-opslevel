@@ -3,8 +3,8 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/google/go-cmp/cmp"
-	"strings"
 
 	"github.com/opslevel/opslevel-go/v2024"
 	opslevel_jq_parser "github.com/opslevel/opslevel-jq-parser/v2024"
@@ -36,17 +36,19 @@ func NewServiceReconciler(client *OpslevelClient, disableServiceCreation bool) *
 // Reconcile looks up services matching the aliases provided in the registration. If it does not find one, it will create one.
 // Reconcile is push-only, meaning it will never remove data contained in the service but not defined in the registration.
 func (r *ServiceReconciler) Reconcile(registration opslevel_jq_parser.ServiceRegistration) error {
-	if len(registration.Aliases) <= 0 {
+	if len(registration.Aliases) == 0 {
 		return fmt.Errorf("[%s] found 0 aliases from kubernetes data", registration.Name)
 	}
-
 	service, status := r.lookupService(registration)
 	switch status {
 	case serviceAliasesResult_APIErrorHappened:
 		return fmt.Errorf("[%s] api error during service lookup by alias.  unable to guarantee service was found or not ... skipping reconciliation", registration.Name)
 	case serviceAliasesResult_MultipleServicesFound:
-		return fmt.Errorf("found multiple services with alias.  cannot know which one to update (this is caused by misconfiguration)")
+		return fmt.Errorf("[%s] found multiple services with aliases = [%s]. cannot know which service to target for update ... skipping reconciliation", registration.Name, registration.Aliases)
 	case serviceAliasesResult_AliasMatched:
+		if service == nil {
+			return fmt.Errorf("[%s] unexpected nil - submit a bug report ... skipping reconciliation", registration.Name)
+		}
 		r.updateService(service, registration)
 	default:
 		// happy path
@@ -145,34 +147,6 @@ func (r *ServiceReconciler) lookupService(registration opslevel_jq_parser.Servic
 	return foundService, serviceAliasesResult_AliasMatched // happy path
 }
 
-func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.ServiceRegistration) (*opslevel.Service, error) {
-	service, status := r.lookupService(registration)
-	switch status {
-	case serviceAliasesResult_NoAliasesMatched:
-		if r.disableServiceCreation {
-			log.Info().Msgf("[%s] Avoided creating a new service\n\tREASON: service creation is disabled", registration.Name)
-			return nil, nil
-		}
-
-		newService, newServiceErr := r.createService(registration)
-		if newServiceErr != nil {
-			return nil, fmt.Errorf("[%s] api error during service creation ... skipping reconciliation.\n\tREASON: %v", registration.Name, newServiceErr)
-		}
-		service = newService
-	case serviceAliasesResult_AliasMatched:
-		r.updateService(service, registration)
-	case serviceAliasesResult_MultipleServicesFound:
-		aliases := ""
-		if service != nil {
-			aliases = fmt.Sprintf(`"%s"`, strings.Join(service.Aliases, `", "`))
-		}
-		return nil, fmt.Errorf("[%s] found multiple services with aliases = [%s].  cannot know which service to target for update ... skipping reconciliation", registration.Name, aliases)
-	case serviceAliasesResult_APIErrorHappened:
-		return nil, fmt.Errorf("[%s] api error during service lookup by alias.  unable to guarantee service was found or not ... skipping reconciliation", registration.Name)
-	}
-	return service, nil
-}
-
 func (r *ServiceReconciler) createService(registration opslevel_jq_parser.ServiceRegistration) (*opslevel.Service, error) {
 	serviceInput := opslevel.ServiceCreateInput{}
 	// set service fields -- ALWAYS ensure jq parser did not return "" before setting
@@ -218,10 +192,6 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 }
 
 func (r *ServiceReconciler) updateService(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
-	if service == nil {
-		log.Warn().Msgf("[%s] unexpected happened: service passed to be updated is nil", registration.Name)
-		return
-	}
 	serviceInput := opslevel.ServiceUpdateInput{
 		Id: &service.Id,
 	}
