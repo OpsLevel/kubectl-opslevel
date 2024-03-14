@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -92,20 +93,22 @@ func init() {
 }
 
 func readConfig() []byte {
-	var err error
-	var res []byte
-
-	switch cfgFile {
-	case ".":
-		res, err = os.ReadFile("./opslevel-k8s.yaml")
-	case "-":
+	if cfgFile == "-" {
 		buf := bytes.Buffer{}
-		_, err = buf.ReadFrom(os.Stdin)
-		res = buf.Bytes()
-	default:
-		res, err = os.ReadFile(cfgFile)
+		_, err := buf.ReadFrom(os.Stdin)
+		if err != nil {
+			panic(err)
+		}
+		return buf.Bytes()
 	}
+	res, err := os.ReadFile(cfgFile)
 	if err != nil {
+		// send a gentle error message instead of panicking if user forgot their config file
+		if errors.As(os.ErrNotExist, &err) {
+			fmt.Printf("config file not found: '%s' - try running:\n  try running: kubectl opslevel config sample [--simple] > %s\n", cfgFile, cfgFile)
+			fmt.Printf("make sure to edit and then preview it afterwards:\n  kubectl opslevel service preview\n")
+			os.Exit(1)
+		}
 		panic(err)
 	}
 	return res
