@@ -116,6 +116,7 @@ func (r *ServiceReconciler) ServiceNeedsUpdate(input opslevel.ServiceUpdateInput
 // serviceAliasesResult_APIErrorHappened - means that 1 of N aliases got a 4xx/5xx and thereforce we cannot say 100% that the services doesn't exist
 // serviceAliasesResult_FoundServiceNoAlias - means that a service was found but that service has no alias (this should not be possible and can only happen from a bad code change.)
 func (r *ServiceReconciler) lookupService(registration opslevel_jq_parser.ServiceRegistration) (*opslevel.Service, serviceAliasesResult) {
+	// TODO: gotError should not be checked so late - function can be shorter.
 	var gotError error
 	foundServices := map[string]*opslevel.Service{}
 	for _, alias := range registration.Aliases {
@@ -286,6 +287,9 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 
 func (r *ServiceReconciler) handleAliases(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	for _, alias := range registration.Aliases {
+		if service.HasAlias(alias) {
+			continue
+		}
 		err := r.client.CreateAlias(opslevel.AliasCreateInput{
 			Alias:   alias,
 			OwnerId: service.Id,
