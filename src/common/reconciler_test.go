@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/rs/zerolog/log"
@@ -21,6 +22,44 @@ var testServiceJSON []byte
 var testRegistrationJSON []byte
 
 var gotService = false
+
+func panicClient() common.OpslevelClient {
+	return common.OpslevelClient{
+		GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+			panic("should not be called")
+		},
+		CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+			panic("should not be called")
+		},
+		UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+			panic("should not be called")
+		},
+		CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
+			panic("should not be called")
+		},
+		AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
+			panic("should not be called")
+		},
+		AssignPropertyHandler: func(input opslevel.PropertyInput) error {
+			panic("should not be called")
+		},
+		CreateTagHandler: func(input opslevel.TagCreateInput) error {
+			panic("should not be called")
+		},
+		CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
+			panic("should not be called")
+		},
+		GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
+			panic("should not be called")
+		},
+		CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
+			panic("should not be called")
+		},
+		UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
+			panic("should not be called")
+		},
+	}
+}
 
 func TestReconcilerReconcile(t *testing.T) {
 	// Arrange
@@ -138,7 +177,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				},
 			}, false),
 			assert: func(t *testing.T, err error) {
-				autopilot.Equals(t, "[test] Failed creating service\n\tREASON: api error", err.Error())
+				autopilot.Equals(t, "api error", err.Error())
 			},
 		},
 		"Happy Path": {
@@ -226,6 +265,102 @@ func TestReconcilerReconcile(t *testing.T) {
 			}
 			result := tc.reconciler.Reconcile(tc.registration)
 			tc.assert(t, result)
+		})
+	}
+}
+
+func ToJSON[T any](object T) string {
+	b, _ := json.MarshalIndent(&object, "", "    ")
+	return string(b)
+}
+
+func TestReconcilerWithRegistration(t *testing.T) {
+	type TestCase struct {
+		Registration opslevel_jq_parser.ServiceRegistration
+		CreateInput  opslevel.ServiceCreateInput
+		UpdateInput  opslevel.ServiceUpdateInput
+	}
+	testCases := map[string]TestCase{
+		"Specify all expect all": {
+			opslevel_jq_parser.ServiceRegistration{
+				Aliases:     []string{"hwapp", "hello_world"},
+				Description: "hello world 1234",
+				Framework:   "rails",
+				Language:    "ruby",
+				Lifecycle:   "generally_available",
+				Name:        "hello world app",
+				Owner:       "platform",
+				Product:     "cloud",
+				System:      "internal_apps",
+				Tier:        "tier_4",
+			},
+			opslevel.ServiceCreateInput{
+				Description:    opslevel.RefOf("hello world 1234"),
+				Framework:      opslevel.RefOf("rails"),
+				Language:       opslevel.RefOf("ruby"),
+				LifecycleAlias: opslevel.RefOf("generally_available"),
+				Name:           "hello world app",
+				OwnerInput:     opslevel.NewIdentifier("platform"),
+				Parent:         opslevel.NewIdentifier("internal_apps"),
+				Product:        opslevel.RefOf("cloud"),
+				TierAlias:      opslevel.RefOf("tier_4"),
+			},
+			opslevel.ServiceUpdateInput{
+				Description:    opslevel.RefOf("hello world 1234"),
+				Framework:      opslevel.RefOf("rails"),
+				Id:             opslevel.NewID("XXX"),
+				Language:       opslevel.RefOf("ruby"),
+				LifecycleAlias: opslevel.RefOf("generally_available"),
+				Name:           opslevel.RefOf("hello world app"),
+				OwnerInput:     opslevel.NewIdentifier("platform"),
+				Parent:         opslevel.NewIdentifier("internal_apps"),
+				Product:        opslevel.RefOf("cloud"),
+				TierAlias:      opslevel.RefOf("tier_4"),
+			},
+		},
+	}
+	for k, tc := range testCases {
+		t.Run(k, func(t *testing.T) {
+			var reconciler *common.ServiceReconciler
+			var err error
+			reconciler = common.NewServiceReconciler(&common.OpslevelClient{
+				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+					return nil, nil
+				},
+				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+					if !reflect.DeepEqual(input, tc.CreateInput) {
+						t.Errorf("expected create input:\n'%s'\ngot create input:\n'%s'\n", ToJSON(tc.CreateInput), ToJSON(input))
+					}
+					return nil, fmt.Errorf("done")
+				},
+			}, false)
+			err = reconciler.Reconcile(tc.Registration)
+			if err.Error() != "done" {
+				t.Errorf("create: expected error containing 'done', got: '%s'", err.Error())
+			}
+
+			ranOnce := false
+			reconciler = common.NewServiceReconciler(&common.OpslevelClient{
+				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+					if ranOnce {
+						return nil, nil
+					}
+					ranOnce = true
+					service := &opslevel.Service{}
+					service.Id = "XXX"
+					return service, nil
+				},
+				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+					if !reflect.DeepEqual(input, tc.UpdateInput) {
+						t.Errorf("expected update input:\n'%s'\ngot update input:\n'%s'\n", ToJSON(tc.UpdateInput), ToJSON(input))
+					}
+					return nil, fmt.Errorf("done")
+				},
+			}, false)
+			err = reconciler.Reconcile(tc.Registration)
+			if err.Error() != "done" {
+				t.Errorf("update: expected error containing 'done', got: '%s'", err.Error())
+			}
 		})
 	}
 }
@@ -325,93 +460,6 @@ func Test_Reconciler_ContainsAllTags(t *testing.T) {
 	autopilot.RunTableTests(t, cases, func(t *testing.T, test TestCase) {
 		// Assert
 		autopilot.Equals(t, test.result, reconciler.ContainsAllTags(test.input, test.tags))
-	})
-}
-
-func Test_Reconciler_ServiceNeedsUpdate(t *testing.T) {
-	type TestCase struct {
-		input   opslevel.ServiceUpdateInput
-		service opslevel.Service
-		result  bool
-	}
-	// Arrange
-	service1 := opslevel.Service{
-		ServiceId: opslevel.ServiceId{
-			Id: *opslevel.NewID("XXX"),
-		},
-		Name:        "Test",
-		Description: "Hello World",
-		Language:    "Python",
-		Tier: opslevel.Tier{
-			Alias: "tier_1",
-		},
-	}
-	service2 := opslevel.Service{
-		ServiceId: opslevel.ServiceId{
-			Id: *opslevel.NewID("XXX"),
-		},
-		Name:        "Test",
-		Description: "Hello World",
-		Language:    "Python",
-		Tier: opslevel.Tier{
-			Alias: "tier_1",
-		},
-	}
-	reconciler := common.NewServiceReconciler(&common.OpslevelClient{}, false)
-	cases := map[string]TestCase{
-		"Is True When Input Differs 1": {
-			input: opslevel.ServiceUpdateInput{
-				Name: opslevel.RefOf("Test1"),
-			},
-			service: service1,
-			result:  true,
-		},
-		"Is True When Input Differs 2": {
-			input: opslevel.ServiceUpdateInput{
-				Name:      opslevel.RefOf("Test"),
-				Language:  opslevel.RefOf("Python"),
-				TierAlias: opslevel.RefOf("tier_2"),
-			},
-			service: service1,
-			result:  true,
-		},
-		"Is True When Input Differs 3": {
-			input: opslevel.ServiceUpdateInput{
-				Name:       opslevel.RefOf("Test"),
-				Language:   opslevel.RefOf("Python"),
-				OwnerInput: opslevel.NewIdentifier("platform"),
-			},
-			service: service1,
-			result:  true,
-		},
-		"Is False When Input Matches 1": {
-			input: opslevel.ServiceUpdateInput{
-				Id: opslevel.NewID("XXX"),
-			},
-			service: service2,
-			result:  false,
-		},
-		"Is False When Input Matches 2": {
-			input: opslevel.ServiceUpdateInput{
-				Name: opslevel.RefOf("Test"),
-			},
-			service: service2,
-			result:  false,
-		},
-		"Is False When Input Matches 3": {
-			input: opslevel.ServiceUpdateInput{
-				Name:      opslevel.RefOf("Test"),
-				Language:  opslevel.RefOf("Python"),
-				TierAlias: opslevel.RefOf("tier_1"),
-			},
-			service: service2,
-			result:  false,
-		},
-	}
-	// Act
-	autopilot.RunTableTests(t, cases, func(t *testing.T, test TestCase) {
-		// Assert
-		autopilot.Equals(t, test.result, reconciler.ServiceNeedsUpdate(test.input, &test.service))
 	})
 }
 

@@ -49,18 +49,21 @@ func (r *ServiceReconciler) Reconcile(registration opslevel_jq_parser.ServiceReg
 		if service == nil {
 			return fmt.Errorf("[%s] unexpected nil before update - submit a bug report ... skipping reconciliation", registration.Name)
 		}
-		r.updateService(service, registration)
+		err := r.updateService(service, registration)
+		if err != nil {
+			return err
+		}
 	default:
 		// happy path
 		if r.disableServiceCreation {
 			log.Info().Msgf("avoiding creating a new service.  service creation is disabled")
 			return nil
 		}
-		newService, err := r.createService(registration)
+		var err error
+		service, err = r.createService(registration)
 		if err != nil {
 			return err
 		}
-		service = newService
 		if service == nil {
 			return fmt.Errorf("[%s] unexpected nil after create - submit a bug report ... skipping reconciliation", registration.Name)
 		}
@@ -92,61 +95,6 @@ func (r *ServiceReconciler) ContainsAllTags(tagAssigns []opslevel.TagInput, serv
 	return true
 }
 
-func (r *ServiceReconciler) ServiceNeedsUpdate(input opslevel.ServiceUpdateInput, service *opslevel.Service) bool {
-	needsUpdateLog := log.With().Str("where", "ServiceNeedsUpdate").Str("name", service.Name).Logger()
-	if input.Description != nil && *input.Description != service.Description {
-		needsUpdateLog.Debug().Msgf("got description '%s' expected '%s'", service.Description, *input.Description)
-		return true
-	}
-	if input.Framework != nil && *input.Framework != service.Framework {
-		needsUpdateLog.Debug().Msgf("got framework '%s' expected '%s'", service.Framework, *input.Framework)
-		return true
-	}
-	if input.Language != nil && *input.Language != service.Language {
-		needsUpdateLog.Debug().Msgf("got language '%s' expected '%s'", service.Language, *input.Language)
-		return true
-	}
-	if input.LifecycleAlias != nil && *input.LifecycleAlias != service.Lifecycle.Alias {
-		needsUpdateLog.Debug().Msgf("got lifecycle '%s' expected '%s'", service.Lifecycle.Alias, *input.LifecycleAlias)
-		return true
-	}
-	if input.Name != nil && *input.Name != service.Name {
-		needsUpdateLog.Debug().Msgf("got name '%s' expected '%s'", service.Name, *input.Name)
-		return true
-	}
-	if input.OwnerInput != nil && *input.OwnerInput.Alias != service.Owner.Alias {
-		needsUpdateLog.Debug().Msgf("got owner '%s' expected '%s'", service.Owner.Alias, *input.OwnerInput.Alias)
-		return true
-	}
-	// handle parent
-	if input.Parent != nil && input.Parent.Alias != nil {
-		if service.Parent == nil {
-			needsUpdateLog.Debug().Msgf("parent (system) '%s' needs to be added", *input.Parent.Alias)
-			return true
-		}
-		found := false
-		for _, alias := range service.Parent.Aliases {
-			if alias == *input.Parent.Alias {
-				found = true
-				break
-			}
-		}
-		if !found {
-			needsUpdateLog.Debug().Msgf("parent (system) needs to be changed to '%s'", *input.Parent.Alias)
-			return true
-		}
-	}
-	if input.Product != nil && *input.Product != service.Product {
-		needsUpdateLog.Debug().Msgf("got product '%s' expected '%s'", service.Product, *input.Product)
-		return true
-	}
-	if input.TierAlias != nil && *input.TierAlias != service.Tier.Alias {
-		needsUpdateLog.Debug().Msgf("got tier '%s' expected '%s'", service.Tier.Alias, *input.TierAlias)
-		return true
-	}
-	return false
-}
-
 // lookupService has 4 outcomes that can happen while looping over the aliases list
 // serviceAliasesResult_NoAliasesMatched - means that all API calls succeeded and none of the aliases matched an existing service
 // serviceAliasesResult_AliasMatched - means that all the API calls succeeded and a single service was found matching 1 of N aliases
@@ -163,7 +111,7 @@ func (r *ServiceReconciler) lookupService(registration opslevel_jq_parser.Servic
 			log.Debug().Msgf("did not find a service with alias '%s'", alias)
 			continue
 		} else if foundService != nil {
-			log.Warn().Msgf("found another service with the same alias '%s' (%s)", alias, gotService.Id)
+			log.Debug().Msgf("found another service with the same alias '%s' (%s)", alias, gotService.Id)
 			return nil, serviceAliasesResult_MultipleServicesFound
 		}
 		// happy path
@@ -177,15 +125,23 @@ func (r *ServiceReconciler) lookupService(registration opslevel_jq_parser.Servic
 
 func (r *ServiceReconciler) createService(registration opslevel_jq_parser.ServiceRegistration) (*opslevel.Service, error) {
 	serviceInput := opslevel.ServiceCreateInput{}
-	// set service fields -- ALWAYS ensure jq parser did not return "" before setting
 	if registration.Description != "" {
-		opslevel.RefOf(registration.Description)
+		serviceInput.Description = opslevel.RefOf(registration.Description)
 	}
 	if registration.Framework != "" {
-		opslevel.RefOf(registration.Framework)
+		serviceInput.Framework = opslevel.RefOf(registration.Framework)
 	}
 	if registration.Language != "" {
-		opslevel.RefOf(registration.Language)
+		serviceInput.Language = opslevel.RefOf(registration.Language)
+	}
+	if registration.Lifecycle != "" {
+		serviceInput.LifecycleAlias = opslevel.RefOf(registration.Lifecycle)
+	}
+	if registration.Name != "" {
+		serviceInput.Name = registration.Name
+	}
+	if registration.Owner != "" {
+		serviceInput.OwnerInput = opslevel.NewIdentifier(registration.Owner)
 	}
 	if registration.Product != "" {
 		serviceInput.Product = opslevel.RefOf(registration.Product)
@@ -193,46 +149,40 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 	if registration.System != "" {
 		serviceInput.Parent = opslevel.NewIdentifier(registration.System)
 	}
-	// this still checks if jq parser did not return "", since the cache key should never be ""
-	if lifecycle, _ := opslevel.Cache.TryGetLifecycle(registration.Lifecycle); lifecycle != nil {
-		serviceInput.LifecycleAlias = opslevel.RefOf(lifecycle.Alias)
-	} else if registration.Lifecycle != "" {
-		log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", registration.Name, registration.Lifecycle)
+	if registration.Tier != "" {
+		serviceInput.TierAlias = opslevel.RefOf(registration.Tier)
 	}
-	if team, _ := opslevel.Cache.TryGetTeam(registration.Owner); team != nil {
-		serviceInput.OwnerInput = opslevel.NewIdentifier(team.Alias)
-	} else if registration.Owner != "" {
-		log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", registration.Name, registration.Owner)
-	}
-	if tier, _ := opslevel.Cache.TryGetTier(registration.Tier); tier != nil {
-		serviceInput.TierAlias = opslevel.RefOf(tier.Alias)
-	} else if registration.Tier != "" {
-		log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", registration.Name, registration.Tier)
-	}
-	service, err := r.client.CreateService(serviceInput)
+	created, err := r.client.CreateService(serviceInput)
 	if err != nil {
-		return service, fmt.Errorf("[%s] Failed creating service\n\tREASON: %v", registration.Name, err.Error())
-	} else if service == nil {
-		return nil, fmt.Errorf("[%s] unexpected happened: created service but the result is nil", registration.Name)
+		log.Error().Msgf("[%s] API error: '%s'", registration.Name, err.Error())
+		return nil, err
 	}
-	log.Info().Msgf("[%s] Created new service", service.Name)
-	return service, nil
+	toJSON, _ := json.Marshal(&created)
+	log.Info().Msgf("[%s] Created Service:\n%s", registration.Name, string(toJSON))
+	return created, nil
 }
 
-func (r *ServiceReconciler) updateService(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
+func (r *ServiceReconciler) updateService(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) error {
 	serviceInput := opslevel.ServiceUpdateInput{
 		Id: &service.Id,
 	}
-	// set service fields -- ALWAYS ensure jq parser did not return "" before setting
-	// TODO: this is the exact same logic as in createService() - we can use mapstructure here.
 	if registration.Description != "" {
-		opslevel.RefOf(registration.Description)
+		serviceInput.Description = opslevel.RefOf(registration.Description)
 	}
 	if registration.Framework != "" {
-		opslevel.RefOf(registration.Framework)
+		serviceInput.Framework = opslevel.RefOf(registration.Framework)
 	}
 	if registration.Language != "" {
-		opslevel.RefOf(registration.Language)
+		serviceInput.Language = opslevel.RefOf(registration.Language)
+	}
+	if registration.Lifecycle != "" {
+		serviceInput.LifecycleAlias = opslevel.RefOf(registration.Lifecycle)
+	}
+	if registration.Name != "" {
+		serviceInput.Name = opslevel.RefOf(registration.Name)
+	}
+	if registration.Owner != "" {
+		serviceInput.OwnerInput = opslevel.NewIdentifier(registration.Owner)
 	}
 	if registration.Product != "" {
 		serviceInput.Product = opslevel.RefOf(registration.Product)
@@ -240,33 +190,23 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 	if registration.System != "" {
 		serviceInput.Parent = opslevel.NewIdentifier(registration.System)
 	}
-	// this still checks if jq parser did not return "", since the cache key should never be ""
-	// TODO: change this cache API in opslevel-go, it is awkward to use. Why does it return both the pointer value AND the bool?
-	if lifecycle, _ := opslevel.Cache.TryGetLifecycle(registration.Lifecycle); lifecycle != nil {
-		serviceInput.LifecycleAlias = opslevel.RefOf(lifecycle.Alias)
-	} else if registration.Lifecycle != "" {
-		log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", service.Name, registration.Lifecycle)
+	if registration.Tier != "" {
+		serviceInput.TierAlias = opslevel.RefOf(registration.Tier)
 	}
-	if team, _ := opslevel.Cache.TryGetTeam(registration.Owner); team != nil {
-		serviceInput.OwnerInput = opslevel.NewIdentifier(team.Alias)
-	} else if registration.Owner != "" {
-		log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", service.Name, registration.Owner)
+	inputDiff := cmp.Diff(serviceInput, opslevel.ServiceUpdateInput{Id: &service.Id})
+	if inputDiff == "" {
+		log.Info().Msgf("[%s] No changes - skipping", service.Name)
+		return nil
 	}
-	if tier, _ := opslevel.Cache.TryGetTier(registration.Tier); tier != nil {
-		serviceInput.TierAlias = opslevel.RefOf(tier.Alias)
-	} else if registration.Tier != "" {
-		log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", service.Name, registration.Tier)
+	log.Info().Msgf("[%s] Needs changes - Diff:\n%s", service.Name, inputDiff)
+	updated, err := r.client.UpdateService(serviceInput)
+	if err != nil {
+		log.Error().Msgf("[%s] API error: '%s'", service.Name, err.Error())
+		return err
 	}
-	if !r.ServiceNeedsUpdate(serviceInput, service) {
-		log.Info().Msgf("[%s] No changes detected to fields - skipping update", service.Name)
-	}
-	updatedService, updateServiceErr := r.client.UpdateService(serviceInput)
-	if updateServiceErr != nil {
-		log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
-		return
-	}
-	diff := cmp.Diff(service, updatedService)
+	diff := cmp.Diff(service, updated)
 	log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
+	return nil
 }
 
 func (r *ServiceReconciler) handleAliases(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {

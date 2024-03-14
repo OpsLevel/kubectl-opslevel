@@ -1,0 +1,20 @@
+version: "1.3.0"
+service:
+  import:
+    - selector:
+        apiVersion: apps/v1
+        kind: Deployment
+        excludes:
+          - .metadata.namespace == "kube-system"
+          - .metadata.annotations."opslevel.com/ignore"
+      opslevel:
+        name: .metadata.name
+        aliases:
+          - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
+        tags:
+          assign:
+            - '{"imported": "kubectl-opslevel"}'
+            - '{"kind": "Deployment"}'
+            - '{"namespace": "\(.metadata.namespace)"}'
+          create:
+            - '{"environment": "staging"}'
