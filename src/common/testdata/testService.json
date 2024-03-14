@@ -1,0 +1,83 @@
+{
+    "description": "test",
+    "framework": "test",
+    "htmlUrl": "",
+    "id": "test",
+    "aliases": [
+        "test"
+    ],
+    "language": "test",
+    "lifecycle": {
+        "Alias": "test",
+        "Description": "",
+        "Id": "",
+        "Index": 0,
+        "Name": ""
+    },
+    "name": "test",
+    "owner": {
+        "Alias": "test",
+        "Id": ""
+    },
+    "product": "test",
+    "tags": {
+        "Nodes": [
+            {
+                "id": null,
+                "key": "foo",
+                "value": "bar"
+            },
+            {
+                "id": null,
+                "key": "hello",
+                "value": "world"
+            },
+            {
+                "id": null,
+                "key": "env",
+                "value": "test"
+            }
+        ],
+        "PageInfo": {
+            "HasNextPage": false,
+            "HasPreviousPage": false,
+            "Start": "",
+            "End": ""
+        },
+        "TotalCount": 0
+    },
+    "tier": {
+        "Alias": "test",
+        "Description": "",
+        "Id": "",
+        "Index": 0,
+        "Name": ""
+    },
+    "timestamps": {
+        "createdAt": "0001-01-01T00:00:00Z",
+        "updatedAt": "0001-01-01T00:00:00Z"
+    },
+    "tools": {
+        "Nodes": [
+            {
+                "Category": "code",
+                "DisplayName": "test",
+                "Environment": "test",
+                "Url": "https://example.com",
+                "Service": {
+                    "id": null
+                }
+            }
+        ],
+        "PageInfo": {
+            "HasNextPage": false,
+            "HasPreviousPage": false,
+            "Start": "",
+            "End": ""
+        },
+        "TotalCount": 0
+    },
+    "Dependencies": null,
+    "Dependents": null,
+    "Properties": null
+}

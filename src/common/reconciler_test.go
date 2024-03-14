@@ -1,6 +1,8 @@
 package common_test
 
 import (
+	_ "embed"
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -12,6 +14,12 @@ import (
 	"github.com/rocktavious/autopilot/v2023"
 )
 
+//go:embed testdata/testService.json
+var testServiceJSON []byte
+
+//go:embed testdata/testRegistration.json
+var testRegistrationJSON []byte
+
 func TestReconcilerReconcile(t *testing.T) {
 	// Arrange
 	type TestCase struct {
@@ -19,52 +27,15 @@ func TestReconcilerReconcile(t *testing.T) {
 		reconciler   *common.ServiceReconciler
 		assert       func(t *testing.T, err error)
 	}
-	testService := opslevel.Service{
-		ServiceId: opslevel.ServiceId{
-			Id:      opslevel.ID("test"),
-			Aliases: []string{"test"},
-		},
-		Name:        "test",
-		Description: "test",
-		Owner: opslevel.TeamId{
-			Alias: "test",
-		},
-		Lifecycle: opslevel.Lifecycle{
-			Alias: "test",
-		},
-		Tier: opslevel.Tier{
-			Alias: "test",
-		},
-		Product:   "test",
-		Language:  "test",
-		Framework: "test",
-		Tags: &opslevel.TagConnection{
-			Nodes: []opslevel.Tag{
-				{Key: "foo", Value: "bar"},
-				{Key: "hello", Value: "world"},
-				{Key: "env", Value: "test"},
-			},
-		},
-		Tools: &opslevel.ToolConnection{
-			Nodes: []opslevel.Tool{
-				{Category: opslevel.ToolCategoryCode, DisplayName: "test", Url: "https://example.com", Environment: "test"},
-			},
-		},
+	var testService opslevel.Service
+	err := json.Unmarshal(testServiceJSON, &testService)
+	if err != nil {
+		panic(err)
 	}
-	testRegistration := opslevel_jq_parser.ServiceRegistration{
-		Name:         "test",
-		Description:  "test",
-		Owner:        "test",
-		Lifecycle:    "test",
-		Tier:         "test",
-		Product:      "test",
-		Language:     "test",
-		Framework:    "test",
-		Aliases:      []string{"test1", "test2", "test3"},
-		TagAssigns:   []opslevel.TagInput{{Key: "foo", Value: "bar"}, {Key: "hello", Value: "world"}},
-		TagCreates:   []opslevel.TagInput{{Key: "env", Value: "test"}},
-		Tools:        []opslevel.ToolCreateInput{{Category: opslevel.ToolCategoryCode, DisplayName: "test", Url: "https://example.com", Environment: opslevel.RefOf("test")}},
-		Repositories: []opslevel.ServiceRepositoryCreateInput{{Service: *opslevel.NewIdentifier(""), Repository: *opslevel.NewIdentifier(""), DisplayName: opslevel.RefOf(""), BaseDirectory: opslevel.RefOf("")}},
+	var testRegistration opslevel_jq_parser.ServiceRegistration
+	err = json.Unmarshal(testRegistrationJSON, &testRegistration)
+	if err != nil {
+		panic(err)
 	}
 	cases := map[string]TestCase{
 		"Missing Aliases Should Error": {
