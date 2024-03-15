@@ -3,8 +3,10 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/opslevel/kubectl-opslevel/common"
 
@@ -27,7 +29,7 @@ var configSchemaCmd = &cobra.Command{
 	Long:  "Print the jsonschema for configuration file",
 	Run: func(cmd *cobra.Command, args []string) {
 		schema := jsonschema.Reflect(&common.Config{})
-		jsonBytes, err := json.MarshalIndent(schema, "", "  ")
+		jsonBytes, err := json.MarshalIndent(schema, "", "    ")
 		cobra.CheckErr(err)
 		fmt.Println(string(jsonBytes))
 	},
@@ -40,9 +42,9 @@ var configViewCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		conf, err := LoadConfig()
 		cobra.CheckErr(err)
-		output, err := yaml.Marshal(conf)
+		output, err := PrettyConfig(conf)
 		cobra.CheckErr(err)
-		fmt.Println(string(output))
+		fmt.Println(output)
 	},
 }
 
@@ -59,10 +61,27 @@ var configSampleCmd = &cobra.Command{
 			cfg, err = common.ParseConfig(common.ConfigSample)
 		}
 		cobra.CheckErr(err)
-		output, err := yaml.Marshal(cfg)
+		pretty, err := PrettyConfig(cfg)
 		cobra.CheckErr(err)
-		fmt.Println(string(output))
+		fmt.Println(pretty)
 	},
+}
+
+func PrettyConfig(cfg *common.Config) (string, error) {
+	var buffer bytes.Buffer
+	encoder := yaml.NewEncoder(&buffer)
+	encoder.SetIndent(2)
+	err := encoder.Encode(&cfg)
+	if err != nil {
+		return "", err
+	}
+	output := buffer.String()
+
+	// wrap the version in quotes - assumes version is in format X.X.X (3 single digits)
+	output = strings.Replace(output, "VER_STRING", common.ConfigCurrentVersion, 1)
+	versionSubstring := output[9:14]
+	output = strings.Replace(output, versionSubstring, fmt.Sprintf("\"%s\"", versionSubstring), 1)
+	return output, err
 }
 
 func init() {
@@ -75,19 +94,24 @@ func init() {
 }
 
 func readConfig() []byte {
-	var err error
-	var res []byte
-
-	switch cfgFile {
-	case ".":
-		res, err = os.ReadFile("./opslevel-k8s.yaml")
-	case "-":
+	if cfgFile == "-" {
 		buf := bytes.Buffer{}
-		_, err = buf.ReadFrom(os.Stdin)
-		res = buf.Bytes()
-	default:
-		res, err = os.ReadFile(cfgFile)
+		_, err := buf.ReadFrom(os.Stdin)
+		if err != nil {
+			panic(err)
+		}
+		return buf.Bytes()
 	}
+	_, err := os.Stat(cfgFile)
+	if err != nil && errors.Is(err, os.ErrNotExist) {
+		// send a gentle error message instead of panicking if user forgot their config file
+		fmt.Printf("config file not found: '%s' - try running:\n  kubectl opslevel config sample [--simple] > %s\n", cfgFile, cfgFile)
+		fmt.Printf("make sure to edit and then preview it afterwards:\n  kubectl opslevel service preview\n")
+		os.Exit(1)
+	} else if err != nil {
+		panic(err)
+	}
+	res, err := os.ReadFile(cfgFile)
 	if err != nil {
 		panic(err)
 	}

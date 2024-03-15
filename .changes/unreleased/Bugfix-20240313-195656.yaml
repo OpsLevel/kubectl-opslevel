@@ -1,0 +1,3 @@
+kind: Bugfix
+body: Removed sample config repository rule that resulted in duplicates
+time: 2024-03-13T19:56:56.851549-04:00
