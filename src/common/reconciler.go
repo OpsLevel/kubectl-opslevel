@@ -57,7 +57,6 @@ func (r *ServiceReconciler) Reconcile(registration opslevel_jq_parser.ServiceReg
 			return err
 		}
 	default:
-		// happy path
 		if r.disableServiceCreation {
 			log.Info().Msgf("avoiding creating a new service.  service creation is disabled")
 			return nil
@@ -110,20 +109,21 @@ func (r *ServiceReconciler) lookupService(registration opslevel_jq_parser.Servic
 		if err != nil {
 			log.Warn().Err(err).Msgf("got an error when trying to get service with alias '%s'", alias)
 			return nil, serviceAliasesResult_APIErrorHappened
-		} else if gotService == nil {
+		}
+		if gotService == nil {
 			log.Debug().Msgf("did not find a service with alias '%s'", alias)
 			continue
-		} else if foundService != nil {
+		}
+		if foundService != nil {
 			log.Debug().Msgf("found another service with the same alias '%s' (%s)", alias, gotService.Id)
 			return nil, serviceAliasesResult_MultipleServicesFound
 		}
-		// happy path
 		foundService = gotService
 	}
 	if foundService == nil {
 		return nil, serviceAliasesResult_NoAliasesMatched
 	}
-	return foundService, serviceAliasesResult_AliasMatched // happy path
+	return foundService, serviceAliasesResult_AliasMatched
 }
 
 func (r *ServiceReconciler) createService(registration opslevel_jq_parser.ServiceRegistration) (*opslevel.Service, error) {
@@ -159,8 +159,7 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 		log.Error().Msgf("[%s] API error: '%s'", registration.Name, err.Error())
 		return nil, err
 	}
-	toJSON, _ := json.Marshal(&created)
-	log.Info().Msgf("[%s] Created Service:\n%s", registration.Name, string(toJSON))
+	log.Info().Msgf("[%s] Created Service:\n%s", registration.Name, toJSON(created))
 	return created, nil
 }
 
@@ -268,78 +267,76 @@ func (r *ServiceReconciler) handleCreateTags(service *opslevel.Service, registra
 
 func (r *ServiceReconciler) handleTools(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	for _, tool := range registration.Tools {
-		toolEnv := ""
-		if tool.Environment != nil {
-			toolEnv = *tool.Environment
+		toolCreateString := toJSON(tool)
+		// TODO: Tool.Environment is required for looking up tools and but it is not a required field and the config shows how to create a tool without it set
+		if tool.Environment == nil {
+			log.Debug().Msgf("[%s] Tool '%s' does not have required field 'environment' ... skipping", service.Name, toolCreateString)
+			continue
 		}
-		if service.Tools != nil && service.HasTool(tool.Category, tool.DisplayName, toolEnv) {
-			log.Debug().Msgf("[%s] Tool '{Category: %s, Environment: %s, Name: %s}' already exists on service ... skipping", service.Name, tool.Category, toolEnv, tool.DisplayName)
+		if service.Tools != nil && service.HasTool(tool.Category, tool.DisplayName, *tool.Environment) {
+			log.Debug().Msgf("[%s] Tool '%s' already exists on service ... skipping", service.Name, toolCreateString)
 			continue
 		}
 		tool.ServiceId = &service.Id
 		err := r.client.CreateTool(tool)
 		if err != nil {
-			log.Error().Msgf("[%s] Failed assigning tool '{Category: %s, Environment: %s, Name: %s}'\n\tREASON: %v", service.Name, tool.Category, toolEnv, tool.DisplayName, err.Error())
+			log.Error().Err(err).Msgf("[%s] Failed assigning tool '%s'", service.Name, toJSON(tool))
 			continue
 		}
-		log.Info().Msgf("[%s] Ensured tool '{Category: %s, Environment: %s, Name: %s}'", service.Name, tool.Category, toolEnv, tool.DisplayName)
+		log.Info().Msgf("[%s] Assigned tool '%s'", service.Name, toJSON(tool))
 	}
 }
 
-func toJSON[T any](object T) string {
-	s, _ := json.Marshal(object)
-	return string(s)
-}
-
+// TODO: move the bulk of this code to opslevel-go, make HasRepository() and HasRepositoryWithAlias()
 func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
-	repoLog := log.With().Str("where", "handleRepositories").Str("service", service.Name).Logger()
-	for _, newRepo := range registration.Repositories {
-		if newRepo.Repository.Alias == nil || *newRepo.Repository.Alias == "" {
-			repoLog.Warn().Msgf("repository (%s) has no alias ... skipping", toJSON(newRepo))
-			continue
-		}
-		newRepoLog := repoLog.With().Str("repository", *newRepo.Repository.Alias).Logger()
-		foundRepository, foundRepositoryErr := r.client.GetRepositoryWithAlias(*newRepo.Repository.Alias)
+	for _, repositoryCreate := range registration.Repositories {
+		repoCreateString := toJSON(repositoryCreate)
+		foundRepository, foundRepositoryErr := r.client.GetRepositoryWithAlias(*repositoryCreate.Repository.Alias)
 		if foundRepositoryErr != nil {
-			newRepoLog.Error().Err(foundRepositoryErr).Msgf("repository get with alias error ... skipping")
+			log.Warn().Msgf("[%s] Repository with alias: '%s' not found so it cannot be attached to service ... skipping", service.Name, repoCreateString)
 			continue
 		}
-		// update repository case
+		// update service repository case
 		if foundRepository != nil {
-			if newRepo.BaseDirectory == nil && newRepo.DisplayName == nil {
-				// TODO: both fields cannot be unset in opslevel-go because of pointer + omitempty
-				newRepoLog.Debug().Msgf("repository update has no base directory or display name ... skipping")
+			// base directory and display name can never be unset due to opslevel-go representing these fields as *string with json:",omitempty"
+			if repositoryCreate.BaseDirectory == nil && repositoryCreate.DisplayName == nil {
+				log.Warn().Msgf("[%s] Repository '%s' update has no base directory or display name ... skipping", service.Name, repoCreateString)
 				continue
 			}
-			serviceRepository := foundRepository.GetService(service.Id, *newRepo.BaseDirectory)
+			// TODO: why does repository.GetService() this require a BaseDirectory?
+			if repositoryCreate.BaseDirectory == nil {
+				log.Warn().Msgf("[%s] Repository '%s' has no base directory (is required for update) ... skipping", service.Name, repoCreateString)
+				continue
+			}
+			serviceRepository := foundRepository.GetService(service.Id, *repositoryCreate.BaseDirectory)
 			if serviceRepository == nil {
-				newRepoLog.Warn().Msgf("tried to get service repository, got nil ... skipping")
+				log.Debug().Msgf("[%s] Repository '%s' call to get service repository returned nil ... skipping", service.Name, repoCreateString)
 				continue
 			}
-			if newRepo.BaseDirectory != nil && *newRepo.BaseDirectory == serviceRepository.BaseDirectory && newRepo.DisplayName != nil && *newRepo.DisplayName == serviceRepository.DisplayName {
-				newRepoLog.Info().Msgf("repository (%s) already attached to service ... skipping", toJSON(newRepo))
+			if *repositoryCreate.BaseDirectory == serviceRepository.BaseDirectory && repositoryCreate.DisplayName != nil && *repositoryCreate.DisplayName == serviceRepository.DisplayName {
+				log.Debug().Msgf("[%s] Repository '%s' already attached to service ... skipping", service.Name, repoCreateString)
 				continue
 			}
 			updateInput := opslevel.ServiceRepositoryUpdateInput{
 				Id:            serviceRepository.Id,
-				BaseDirectory: newRepo.BaseDirectory,
-				DisplayName:   newRepo.DisplayName,
+				BaseDirectory: repositoryCreate.BaseDirectory,
+				DisplayName:   repositoryCreate.DisplayName,
 			}
 			err := r.client.UpdateServiceRepository(updateInput)
 			if err != nil {
-				newRepoLog.Error().Err(err).Msgf("failed updating repository (%s) ... skipping", toJSON(updateInput))
+				log.Error().Msgf("[%s] Failed updating repository '%s'\n\tREASON: %v", service.Name, repoCreateString, err.Error())
 				continue
 			}
-			newRepoLog.Info().Msgf("successfully updated repository on service (%s)", toJSON(updateInput))
+			log.Info().Msgf("[%s] Updated repository '%s'", service.Name, repoCreateString)
 			continue
 		}
-		// create repository case
-		err := r.client.CreateServiceRepository(newRepo)
+		// create service repository case
+		err := r.client.CreateServiceRepository(repositoryCreate)
 		if err != nil {
-			newRepoLog.Error().Err(err).Msgf("failed assigning repository (%s)", toJSON(newRepo))
+			log.Error().Msgf("[%s] Failed assigning repository '%s'\n\tREASON: %v", service.Name, repoCreateString, err.Error())
 			continue
 		}
-		newRepoLog.Info().Msgf("successfully attached repository (%s)", toJSON(newRepo))
+		log.Info().Msgf("[%s] Attached repository '%s'", service.Name, repoCreateString)
 	}
 }
 
@@ -348,11 +345,14 @@ func (r *ServiceReconciler) handleProperties(service *opslevel.Service, registra
 		propertyInput.Owner = *opslevel.NewIdentifier(string(service.Id))
 		err := r.client.AssignPropertyHandler(propertyInput)
 		if err != nil {
-			// TODO: nil here
 			log.Error().Err(err).Msgf("[%s] Failed assigning property with definition: '%s' and value: '%s'", service.Name, *propertyInput.Definition.Alias, propertyInput.Value)
 			continue
 		}
-		// TODO: nil here
 		log.Info().Msgf("[%s] Successfully assigned property with definition: '%s' and value: '%s'", service.Name, *propertyInput.Definition.Alias, propertyInput.Value)
 	}
+}
+
+func toJSON[T any](object T) string {
+	s, _ := json.Marshal(object)
+	return string(s)
 }
