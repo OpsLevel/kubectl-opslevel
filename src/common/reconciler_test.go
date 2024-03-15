@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/rs/zerolog/log"
@@ -23,50 +22,116 @@ var testRegistrationJSON []byte
 
 var gotService = false
 
-func panicClient() common.OpslevelClient {
-	return common.OpslevelClient{
-		GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-			panic("should not be called")
-		},
-		CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-			panic("should not be called")
-		},
-		UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-			panic("should not be called")
-		},
-		CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
-			panic("should not be called")
-		},
-		AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
-			panic("should not be called")
-		},
-		AssignPropertyHandler: func(input opslevel.PropertyInput) error {
-			panic("should not be called")
-		},
-		CreateTagHandler: func(input opslevel.TagCreateInput) error {
-			panic("should not be called")
-		},
-		CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
-			panic("should not be called")
-		},
-		GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
-			panic("should not be called")
-		},
-		CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
-			panic("should not be called")
-		},
-		UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
-			panic("should not be called")
+type TestingClientBuilder struct {
+	client *common.OpslevelClient
+}
+
+func NewTestingClientBuilder() *TestingClientBuilder {
+	return &TestingClientBuilder{
+		client: &common.OpslevelClient{
+			GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+				panic("should not be called")
+			},
+			CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+				panic("should not be called")
+			},
+			UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+				panic("should not be called")
+			},
+			CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
+				panic("should not be called")
+			},
+			AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
+				panic("should not be called")
+			},
+			AssignPropertyHandler: func(input opslevel.PropertyInput) error {
+				panic("should not be called")
+			},
+			CreateTagHandler: func(input opslevel.TagCreateInput) error {
+				panic("should not be called")
+			},
+			CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
+				panic("should not be called")
+			},
+			GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
+				panic("should not be called")
+			},
+			CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
+				panic("should not be called")
+			},
+			UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
+				panic("should not be called")
+			},
 		},
 	}
+}
+
+func (b *TestingClientBuilder) SetAssignPropertyHandler(fn func(input opslevel.PropertyInput) error) *TestingClientBuilder {
+	b.client.AssignPropertyHandler = fn
+	return b
+}
+
+func (b *TestingClientBuilder) SetAssignTagsHandler(fn func(service *opslevel.Service, tags map[string]string) error) *TestingClientBuilder {
+	b.client.AssignTagsHandler = fn
+	return b
+}
+
+func (b *TestingClientBuilder) SetCreateAliasHandler(fn func(input opslevel.AliasCreateInput) error) *TestingClientBuilder {
+	b.client.CreateAliasHandler = fn
+	return b
+}
+
+func (b *TestingClientBuilder) SetCreateServiceHandler(fn func(input opslevel.ServiceCreateInput) (*opslevel.Service, error)) *TestingClientBuilder {
+	b.client.CreateServiceHandler = fn
+	return b
+}
+
+func (b *TestingClientBuilder) SetCreateServiceRepositoryHandler(fn func(input opslevel.ServiceRepositoryCreateInput) error) *TestingClientBuilder {
+	b.client.CreateServiceRepositoryHandler = fn
+	return b
+}
+
+func (b *TestingClientBuilder) SetCreateTagHandler(fn func(input opslevel.TagCreateInput) error) *TestingClientBuilder {
+	b.client.CreateTagHandler = fn
+	return b
+}
+
+func (b *TestingClientBuilder) SetCreateToolHandler(fn func(input opslevel.ToolCreateInput) error) *TestingClientBuilder {
+	b.client.CreateToolHandler = fn
+	return b
+}
+
+func (b *TestingClientBuilder) SetGetRepositoryWithAliasHandler(fn func(alias string) (*opslevel.Repository, error)) *TestingClientBuilder {
+	b.client.GetRepositoryWithAliasHandler = fn
+	return b
+}
+
+func (b *TestingClientBuilder) SetGetServiceHandler(fn func(alias string) (*opslevel.Service, error)) *TestingClientBuilder {
+	b.client.GetServiceHandler = fn
+	return b
+}
+
+func (b *TestingClientBuilder) SetUpdateServiceHandler(fn func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error)) *TestingClientBuilder {
+	b.client.UpdateServiceHandler = fn
+	return b
+}
+
+func (b *TestingClientBuilder) SetUpdateServiceRepositoryHandler(fn func(input opslevel.ServiceRepositoryUpdateInput) error) *TestingClientBuilder {
+	b.client.UpdateServiceRepositoryHandler = fn
+	return b
+}
+
+func (b *TestingClientBuilder) GetClient() *common.OpslevelClient {
+	return b.client
 }
 
 func TestReconcilerReconcile(t *testing.T) {
 	// Arrange
 	type TestCase struct {
-		registration opslevel_jq_parser.ServiceRegistration
-		reconciler   *common.ServiceReconciler
-		assert       func(t *testing.T, err error)
+		assert                 func(t *testing.T, err error)
+		client                 *common.OpslevelClient
+		registration           opslevel_jq_parser.ServiceRegistration
+		disableServiceCreation bool
 	}
 	var testService opslevel.Service
 	err := json.Unmarshal(testServiceJSON, &testService)
@@ -84,49 +149,32 @@ func TestReconcilerReconcile(t *testing.T) {
 				Name:    "test",
 				Aliases: []string{},
 			},
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{}, false),
+			client: NewTestingClientBuilder().GetClient(),
 			assert: func(t *testing.T, err error) {
 				autopilot.Equals(t, "[test] found 0 aliases from kubernetes data", err.Error())
 			},
 		},
 		"Matching Alias Should Call Service Update": {
 			registration: testRegistration,
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					// TODO: this global var is a hack to get a service to be returned only once
-					if gotService == true {
-						return nil, nil
-					}
-					gotService = true
-					return &testService, nil
-				},
-				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-					return &testService, nil
-				},
-			}, false),
+			client: NewTestingClientBuilder().SetGetServiceHandler(func(alias string) (*opslevel.Service, error) {
+				// TODO: this global var is a hack to get a service to be returned only once
+				if gotService == true {
+					return nil, nil
+				}
+				gotService = true
+				return &testService, nil
+			}).SetUpdateServiceHandler(func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+				return nil, fmt.Errorf("done")
+			}).GetClient(),
 			assert: func(t *testing.T, err error) {
-				autopilot.Ok(t, err)
+				autopilot.Equals(t, "done", err.Error())
 			},
 		},
 		"Multiple Matching Aliases Should Halt": {
 			registration: testRegistration,
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return &testService, nil
-				},
-				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
-					return nil, fmt.Errorf("api error")
-				},
-			}, false),
+			client: NewTestingClientBuilder().SetGetServiceHandler(func(alias string) (*opslevel.Service, error) {
+				return &testService, nil
+			}).GetClient(),
 			assert: func(t *testing.T, err error) {
 				autopilot.Equals(t, "[test] found multiple services with aliases = [[test1 test2 test3]]. cannot know which service to target for update ... skipping reconciliation", err.Error())
 			},
@@ -136,125 +184,60 @@ func TestReconcilerReconcile(t *testing.T) {
 				Name:    "test",
 				Aliases: []string{"test"},
 			},
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return nil, fmt.Errorf("api error")
-				},
-				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-			}, false),
+			client: NewTestingClientBuilder().SetGetServiceHandler(func(alias string) (*opslevel.Service, error) {
+				return nil, fmt.Errorf("api error")
+			}).GetClient(),
 			assert: func(t *testing.T, err error) {
 				autopilot.Equals(t, "[test] api error during service lookup by alias.  unable to guarantee service was found or not ... skipping reconciliation", err.Error())
 			},
 		},
+		// TODO: same on update service
 		"API Error On Create Service Should Halt": {
 			registration: opslevel_jq_parser.ServiceRegistration{
 				Name:    "test",
 				Aliases: []string{"test"},
 			},
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return nil, nil
-				},
-				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-					return nil, fmt.Errorf("api error")
-				},
-				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
-					panic("should not be called")
-				},
-				AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
-					panic("should not be called")
-				},
-				CreateTagHandler: func(input opslevel.TagCreateInput) error {
-					panic("should not be called")
-				},
-			}, false),
+			client: NewTestingClientBuilder().SetGetServiceHandler(func(alias string) (*opslevel.Service, error) {
+				return nil, nil
+			}).SetCreateServiceHandler(func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+				return nil, fmt.Errorf("api error")
+			}).GetClient(),
 			assert: func(t *testing.T, err error) {
 				autopilot.Equals(t, "api error", err.Error())
 			},
 		},
 		"Happy Path": {
 			registration: testRegistration,
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return nil, nil // This returns a nil service as if the alias lookup didn't find anything
-				},
-				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-					return &testService, nil
-				},
-				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
-					return nil
-				},
-				AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
-					return nil
-				},
-				CreateTagHandler: func(input opslevel.TagCreateInput) error {
-					return nil
-				},
-				CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
-					return nil
-				},
-				GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
-					return nil, fmt.Errorf("api error")
-				},
-				CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
-					panic("should not be called")
-				},
-				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
-					panic("should not be called")
-				},
-			}, false),
+			client: NewTestingClientBuilder().SetGetServiceHandler(func(alias string) (*opslevel.Service, error) {
+				return nil, nil
+			}).SetCreateServiceHandler(func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+				return &testService, nil
+			}).SetCreateAliasHandler(func(input opslevel.AliasCreateInput) error {
+				return nil
+			}).SetAssignTagsHandler(func(service *opslevel.Service, tags map[string]string) error {
+				return nil
+			}).SetCreateTagHandler(func(input opslevel.TagCreateInput) error {
+				return nil
+			}).SetCreateToolHandler(func(input opslevel.ToolCreateInput) error {
+				return nil
+			}).SetCreateServiceRepositoryHandler(func(input opslevel.ServiceRepositoryCreateInput) error {
+				return nil
+			}).SetAssignPropertyHandler(func(input opslevel.PropertyInput) error {
+				return nil
+			}).GetClient(),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
 		},
 		"Happy Path Do Not Create Services": {
 			registration: testRegistration,
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return nil, nil
-				},
-				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
-					return nil
-				},
-				AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
-					return nil
-				},
-				CreateTagHandler: func(input opslevel.TagCreateInput) error {
-					return nil
-				},
-				CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
-					return nil
-				},
-				GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
-					return nil, fmt.Errorf("api error")
-				},
-				CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
-					panic("should not be called")
-				},
-				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
-					panic("should not be called")
-				},
-			}, true),
+			client: NewTestingClientBuilder().SetGetServiceHandler(func(alias string) (*opslevel.Service, error) {
+				return nil, nil
+			}).GetClient(),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
+			disableServiceCreation: true,
 		},
 	}
 	// Act
@@ -263,104 +246,8 @@ func TestReconcilerReconcile(t *testing.T) {
 			if k == "Single Matching Alias Should Call Service Update" {
 				gotService = false
 			}
-			result := tc.reconciler.Reconcile(tc.registration)
+			result := common.NewServiceReconciler(tc.client, tc.disableServiceCreation).Reconcile(tc.registration)
 			tc.assert(t, result)
-		})
-	}
-}
-
-func ToJSON[T any](object T) string {
-	b, _ := json.MarshalIndent(&object, "", "    ")
-	return string(b)
-}
-
-func TestReconcilerWithRegistration(t *testing.T) {
-	type TestCase struct {
-		Registration opslevel_jq_parser.ServiceRegistration
-		CreateInput  opslevel.ServiceCreateInput
-		UpdateInput  opslevel.ServiceUpdateInput
-	}
-	testCases := map[string]TestCase{
-		"Specify all expect all": {
-			opslevel_jq_parser.ServiceRegistration{
-				Aliases:     []string{"hwapp", "hello_world"},
-				Description: "hello world 1234",
-				Framework:   "rails",
-				Language:    "ruby",
-				Lifecycle:   "generally_available",
-				Name:        "hello world app",
-				Owner:       "platform",
-				Product:     "cloud",
-				System:      "internal_apps",
-				Tier:        "tier_4",
-			},
-			opslevel.ServiceCreateInput{
-				Description:    opslevel.RefOf("hello world 1234"),
-				Framework:      opslevel.RefOf("rails"),
-				Language:       opslevel.RefOf("ruby"),
-				LifecycleAlias: opslevel.RefOf("generally_available"),
-				Name:           "hello world app",
-				OwnerInput:     opslevel.NewIdentifier("platform"),
-				Parent:         opslevel.NewIdentifier("internal_apps"),
-				Product:        opslevel.RefOf("cloud"),
-				TierAlias:      opslevel.RefOf("tier_4"),
-			},
-			opslevel.ServiceUpdateInput{
-				Description:    opslevel.RefOf("hello world 1234"),
-				Framework:      opslevel.RefOf("rails"),
-				Id:             opslevel.NewID("XXX"),
-				Language:       opslevel.RefOf("ruby"),
-				LifecycleAlias: opslevel.RefOf("generally_available"),
-				Name:           opslevel.RefOf("hello world app"),
-				OwnerInput:     opslevel.NewIdentifier("platform"),
-				Parent:         opslevel.NewIdentifier("internal_apps"),
-				Product:        opslevel.RefOf("cloud"),
-				TierAlias:      opslevel.RefOf("tier_4"),
-			},
-		},
-	}
-	for k, tc := range testCases {
-		t.Run(k, func(t *testing.T) {
-			var reconciler *common.ServiceReconciler
-			var err error
-			reconciler = common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return nil, nil
-				},
-				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-					if !reflect.DeepEqual(input, tc.CreateInput) {
-						t.Errorf("expected create input:\n'%s'\ngot create input:\n'%s'\n", ToJSON(tc.CreateInput), ToJSON(input))
-					}
-					return nil, fmt.Errorf("done")
-				},
-			}, false)
-			err = reconciler.Reconcile(tc.Registration)
-			if err.Error() != "done" {
-				t.Errorf("create: expected error containing 'done', got: '%s'", err.Error())
-			}
-
-			ranOnce := false
-			reconciler = common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					if ranOnce {
-						return nil, nil
-					}
-					ranOnce = true
-					service := &opslevel.Service{}
-					service.Id = "XXX"
-					return service, nil
-				},
-				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-					if !reflect.DeepEqual(input, tc.UpdateInput) {
-						t.Errorf("expected update input:\n'%s'\ngot update input:\n'%s'\n", ToJSON(tc.UpdateInput), ToJSON(input))
-					}
-					return nil, fmt.Errorf("done")
-				},
-			}, false)
-			err = reconciler.Reconcile(tc.Registration)
-			if err.Error() != "done" {
-				t.Errorf("update: expected error containing 'done', got: '%s'", err.Error())
-			}
 		})
 	}
 }
