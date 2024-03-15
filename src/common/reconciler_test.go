@@ -2,6 +2,7 @@ package common_test
 
 import (
 	"fmt"
+	"golang.org/x/exp/maps"
 	"testing"
 
 	"github.com/opslevel/kubectl-opslevel/common"
@@ -439,20 +440,21 @@ func Test_Reconciler_HandleTools(t *testing.T) {
 
 func Test_Reconciler_HandleProperties(t *testing.T) {
 	// Arrange
-	props := []opslevel.PropertyInput{
-		{
+	// testProperties is a map of strings to property inputs where the key is just the definition alias so that we can look it up easily in the expectation.
+	testProperties := map[string]opslevel.PropertyInput{
+		"prop_bool": {
 			Definition: *opslevel.NewIdentifier("prop_bool"),
 			Value:      opslevel.JsonString("true"),
 		},
-		{
+		"prop_empty_object": {
 			Definition: *opslevel.NewIdentifier("prop_empty_object"),
 			Value:      opslevel.JsonString("{"),
 		},
-		{
+		"prop_object": {
 			Definition: *opslevel.NewIdentifier("prop_object"),
 			Value:      opslevel.JsonString("{\"message\":\"hello world\",\"condition\":true}"),
 		},
-		{
+		"prop_string": {
 			Definition: *opslevel.NewIdentifier("prop_string"),
 			Value:      opslevel.JsonString("hello world"),
 		},
@@ -460,7 +462,7 @@ func Test_Reconciler_HandleProperties(t *testing.T) {
 	registration := opslevel_jq_parser.ServiceRegistration{
 		Aliases:    []string{"a_test_service_with_properties"},
 		Name:       "A test service with properties",
-		Properties: props,
+		Properties: maps.Values(testProperties),
 	}
 	service := opslevel.Service{
 		ServiceId: opslevel.ServiceId{
@@ -485,8 +487,14 @@ func Test_Reconciler_HandleProperties(t *testing.T) {
 	autopilot.Ok(t, err)
 
 	// Assert
-	expLen, gotLen := len(props), len(results)
-	autopilot.Assert(t, gotLen == expLen, fmt.Sprintf("expected to get %d property assignments got %d", expLen, gotLen))
+	// for every property input processed by the reconciler, look up what it was before Reconcile()
+	// ensure that service alias was set, definition did not change, value did not change
+	for _, resultProperty := range results {
+		autopilot.Equals(t, string(service.Id), *resultProperty.Owner.Alias)
+		key := *resultProperty.Definition.Alias
+		autopilot.Equals(t, *testProperties[key].Definition.Alias, *resultProperty.Definition.Alias)
+		autopilot.Equals(t, string(testProperties[key].Value), string(resultProperty.Value))
+	}
 }
 
 func newToolInputs(names ...string) []opslevel.ToolCreateInput {
