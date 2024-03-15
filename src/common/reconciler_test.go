@@ -2,8 +2,9 @@ package common_test
 
 import (
 	"fmt"
-	"golang.org/x/exp/maps"
 	"testing"
+
+	"golang.org/x/exp/maps"
 
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/opslevel-go/v2024"
