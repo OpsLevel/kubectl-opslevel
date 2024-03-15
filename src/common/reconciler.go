@@ -412,24 +412,16 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 }
 
 func (r *ServiceReconciler) handleProperties(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
-	for def, val := range registration.Properties {
-		definition := opslevel.NewIdentifier(def)
-		owner := opslevel.NewIdentifier(string(service.Id))
-		value, err := opslevel.NewJSONInput(val)
+	for _, propertyInput := range registration.Properties {
+		if propertyInput.Definition.Alias == nil {
+			log.Warn().Msgf("[%s] Cannot assign property with no definition ... skipping", service.Name)
+		}
+		propertyInput.Owner = *opslevel.NewIdentifier(string(service.Id))
+		err := r.client.AssignPropertyHandler(propertyInput)
 		if err != nil {
-			log.Error().Err(err).Msgf("[%s] NewJSONInput failed parsing property value: '%s' on definition: '%s'", service.Name, val, def)
+			log.Error().Err(err).Msgf("[%s] Failed assigning property with definition: '%s' and value: '%s'", service.Name, *propertyInput.Definition.Alias, propertyInput.Value)
 			continue
 		}
-		input := opslevel.PropertyInput{
-			Definition: *definition,
-			Owner:      *owner,
-			Value:      *value,
-		}
-		err = r.client.AssignPropertyHandler(input)
-		if err != nil {
-			log.Error().Err(err).Msgf("[%s] Failed assigning property with definition: '%s' and value: '%s'", service.Name, def, val)
-			continue
-		}
-		log.Info().Msgf("[%s] Successfully assigned property with definition: '%s' and value: '%s'", service.Name, def, val)
+		log.Info().Msgf("[%s] Successfully assigned property with definition: '%s' and value: '%s'", service.Name, *propertyInput.Definition.Alias, propertyInput.Value)
 	}
 }
