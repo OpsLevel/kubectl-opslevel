@@ -36,6 +36,9 @@ func NewServiceReconciler(client *OpslevelClient, disableServiceCreation bool) *
 // Reconcile looks up services matching the aliases provided in the registration. If it does not find one, it will create one.
 // Reconcile is push-only, meaning it will never remove data contained in the service but not defined in the registration.
 func (r *ServiceReconciler) Reconcile(registration opslevel_jq_parser.ServiceRegistration) error {
+	if registration.Name == "" {
+		return fmt.Errorf("cannot reconcile service with no name")
+	}
 	if len(registration.Aliases) == 0 {
 		return fmt.Errorf("[%s] found 0 aliases from kubernetes data", registration.Name)
 	}
@@ -124,7 +127,9 @@ func (r *ServiceReconciler) lookupService(registration opslevel_jq_parser.Servic
 }
 
 func (r *ServiceReconciler) createService(registration opslevel_jq_parser.ServiceRegistration) (*opslevel.Service, error) {
-	serviceInput := opslevel.ServiceCreateInput{}
+	serviceInput := opslevel.ServiceCreateInput{
+		Name: registration.Name,
+	}
 	if registration.Description != "" {
 		serviceInput.Description = opslevel.RefOf(registration.Description)
 	}
@@ -137,17 +142,14 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 	if registration.Lifecycle != "" {
 		serviceInput.LifecycleAlias = opslevel.RefOf(registration.Lifecycle)
 	}
-	if registration.Name != "" {
-		serviceInput.Name = registration.Name
-	}
 	if registration.Owner != "" {
 		serviceInput.OwnerInput = opslevel.NewIdentifier(registration.Owner)
 	}
-	if registration.Product != "" {
-		serviceInput.Product = opslevel.RefOf(registration.Product)
-	}
 	if registration.System != "" {
 		serviceInput.Parent = opslevel.NewIdentifier(registration.System)
+	}
+	if registration.Product != "" {
+		serviceInput.Product = opslevel.RefOf(registration.Product)
 	}
 	if registration.Tier != "" {
 		serviceInput.TierAlias = opslevel.RefOf(registration.Tier)
@@ -184,11 +186,11 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 	if registration.Owner != "" {
 		serviceInput.OwnerInput = opslevel.NewIdentifier(registration.Owner)
 	}
-	if registration.Product != "" {
-		serviceInput.Product = opslevel.RefOf(registration.Product)
-	}
 	if registration.System != "" {
 		serviceInput.Parent = opslevel.NewIdentifier(registration.System)
+	}
+	if registration.Product != "" {
+		serviceInput.Product = opslevel.RefOf(registration.Product)
 	}
 	if registration.Tier != "" {
 		serviceInput.TierAlias = opslevel.RefOf(registration.Tier)
@@ -227,7 +229,7 @@ func (r *ServiceReconciler) handleAliases(service *opslevel.Service, registratio
 }
 
 func (r *ServiceReconciler) handleAssignTags(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
-	if registration.TagAssigns == nil || r.ContainsAllTags(registration.TagAssigns, service.Tags.Nodes) {
+	if registration.TagAssigns == nil || (service.Tags != nil && r.ContainsAllTags(registration.TagAssigns, service.Tags.Nodes)) {
 		log.Info().Msgf("[%s] 0/%d tags need to be assigned to service.", service.Name, len(registration.TagAssigns))
 		return
 	}
@@ -247,7 +249,7 @@ func (r *ServiceReconciler) handleAssignTags(service *opslevel.Service, registra
 
 func (r *ServiceReconciler) handleCreateTags(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	for _, tag := range registration.TagCreates {
-		if service.HasTag(tag.Key, tag.Value) {
+		if service.Tags != nil && service.HasTag(tag.Key, tag.Value) {
 			continue
 		}
 		input := opslevel.TagCreateInput{
@@ -270,7 +272,7 @@ func (r *ServiceReconciler) handleTools(service *opslevel.Service, registration 
 		if tool.Environment != nil {
 			toolEnv = *tool.Environment
 		}
-		if service.HasTool(tool.Category, tool.DisplayName, toolEnv) {
+		if service.Tools != nil && service.HasTool(tool.Category, tool.DisplayName, toolEnv) {
 			log.Debug().Msgf("[%s] Tool '{Category: %s, Environment: %s, Name: %s}' already exists on service ... skipping", service.Name, tool.Category, toolEnv, tool.DisplayName)
 			continue
 		}
@@ -284,73 +286,73 @@ func (r *ServiceReconciler) handleTools(service *opslevel.Service, registration 
 	}
 }
 
+func toJSON[T any](object T) string {
+	s, _ := json.Marshal(object)
+	return string(s)
+}
+
 func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
-	for _, repositoryCreate := range registration.Repositories {
-		repoCreateString := "repoCreate{}"
-		if repositoryCreate.Repository.Alias == nil || *repositoryCreate.Repository.Alias == "" {
-			log.Warn().Msgf("[%s] Repository with alias: '%s' not found so it cannot be attached to service ... skipping", service.Name, repoCreateString)
+	repoLog := log.With().Str("where", "handleRepositories").Str("service", service.Name).Logger()
+	for _, newRepo := range registration.Repositories {
+		if newRepo.Repository.Alias == nil || *newRepo.Repository.Alias == "" {
+			repoLog.Warn().Msgf("repository (%s) has no alias ... skipping", toJSON(newRepo))
 			continue
 		}
-		b, err := json.Marshal(repositoryCreate)
-		if err == nil {
-			repoCreateString = string(b)
-		}
-		foundRepository, foundRepositoryErr := r.client.GetRepositoryWithAlias(*repositoryCreate.Repository.Alias)
+		newRepoLog := repoLog.With().Str("repository", *newRepo.Repository.Alias).Logger()
+		foundRepository, foundRepositoryErr := r.client.GetRepositoryWithAlias(*newRepo.Repository.Alias)
 		if foundRepositoryErr != nil {
-			log.Warn().Msgf("[%s] Repository with alias: '%s' not found so it cannot be attached to service ... skipping", service.Name, repoCreateString)
+			newRepoLog.Error().Err(foundRepositoryErr).Msgf("repository get with alias error ... skipping")
 			continue
 		}
-		var serviceRepository *opslevel.ServiceRepository
-		if repositoryCreate.BaseDirectory != nil {
-			serviceRepository = foundRepository.GetService(service.Id, *repositoryCreate.BaseDirectory)
-		}
-		if serviceRepository != nil {
-			if repositoryCreate.DisplayName != nil && serviceRepository.DisplayName != *repositoryCreate.DisplayName {
-				repositoryUpdate := opslevel.ServiceRepositoryUpdateInput{
-					Id:          serviceRepository.Id,
-					DisplayName: repositoryCreate.DisplayName,
-				}
-				err := r.client.UpdateServiceRepository(repositoryUpdate)
-				if err != nil {
-					log.Error().Msgf("[%s] Failed updating repository '%s'\n\tREASON: %v", service.Name, repoCreateString, err.Error())
-					continue
-				} else {
-					log.Info().Msgf("[%s] Updated repository '%s'", service.Name, repoCreateString)
-					continue
-				}
+		// update repository case
+		if foundRepository != nil {
+			if newRepo.BaseDirectory == nil && newRepo.DisplayName == nil {
+				// TODO: both fields cannot be unset in opslevel-go because of pointer + omitempty
+				newRepoLog.Debug().Msgf("repository update has no base directory or display name ... skipping")
+				continue
 			}
-			log.Debug().Msgf("[%s] Repository '%s' already attached to service ... skipping", service.Name, repoCreateString)
+			serviceRepository := foundRepository.GetService(service.Id, *newRepo.BaseDirectory)
+			if serviceRepository == nil {
+				newRepoLog.Warn().Msgf("tried to get service repository, got nil ... skipping")
+				continue
+			}
+			if newRepo.BaseDirectory != nil && *newRepo.BaseDirectory == serviceRepository.BaseDirectory && newRepo.DisplayName != nil && *newRepo.DisplayName == serviceRepository.DisplayName {
+				newRepoLog.Info().Msgf("repository (%s) already attached to service ... skipping", toJSON(newRepo))
+				continue
+			}
+			updateInput := opslevel.ServiceRepositoryUpdateInput{
+				Id:            serviceRepository.Id,
+				BaseDirectory: newRepo.BaseDirectory,
+				DisplayName:   newRepo.DisplayName,
+			}
+			err := r.client.UpdateServiceRepository(updateInput)
+			if err != nil {
+				newRepoLog.Error().Err(err).Msgf("failed updating repository (%s) ... skipping", toJSON(updateInput))
+				continue
+			}
+			newRepoLog.Info().Msgf("successfully updated repository on service (%s)", toJSON(updateInput))
 			continue
 		}
-		repositoryCreate.Service = opslevel.IdentifierInput{Id: &service.Id}
-		err = r.client.CreateServiceRepository(repositoryCreate)
+		// create repository case
+		err := r.client.CreateServiceRepository(newRepo)
 		if err != nil {
-			log.Error().Msgf("[%s] Failed assigning repository '%s'\n\tREASON: %v", service.Name, repoCreateString, err.Error())
+			newRepoLog.Error().Err(err).Msgf("failed assigning repository (%s)", toJSON(newRepo))
 			continue
 		}
-		log.Info().Msgf("[%s] Attached repository '%s'", service.Name, repoCreateString)
+		newRepoLog.Info().Msgf("successfully attached repository (%s)", toJSON(newRepo))
 	}
 }
 
 func (r *ServiceReconciler) handleProperties(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
-	for def, val := range registration.Properties {
-		definition := opslevel.NewIdentifier(def)
-		owner := opslevel.NewIdentifier(string(service.Id))
-		value, err := opslevel.NewJSONInput(val)
+	for _, propertyInput := range registration.Properties {
+		propertyInput.Owner = *opslevel.NewIdentifier(string(service.Id))
+		err := r.client.AssignPropertyHandler(propertyInput)
 		if err != nil {
-			log.Error().Err(err).Msgf("[%s] NewJSONInput failed parsing property value: '%s' on definition: '%s'", service.Name, val, def)
+			// TODO: nil here
+			log.Error().Err(err).Msgf("[%s] Failed assigning property with definition: '%s' and value: '%s'", service.Name, *propertyInput.Definition.Alias, propertyInput.Value)
 			continue
 		}
-		input := opslevel.PropertyInput{
-			Definition: *definition,
-			Owner:      *owner,
-			Value:      *value,
-		}
-		err = r.client.AssignPropertyHandler(input)
-		if err != nil {
-			log.Error().Err(err).Msgf("[%s] Failed assigning property with definition: '%s' and value: '%s'", service.Name, def, val)
-			continue
-		}
-		log.Info().Msgf("[%s] Successfully assigned property with definition: '%s' and value: '%s'", service.Name, def, val)
+		// TODO: nil here
+		log.Info().Msgf("[%s] Successfully assigned property with definition: '%s' and value: '%s'", service.Name, *propertyInput.Definition.Alias, propertyInput.Value)
 	}
 }

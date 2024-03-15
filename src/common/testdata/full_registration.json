@@ -1,0 +1,79 @@
+{
+    "aliases": [
+        "hello_world",
+        "hello_world_app",
+        "hello_world_internal"
+    ],
+    "description": "hello world 1234",
+    "framework": "rails",
+    "language": "ruby",
+    "lifecycle": "generally_available",
+    "name": "Hello World Test App",
+    "owner": "platform",
+    "product": "cloud",
+    "properties": [
+        {
+            "definition": {
+                "alias": "prop_object"
+            },
+            "value": "{\"message\":\"hello world\",\"condition\":true}"
+        },
+        {
+            "definition": {
+                "alias": "prop_string"
+            },
+            "value": "hello world"
+        }
+    ],
+    "repositories": [
+        {
+            "baseDirectory": "",
+            "displayName": "Hello World (Internal)",
+            "repository": {
+                "alias": "github.com:opslevel/hello_world"
+            }
+        },
+        {
+            "baseDirectory": "docs/rails",
+            "displayName": "Getting Started with Rails",
+            "repository": {
+                "alias": "github.com:opslevel/getting_started"
+            }
+        }
+    ],
+    "system": "internal_apps",
+    "tagAssigns": [
+        {
+            "key": "hello",
+            "value": "world"
+        },
+        {
+            "key": "internal",
+            "value": "true"
+        }
+    ],
+    "tagCreates": [
+        {
+            "key": "env",
+            "value": "test"
+        },
+        {
+            "key": "cloud",
+            "value": "aws"
+        }
+    ],
+    "tier": "tier_4",
+    "tools": [
+        {
+            "category": "code",
+            "displayName": "Test Coverage",
+            "url": "https://github.com/opslevel/hello_world/test_coverage",
+            "environment": "test"
+        },
+        {
+            "category": "deploy",
+            "displayName": "GitHub Actions",
+            "url": "https://github.com/opslevel/hello_world/actions"
+        }
+    ]
+}
