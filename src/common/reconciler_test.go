@@ -109,20 +109,12 @@ func TestReconcilerReconcile(t *testing.T) {
 		},
 		"Matching Alias Should Call Service Update": {
 			registration: testRegistration,
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return &testService, nil
-				},
-				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-					return &testService, nil
-				},
-				GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
-					return nil, fmt.Errorf("api error")
-				},
-			}, false),
+			// use error client since all errors not related to service create/update are logged and not returned.
+			reconciler: common.NewServiceReconciler(NewTestClientBuilderWithError().SetGetServiceHandler(func(alias string) (*opslevel.Service, error) {
+				return &testService, nil
+			}).SetUpdateServiceHandler(func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+				return &testService, nil
+			}).GetClient(), false),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
@@ -132,11 +124,10 @@ func TestReconcilerReconcile(t *testing.T) {
 				Name:    "test",
 				Aliases: []string{"test"},
 			},
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return nil, fmt.Errorf("api error")
-				},
-			}, false),
+			// use panic client since this execution path should only call get service, and we have an error expectation defined.
+			reconciler: common.NewServiceReconciler(NewTestClientBuilderWithPanic().SetGetServiceHandler(func(alias string) (*opslevel.Service, error) {
+				return nil, fmt.Errorf("api error")
+			}).GetClient(), false),
 			assert: func(t *testing.T, err error) {
 				autopilot.Equals(t, "[test] api error during service lookup by alias.  unable to guarantee service was found or not ... skipping reconciliation", err.Error())
 			},
@@ -146,277 +137,98 @@ func TestReconcilerReconcile(t *testing.T) {
 				Name:    "test",
 				Aliases: []string{"test"},
 			},
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return &testService, nil
-				},
-				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-					return nil, fmt.Errorf("api error")
-				},
-				CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
-					panic("should not be called")
-				},
-				AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
-					panic("should not be called")
-				},
-				CreateTagHandler: func(input opslevel.TagCreateInput) error {
-					panic("should not be called")
-				},
-			}, false),
+			reconciler: common.NewServiceReconciler(NewTestClientBuilderWithPanic().SetGetServiceHandler(func(alias string) (*opslevel.Service, error) {
+				return &testService, nil
+			}).SetCreateServiceHandler(func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+				return nil, fmt.Errorf("api error")
+			}).GetClient(), false),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
 		},
 		"Happy Path": {
 			registration: testRegistration,
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					// TODO: this is nt a "nil service", this is an empty service - this is confusing because the service can be returned as a pointer...
-					return &opslevel.Service{}, nil // This returns a nil service as if the alias lookup didn't find anything
-				},
-				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-					return &testService, nil
-				},
-				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
-					return nil
-				},
-				AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
-					return nil
-				},
-				CreateTagHandler: func(input opslevel.TagCreateInput) error {
-					return nil
-				},
-				CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
-					return nil
-				},
-				GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
-					return nil, fmt.Errorf("api error")
-				},
-				CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
-					panic("should not be called")
-				},
-				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
-					panic("should not be called")
-				},
-			}, false),
+			reconciler: common.NewServiceReconciler(NewTestClientBuilderWithError().SetGetServiceHandler(func(alias string) (*opslevel.Service, error) {
+				// TODO: this is nt a "nil service", this is an empty service - this is confusing because the service can be returned as a pointer...
+				return &opslevel.Service{}, nil // This returns a nil service as if the alias lookup didn't find anything
+			}).SetCreateServiceHandler(func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+				return &testService, nil
+			}).GetClient(), false),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
 		},
 		"Happy Path Do Not Create Services": {
 			registration: testRegistration,
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return &opslevel.Service{}, nil // This returns a nil service as if the alias lookup didn't find anything
-				},
-				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
-					return nil
-				},
-				AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
-					return nil
-				},
-				CreateTagHandler: func(input opslevel.TagCreateInput) error {
-					return nil
-				},
-				CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
-					return nil
-				},
-				GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
-					return nil, fmt.Errorf("api error")
-				},
-				CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
-					panic("should not be called")
-				},
-				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
-					panic("should not be called")
-				},
-			}, true),
+			reconciler: common.NewServiceReconciler(NewTestClientBuilderWithPanic().SetGetServiceHandler(func(alias string) (*opslevel.Service, error) {
+				// TODO: this is nt a "nil service", this is an empty service - this is confusing because the service can be returned as a pointer...
+				return &opslevel.Service{}, nil // This returns a nil service as if the alias lookup didn't find anything
+			}).GetClient(), true),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
 		},
 		"Update Path - Has No Changes": {
 			registration: testRegistration,
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return &testService, nil
-				},
-				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
-					return nil
-				},
-				AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
-					return nil
-				},
-				CreateTagHandler: func(input opslevel.TagCreateInput) error {
-					return nil
-				},
-				CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
-					return nil
-				},
-				GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
-					return nil, fmt.Errorf("api error")
-				},
-				CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
-					panic("should not be called")
-				},
-				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
-					panic("should not be called")
-				},
-			}, false),
+			reconciler: common.NewServiceReconciler(NewTestClientBuilderWithError().SetGetServiceHandler(func(alias string) (*opslevel.Service, error) {
+				return &testService, nil
+			}).GetClient(), false),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
 		},
 		"Update Path - Changes Only Aliases But No Fields": {
 			registration: testRegistrationChangesAliasesOnly,
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return &testService, nil
-				},
-				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
-					return nil
-				},
-				AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
-					return nil
-				},
-				CreateTagHandler: func(input opslevel.TagCreateInput) error {
-					return nil
-				},
-				CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
-					return nil
-				},
-				GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
-					return nil, fmt.Errorf("api error")
-				},
-				CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
-					panic("should not be called")
-				},
-				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
-					panic("should not be called")
-				},
-			}, false),
+			reconciler: common.NewServiceReconciler(NewTestClientBuilderWithError().SetGetServiceHandler(func(alias string) (*opslevel.Service, error) {
+				return &testService, nil
+			}).GetClient(), false),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
 		},
 		"Update Path - Changes Only Description Field": {
 			registration: testRegistrationChangesDescriptionOnly,
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return &testService, nil
-				},
-				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-					expectedInput := opslevel.ServiceUpdateInput{
-						Id:          input.Id,
-						Description: opslevel.RefOf("description has update"),
-					}
-					if diff := cmp.Diff(expectedInput, input); diff != "" {
-						log.Panic().Msgf("expected different update input\nexp: %s\ngot: %s\n", toJSON(expectedInput), toJSON(input))
-					}
-					// TODO: this should update the service description and then return, but that would require adding dozens of lines of code. need a builder for services.
-					return &testService, nil
-				},
-				CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
-					return nil
-				},
-				AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
-					return nil
-				},
-				CreateTagHandler: func(input opslevel.TagCreateInput) error {
-					return nil
-				},
-				CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
-					return nil
-				},
-				GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
-					return nil, fmt.Errorf("api error")
-				},
-				CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
-					panic("should not be called")
-				},
-				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
-					panic("should not be called")
-				},
-			}, false),
+			reconciler: common.NewServiceReconciler(NewTestClientBuilderWithPanic().SetGetServiceHandler(func(alias string) (*opslevel.Service, error) {
+				return &testService, nil
+			}).SetUpdateServiceHandler(func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+				expectedInput := opslevel.ServiceUpdateInput{
+					Id:          input.Id,
+					Description: opslevel.RefOf("description has update"),
+				}
+				if diff := cmp.Diff(expectedInput, input); diff != "" {
+					log.Panic().Msgf("expected different update input\nexp: %s\ngot: %s\n", common.ToJSON(expectedInput), common.ToJSON(input))
+				}
+				// TODO: this should update the service description and then return, but that would require adding dozens of lines of code. need a builder for services.
+				return &testService, nil
+			}).GetClient(), false),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
 		},
 		"Update Path - Changes Every Field": {
 			registration: testRegistrationChangesEveryField,
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
-				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
-					return &testService, nil
-				},
-				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
-					panic("should not be called")
-				},
-				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-					// TODO: since opslevel-go client cannot be mocked, exclude lifecyce/owner/tier expectation for now...
-					expectedInput := opslevel.ServiceUpdateInput{
-						Id:          input.Id,
-						Description: opslevel.RefOf("changed_description"),
-						Framework:   opslevel.RefOf("changed_framework"),
-						Language:    opslevel.RefOf("changed_language"),
-						// LifecycleAlias: opslevel.RefOf("changed_lifecycle"),
-						Name: opslevel.RefOf("changed_name"),
-						// OwnerInput: opslevel.NewIdentifier("changed_owner"),
-						Parent:  opslevel.NewIdentifier("changed_system"),
-						Product: opslevel.RefOf("changed_product"),
-						// TierAlias:  opslevel.RefOf("changed_tier"),
-					}
-					if diff := cmp.Diff(expectedInput, input); diff != "" {
-						log.Panic().Msgf("expected different update input\nexp: %s\ngot: %s\n", toJSON(expectedInput), toJSON(input))
-					}
-					// TODO: this should update the service description and then return, but that would require adding dozens of lines of code. need a builder for services.
-					return &testService, nil
-				},
-				CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
-					return nil
-				},
-				AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
-					return nil
-				},
-				CreateTagHandler: func(input opslevel.TagCreateInput) error {
-					return nil
-				},
-				CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
-					return nil
-				},
-				GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
-					return nil, fmt.Errorf("api error")
-				},
-				CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
-					panic("should not be called")
-				},
-				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
-					panic("should not be called")
-				},
-			}, false),
+			reconciler: common.NewServiceReconciler(NewTestClientBuilderWithError().SetGetServiceHandler(func(alias string) (*opslevel.Service, error) {
+				return &testService, nil
+			}).SetUpdateServiceHandler(func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+				// TODO: since opslevel-go client cannot be mocked, exclude lifecyce/owner/tier expectation for now...
+				expectedInput := opslevel.ServiceUpdateInput{
+					Id:          input.Id,
+					Description: opslevel.RefOf("changed_description"),
+					Framework:   opslevel.RefOf("changed_framework"),
+					Language:    opslevel.RefOf("changed_language"),
+					// LifecycleAlias: opslevel.RefOf("changed_lifecycle"),
+					Name: opslevel.RefOf("changed_name"),
+					// OwnerInput: opslevel.NewIdentifier("changed_owner"),
+					Parent:  opslevel.NewIdentifier("changed_system"),
+					Product: opslevel.RefOf("changed_product"),
+					// TierAlias:  opslevel.RefOf("changed_tier"),
+				}
+				if diff := cmp.Diff(expectedInput, input); diff != "" {
+					log.Panic().Msgf("expected different update input\nexp: %s\ngot: %s\n", common.ToJSON(expectedInput), common.ToJSON(input))
+				}
+				// TODO: this should update the service description and then return, but that would require adding dozens of lines of code. need a builder for services.
+				return &testService, nil
+			}).GetClient(), false),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
