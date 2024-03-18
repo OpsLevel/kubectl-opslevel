@@ -241,8 +241,8 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 			log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", service.Name, registration.Owner)
 		}
 	}
-	// TODO: alias equivalency - need to check ALL the aliases
-	if registration.System != "" && (service.Parent == nil || registration.System != service.Parent.Aliases[0]) {
+	// TODO: use the opslevel-go system cache here once it is added
+	if registration.System != "" && !systemIdHasAlias(service.Parent, registration.System) {
 		updateServiceInput.Parent = opslevel.NewIdentifier(registration.System)
 	}
 	if registration.Product != "" && registration.Product != service.Product {
@@ -266,7 +266,8 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 		log.Info().Msgf("[%s] No changes detected to fields - skipping update", service.Name)
 		return
 	}
-	log.Info().Msgf("[%s] Detected Changes - Sending Update:\n%s", service.Name, ToJSON(updateServiceInput))
+	updateJSON, _ := json.Marshal(updateServiceInput)
+	log.Info().Msgf("[%s] Detected Changes - Sending Update:\n%s", service.Name, string(updateJSON))
 	updatedService, updateServiceErr := r.client.UpdateService(updateServiceInput)
 	if updateServiceErr != nil {
 		log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
@@ -423,7 +424,14 @@ func (r *ServiceReconciler) handleProperties(service *opslevel.Service, registra
 	}
 }
 
-func ToJSON[T any](object T) string {
-	b, _ := json.Marshal(object)
-	return string(b)
+func systemIdHasAlias(sys *opslevel.SystemId, alias string) bool {
+	if sys == nil {
+		return false
+	}
+	for _, existingAlias := range sys.Aliases {
+		if alias == existingAlias {
+			return true
+		}
+	}
+	return false
 }
