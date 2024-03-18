@@ -2,6 +2,7 @@ package common_test
 
 import (
 	"fmt"
+
 	"github.com/opslevel/kubectl-opslevel/common"
 	"github.com/opslevel/opslevel-go/v2024"
 )
