@@ -267,7 +267,7 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 		log.Info().Msgf("[%s] No changes detected to fields - skipping update", service.Name)
 		return
 	}
-	log.Info().Interface("update_service_input", updateServiceInput).Msgf("[%s] Detected Changes - Diff:\n%s", service.Name, inputDiff)
+	log.Info().Msgf("[%s] Detected Changes - Sending Update:\n%s", service.Name, ToJSON(updateServiceInput))
 	updatedService, updateServiceErr := r.client.UpdateService(updateServiceInput)
 	if updateServiceErr != nil {
 		log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
@@ -422,4 +422,9 @@ func (r *ServiceReconciler) handleProperties(service *opslevel.Service, registra
 		}
 		log.Info().Msgf("[%s] Successfully assigned property with definition: '%s' and value: '%s'", service.Name, *propertyInput.Definition.Alias, propertyInput.Value)
 	}
+}
+
+func ToJSON[T any](object T) string {
+	b, _ := json.Marshal(object)
+	return string(b)
 }

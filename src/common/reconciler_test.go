@@ -333,7 +333,7 @@ func TestReconcilerReconcile(t *testing.T) {
 						Description: opslevel.RefOf("changed_description"),
 					}
 					if diff := cmp.Diff(expectedInput, input); diff != "" {
-						log.Panic().Interface("expected_input", expectedInput).Interface("got_input", input).Msgf("expected different update input")
+						log.Panic().Msgf("expected different update input\nexp: %s\ngot: %s\n", common.ToJSON(expectedInput), common.ToJSON(input))
 					}
 					// TODO: this should update the service description and then return, but that would require adding dozens of lines of code. need a builder for services.
 					return &testService, nil
@@ -387,7 +387,7 @@ func TestReconcilerReconcile(t *testing.T) {
 						TierAlias:      opslevel.RefOf("changed_tier"),
 					}
 					if diff := cmp.Diff(expectedInput, input); diff != "" {
-						log.Panic().Interface("expected_input", expectedInput).Interface("got_input", input).Msgf("expected different update input")
+						log.Panic().Msgf("expected different update input\nexp: %s\ngot: %s\n", common.ToJSON(expectedInput), common.ToJSON(input))
 					}
 					// TODO: this should update the service description and then return, but that would require adding dozens of lines of code. need a builder for services.
 					return &testService, nil
