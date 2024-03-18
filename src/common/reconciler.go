@@ -262,11 +262,12 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 		}
 	}
 	// if there is nothing in updateServiceInput aside from the service ID, do not send an update service API call
-	inputDiff := cmp.Diff(updateServiceInput, opslevel.ServiceUpdateInput{Id: &service.Id})
+	inputDiff := cmp.Diff(opslevel.ServiceUpdateInput{Id: &service.Id}, updateServiceInput)
 	if inputDiff == "" {
 		log.Info().Msgf("[%s] No changes detected to fields - skipping update", service.Name)
 		return
 	}
+	log.Info().Interface("update_service_input", updateServiceInput).Msgf("[%s] Detected Changes - Diff:\n%s", service.Name, inputDiff)
 	updatedService, updateServiceErr := r.client.UpdateService(updateServiceInput)
 	if updateServiceErr != nil {
 		log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
@@ -276,8 +277,8 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 		log.Warn().Msgf("[%s] unexpected happened: updated service but the result is nil - please submit a bug report", service.Name)
 		return
 	}
-	diff := cmp.Diff(service, updatedService)
-	log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
+	serviceDiff := cmp.Diff(service, updatedService)
+	log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, serviceDiff)
 }
 
 func (r *ServiceReconciler) handleAliases(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
