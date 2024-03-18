@@ -18,7 +18,6 @@ import (
 
 // TODO: tests here would be much easier to use if we had a builder for service registrations
 // TODO: tests here would be much easier to use if we had a builder for existing services
-// TODO: tests here would be much easier to use if we had a builder for clients so that we don't have to `panic("should not be called")` everything.
 func TestReconcilerReconcile(t *testing.T) {
 	// Arrange
 	type TestCase struct {
