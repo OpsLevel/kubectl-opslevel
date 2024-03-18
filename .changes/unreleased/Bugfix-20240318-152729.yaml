@@ -1,0 +1,4 @@
+kind: Bugfix
+body: Fix bug where service fields are being set to "null" if they are not defined
+  in Kubernetes or in the user's config
+time: 2024-03-18T15:27:29.085301-04:00
