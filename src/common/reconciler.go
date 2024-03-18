@@ -147,7 +147,6 @@ func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.Servic
 	return service, nil
 }
 
-// TODO: update this to more closely follow the logic of updateService()
 func (r *ServiceReconciler) createService(registration opslevel_jq_parser.ServiceRegistration) (*opslevel.Service, error) {
 	serviceCreateInput := opslevel.ServiceCreateInput{
 		Name:        registration.Name,
