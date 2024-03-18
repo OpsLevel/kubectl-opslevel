@@ -76,34 +76,6 @@ func (r *ServiceReconciler) ContainsAllTags(tagAssigns []opslevel.TagInput, serv
 	return true
 }
 
-func (r *ServiceReconciler) ServiceNeedsUpdate(input opslevel.ServiceUpdateInput, service *opslevel.Service) bool {
-	if input.Name != nil && *input.Name != service.Name {
-		return true
-	}
-	if input.Product != nil && *input.Product != service.Product {
-		return true
-	}
-	if input.Description != nil && *input.Description != service.Description {
-		return true
-	}
-	if input.Language != nil && *input.Language != service.Language {
-		return true
-	}
-	if input.Framework != nil && *input.Framework != service.Framework {
-		return true
-	}
-	if input.TierAlias != nil && *input.TierAlias != service.Tier.Alias {
-		return true
-	}
-	if input.LifecycleAlias != nil && *input.LifecycleAlias != service.Lifecycle.Alias {
-		return true
-	}
-	if input.OwnerInput != nil && *input.OwnerInput.Alias != service.Owner.Alias {
-		return true
-	}
-	return false
-}
-
 // This function has 4 outcomes that can happen while looping over the aliases list
 // serviceAliasesResult_NoAliasesMatched - means that all API calls succeeded and none of the aliases matched an existing service
 // serviceAliasesResult_AliasMatched - means that all the API calls succeeded and a single service was found matching 1 of N aliases
@@ -175,6 +147,7 @@ func (r *ServiceReconciler) handleService(registration opslevel_jq_parser.Servic
 	return service, nil
 }
 
+// TODO: update this to more closely follow the logic of updateService()
 func (r *ServiceReconciler) createService(registration opslevel_jq_parser.ServiceRegistration) (*opslevel.Service, error) {
 	serviceCreateInput := opslevel.ServiceCreateInput{
 		Name:        registration.Name,
@@ -229,58 +202,82 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 		log.Warn().Msgf("[%s] unexpected happened: service passed to be updated is nil", registration.Name)
 		return
 	}
-	updateServiceInput := opslevel.ServiceUpdateInput{
-		Id:          &service.Id,
-		Product:     opslevel.RefOf[string](registration.Product),
-		Description: opslevel.RefOf[string](registration.Description),
-		Language:    opslevel.RefOf[string](registration.Language),
-		Framework:   opslevel.RefOf[string](registration.Framework),
+
+	// updateServiceInput contains the changes needed to reconcile the service
+	updateServiceInput := opslevel.ServiceUpdateInput{Id: &service.Id}
+	// for each field - check if the value exists in the registration AND if the value has changed compared to what is currently set
+	if registration.Description != "" && registration.Description != service.Description {
+		updateServiceInput.Description = opslevel.RefOf(registration.Description)
 	}
-	if registration.System != "" {
+	if registration.Framework != "" && registration.Framework != service.Framework {
+		updateServiceInput.Framework = opslevel.RefOf(registration.Framework)
+	}
+	if registration.Language != "" && registration.Language != service.Language {
+		updateServiceInput.Language = opslevel.RefOf(registration.Language)
+	}
+	if registration.Lifecycle != "" && registration.Lifecycle != service.Lifecycle.Alias {
+		if lifecycle, ok := opslevel.Cache.TryGetLifecycle(registration.Lifecycle); ok {
+			if lifecycle == nil {
+				err := fmt.Errorf("the cache unexpectedly returned a lifecycle that is nil - please submit a bug report")
+				log.Warn().Msgf("[%s] unexpected happened: %v", service.Name, err)
+			} else {
+				updateServiceInput.LifecycleAlias = opslevel.RefOf(lifecycle.Alias)
+			}
+		} else if registration.Lifecycle != "" {
+			log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", service.Name, registration.Lifecycle)
+		}
+	}
+	if registration.Name != "" && registration.Name != service.Name {
+		updateServiceInput.Name = opslevel.RefOf(registration.Name)
+	}
+	if registration.Owner != "" && registration.Owner != service.Owner.Alias {
+		if team, ok := opslevel.Cache.TryGetTeam(registration.Owner); ok {
+			if team == nil {
+				err := fmt.Errorf("the cache unexpectedly returned a team that is nil - please submit a bug report")
+				log.Warn().Msgf("[%s] unexpected happened: %v", service.Name, err)
+			} else {
+				updateServiceInput.OwnerInput = opslevel.NewIdentifier(team.Alias)
+			}
+		} else if registration.Owner != "" {
+			log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", service.Name, registration.Owner)
+		}
+	}
+	// TODO: alias equivalency - need to check ALL the aliases
+	if registration.System != "" && (service.Parent == nil || registration.System != service.Parent.Aliases[0]) {
 		updateServiceInput.Parent = opslevel.NewIdentifier(registration.System)
 	}
-	if v, ok := opslevel.Cache.TryGetTier(registration.Tier); ok {
-		if v == nil {
-			err := fmt.Errorf("the cache unexpectedly returned a tier that is nil - please submit a bug report")
-			log.Warn().Msgf("[%s] unexpected happened: %v", service.Name, err)
-		} else {
-			updateServiceInput.TierAlias = opslevel.RefOf(v.Alias)
-		}
-	} else if registration.Tier != "" {
-		log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", service.Name, registration.Tier)
+	if registration.Product != "" && registration.Product != service.Product {
+		updateServiceInput.Product = opslevel.RefOf(registration.Product)
 	}
-	if v, ok := opslevel.Cache.TryGetLifecycle(registration.Lifecycle); ok {
-		if v == nil {
-			err := fmt.Errorf("the cache unexpectedly returned a lifecycle that is nil - please submit a bug report")
-			log.Warn().Msgf("[%s] unexpected happened: %v", service.Name, err)
-		} else {
-			updateServiceInput.LifecycleAlias = opslevel.RefOf(v.Alias)
+	if registration.Tier != "" && registration.Tier != service.Tier.Alias {
+		if tier, ok := opslevel.Cache.TryGetTier(registration.Tier); ok {
+			if tier == nil {
+				err := fmt.Errorf("the cache unexpectedly returned a tier that is nil - please submit a bug report")
+				log.Warn().Msgf("[%s] unexpected happened: %v", service.Name, err)
+			} else {
+				updateServiceInput.TierAlias = opslevel.RefOf(tier.Alias)
+			}
+		} else if registration.Tier != "" {
+			log.Warn().Msgf("[%s] Unable to find 'Tier' with alias '%s'", service.Name, registration.Tier)
 		}
-	} else if registration.Lifecycle != "" {
-		log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", service.Name, registration.Lifecycle)
 	}
-	if v, ok := opslevel.Cache.TryGetTeam(registration.Owner); ok {
-		if v == nil {
-			err := fmt.Errorf("the cache unexpectedly returned a team that is nil - please submit a bug report")
-			log.Warn().Msgf("[%s] unexpected happened: %v", service.Name, err)
-		} else {
-			updateServiceInput.OwnerInput = opslevel.NewIdentifier(v.Alias)
-		}
-	} else if registration.Owner != "" {
-		log.Warn().Msgf("[%s] Unable to find 'Team' with alias '%s'", service.Name, registration.Owner)
-	}
-	if r.ServiceNeedsUpdate(updateServiceInput, service) {
-		updatedService, updateServiceErr := r.client.UpdateService(updateServiceInput)
-		if updateServiceErr != nil {
-			log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
-		} else if updatedService == nil {
-			log.Warn().Msgf("[%s] unexpected happened: updated service but the result is nil - please submit a bug report", service.Name)
-		} else if diff := cmp.Diff(service, updatedService); diff != "" {
-			log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
-		}
-	} else {
+	// if there is nothing in updateServiceInput aside from the service ID, do not send an update service API call
+	inputDiff := cmp.Diff(updateServiceInput, opslevel.ServiceUpdateInput{Id: &service.Id})
+	if inputDiff == "" {
 		log.Info().Msgf("[%s] No changes detected to fields - skipping update", service.Name)
+		return
 	}
+	updatedService, updateServiceErr := r.client.UpdateService(updateServiceInput)
+	if updateServiceErr != nil {
+		log.Error().Msgf("[%s] Failed updating service\n\tREASON: %v", service.Name, updateServiceErr.Error())
+		return
+	}
+	if updatedService == nil {
+		log.Warn().Msgf("[%s] unexpected happened: updated service but the result is nil - please submit a bug report", service.Name)
+		return
+	}
+	diff := cmp.Diff(service, updatedService)
+	log.Info().Msgf("[%s] Updated Service - Diff:\n%s", service.Name, diff)
 }
 
 func (r *ServiceReconciler) handleAliases(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
