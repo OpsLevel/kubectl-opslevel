@@ -196,6 +196,8 @@ func (r *ServiceReconciler) createService(registration opslevel_jq_parser.Servic
 	}
 }
 
+// updateService uses compares each field (not foreign keys like Tools or Tags) value in the registration vs the value that is currently set on the service.
+// if there are any updates needed, it will send a ServiceUpdateInput to the API.
 func (r *ServiceReconciler) updateService(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	if service == nil {
 		log.Warn().Msgf("[%s] unexpected happened: service passed to be updated is nil", registration.Name)
@@ -205,6 +207,10 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 	// updateServiceInput contains the changes needed to reconcile the service
 	updateServiceInput := opslevel.ServiceUpdateInput{Id: &service.Id}
 	// for each field - check if the value exists in the registration AND if the value has changed compared to what is currently set
+	// cannot use cmp.Diff to compare field values, since that is used for comparing structs and not individual fields.
+	// some fields like System need special comparisons, e.g. by using systemIdHasAlias
+	// only purpose of cmp.Diff is to display an easy-to-read diff for the user to understand what happened and to check if there
+	// is a need to submit an API update request, since the output of cmp.Diff is not really parseable.
 	if registration.Description != "" && registration.Description != service.Description {
 		updateServiceInput.Description = opslevel.RefOf(registration.Description)
 	}
@@ -261,8 +267,7 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 		}
 	}
 	// if there is nothing in updateServiceInput aside from the service ID, do not send an update service API call
-	inputDiff := cmp.Diff(opslevel.ServiceUpdateInput{Id: &service.Id}, updateServiceInput)
-	if inputDiff == "" {
+	if cmp.Equal(opslevel.ServiceUpdateInput{Id: &service.Id}, updateServiceInput) {
 		log.Info().Msgf("[%s] No changes detected to fields - skipping update", service.Name)
 		return
 	}
