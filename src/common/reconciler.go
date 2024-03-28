@@ -387,9 +387,13 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 			log.Warn().Msgf("[%s] Repository with alias: '%s' call to GetRepositoryWithAlias unexpectedly returned nil - please submit a bug report ... skipping", service.Name, repoCreateString)
 			continue
 		}
-		// step 2: look up the ServiceRepository
+		// step 2: look up the ServiceRepository at the base directory (default from opslevel-jq-parser is "")
+		// TODO: base directory --> if repo has one, then change it
+		// TODO: base directory --> if repo does not have one, then add the repo with that base directory
+		// TODO: lookup the repo....
 		// if it does not exist, create it
 		// if it does exist, update it
+		// TODO: client needs to have a repository.GetService() handler
 		serviceRepository := foundRepository.GetService(service.Id, *repositoryCreate.BaseDirectory)
 		if serviceRepository != nil {
 			log.Debug().Msgf("[%s] ServiceRepository '%s' exists", service.Name, repoCreateString)
@@ -399,10 +403,6 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 			needsUpdate := false
 			if repositoryCreate.DisplayName != nil && serviceRepository.DisplayName != *repositoryCreate.DisplayName {
 				repositoryUpdate.DisplayName = repositoryCreate.DisplayName
-				needsUpdate = true
-			}
-			if *repositoryCreate.BaseDirectory != serviceRepository.BaseDirectory {
-				repositoryUpdate.BaseDirectory = repositoryCreate.BaseDirectory
 				needsUpdate = true
 			}
 			b, _ = json.Marshal(repositoryUpdate)
@@ -420,7 +420,7 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 			log.Info().Msgf("[%s] Updated repository '%s'", service.Name, repoCreateString)
 			continue
 		}
-		repositoryCreate.Service = opslevel.IdentifierInput{Id: &service.Id}
+		repositoryCreate.Service = opslevel.IdentifierInput{Alias: &service.Aliases[0]}
 		err := r.client.CreateServiceRepository(repositoryCreate)
 		if err != nil {
 			log.Error().Msgf("[%s] Failed assigning repository '%s'\n\tREASON: %v", service.Name, repoCreateString, err.Error())
