@@ -385,6 +385,7 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 		}
 
 		// look up the ServiceRepository matching the base directory
+		// TODO: add a client handler for repo.GetService() to make testing easier
 		serviceRepository := foundRepository.GetService(service.Id, *inputRepository.BaseDirectory)
 
 		// if the ServiceRepository is found, update the fields on the ServiceRepository (currently just display name)
