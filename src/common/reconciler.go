@@ -365,68 +365,62 @@ func (r *ServiceReconciler) handleTools(service *opslevel.Service, registration 
 }
 
 func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
-	for _, repositoryCreate := range registration.Repositories {
-		// TODO: are the "null" checks in our go code here still relevant?
-		if repositoryCreate.Repository.Alias == nil || *repositoryCreate.Repository.Alias == "null" || *repositoryCreate.Repository.Alias == "" {
+	for _, inputRepository := range registration.Repositories {
+		// must have alias, must have base directory. if input is just a repository alias like github.com:org/repo then base directory from jq parser will be empty string (root dir)
+		if inputRepository.Repository.Alias == nil || *inputRepository.Repository.Alias == "null" || *inputRepository.Repository.Alias == "" || inputRepository.BaseDirectory == nil {
 			continue
 		}
-		if repositoryCreate.BaseDirectory == nil {
-			log.Error().Msgf("[%s] Repository handler is exiting early for repository with alias '%s'\n\tREASON: %v", service.Name, *repositoryCreate.Repository.Alias, fmt.Errorf("the repository unexpectedly has a nil base directory"))
-			continue
-		}
-		b, _ := json.Marshal(repositoryCreate)
-		repoCreateString := string(b)
-		// step 1: look up the repository in OpsLevel
-		// if it does not exist, exit early
-		// if it does exist, continue to step 2
-		foundRepository, foundRepositoryErr := r.client.GetRepositoryWithAlias(*repositoryCreate.Repository.Alias)
+
+		// setup logger to use for this repository
+		repoLogger := log.With().Str("repo", *inputRepository.Repository.Alias).Str("base_dir", *inputRepository.BaseDirectory).Logger()
+
+		// look up the repository in OpsLevel - exit if it does not exist
+		foundRepository, foundRepositoryErr := r.client.GetRepositoryWithAlias(*inputRepository.Repository.Alias)
 		if foundRepositoryErr != nil {
-			log.Warn().Msgf("[%s] Repository with alias: '%s' not found so it cannot be attached to service ... skipping", service.Name, repoCreateString)
+			repoLogger.Error().Err(foundRepositoryErr).Msgf("fetching repository in OpsLevel resulted in an error ... skipping")
 			continue
 		} else if foundRepository == nil {
-			log.Warn().Msgf("[%s] Repository with alias: '%s' call to GetRepositoryWithAlias unexpectedly returned nil - please submit a bug report ... skipping", service.Name, repoCreateString)
+			repoLogger.Warn().Msgf("repository not found in OpsLevel ... skipping")
 			continue
 		}
-		// step 2: look up the ServiceRepository at the base directory (default from opslevel-jq-parser is "")
-		// TODO: base directory --> if repo has one, then change it
-		// TODO: base directory --> if repo does not have one, then add the repo with that base directory
-		// TODO: lookup the repo....
-		// if it does not exist, create it
-		// if it does exist, update it
-		// TODO: client needs to have a repository.GetService() handler
-		serviceRepository := foundRepository.GetService(service.Id, *repositoryCreate.BaseDirectory)
+
+		// look up the ServiceRepository matching the base directory
+		serviceRepository := foundRepository.GetService(service.Id, *inputRepository.BaseDirectory)
+
+		// if the ServiceRepository is found, update the fields on the ServiceRepository (currently just display name)
 		if serviceRepository != nil {
-			log.Debug().Msgf("[%s] ServiceRepository '%s' exists", service.Name, repoCreateString)
-			repositoryUpdate := opslevel.ServiceRepositoryUpdateInput{
-				Id: serviceRepository.Id,
-			}
+			repoLogger.Debug().Msgf("found service repository (%s) has display name: '%s'", serviceRepository.Id, serviceRepository.DisplayName)
+
+			// check to ensure that an update call is actually necessary
+			repositoryUpdate := opslevel.ServiceRepositoryUpdateInput{Id: serviceRepository.Id, BaseDirectory: &serviceRepository.BaseDirectory}
 			needsUpdate := false
-			if repositoryCreate.DisplayName != nil && serviceRepository.DisplayName != *repositoryCreate.DisplayName {
-				repositoryUpdate.DisplayName = repositoryCreate.DisplayName
+			if inputRepository.DisplayName != nil && *inputRepository.DisplayName != "" && *inputRepository.DisplayName != serviceRepository.DisplayName {
+				repositoryUpdate.DisplayName = inputRepository.DisplayName
 				needsUpdate = true
 			}
-			b, _ = json.Marshal(repositoryUpdate)
-			repoUpdateString := string(b)
 			if !needsUpdate {
-				log.Info().Msgf("[%s] ServiceRepository '%s' does not need any updates ... skipping", service.Name, repoUpdateString)
+				repoLogger.Debug().Msgf("service repository (%s) does not require any updates", serviceRepository.Id)
 				continue
 			}
-			log.Info().Msgf("[%s] ServiceRepository '%s' needs an update ... updating", service.Name, repoUpdateString)
+
+			// perform update
 			serviceRepositoryUpdateErr := r.client.UpdateServiceRepository(repositoryUpdate)
 			if serviceRepositoryUpdateErr != nil {
-				log.Error().Msgf("[%s] Failed updating repository '%s'\n\tREASON: %v", service.Name, repoCreateString, serviceRepositoryUpdateErr.Error())
+				repoLogger.Error().Err(serviceRepositoryUpdateErr).Msgf("failed updating service repository (%s)", serviceRepository.Id)
 				continue
 			}
-			log.Info().Msgf("[%s] Updated repository '%s'", service.Name, repoCreateString)
+			repoLogger.Info().Msgf("successfully updated service repository (%s)", serviceRepository.Id)
 			continue
 		}
-		repositoryCreate.Service = opslevel.IdentifierInput{Alias: &service.Aliases[0]}
-		err := r.client.CreateServiceRepository(repositoryCreate)
+
+		// if the ServiceRepository is not found, create the ServiceRepository (assign the repository to the current service)
+		inputRepository.Service = opslevel.IdentifierInput{Alias: &service.Aliases[0]}
+		err := r.client.CreateServiceRepository(inputRepository)
 		if err != nil {
-			log.Error().Msgf("[%s] Failed assigning repository '%s'\n\tREASON: %v", service.Name, repoCreateString, err.Error())
-		} else {
-			log.Info().Msgf("[%s] Attached repository '%s'", service.Name, repoCreateString)
+			repoLogger.Error().Err(err).Msgf("failed creating a new service repository")
+			continue
 		}
+		repoLogger.Info().Msgf("successfully created a new service repository (%s)", serviceRepository.Id)
 	}
 }
 
