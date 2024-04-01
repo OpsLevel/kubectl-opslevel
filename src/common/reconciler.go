@@ -421,7 +421,7 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 			repoLogger.Error().Err(err).Msgf("failed creating a new service repository")
 			continue
 		}
-		repoLogger.Info().Msgf("successfully created a new service repository (%s)", serviceRepository.Id)
+		repoLogger.Info().Msgf("successfully created a new service repository")
 	}
 }
 
