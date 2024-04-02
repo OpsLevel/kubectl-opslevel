@@ -16,6 +16,8 @@ import (
 	"github.com/rocktavious/autopilot/v2023"
 )
 
+// TODO: use builder pattern for client so that every function that isn't explicitly stubbed will panic
+
 func TestReconcilerReconcile(t *testing.T) {
 	// Arrange
 	type TestCase struct {
