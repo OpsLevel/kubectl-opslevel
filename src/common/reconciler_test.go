@@ -591,7 +591,11 @@ func Test_Reconciler_RepoNeedsCreate(t *testing.T) {
 		},
 		CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
 			calledCreateServiceRepositoryHandler = true
-			autopilot.Equals(t, testRegistration.Repositories[0], input)
+			autopilot.Equals(t, *testRegistration.Repositories[0].BaseDirectory, *input.BaseDirectory)
+			autopilot.Equals(t, *testRegistration.Repositories[0].DisplayName, *input.DisplayName)
+			autopilot.Equals(t, "repo_needs_create", *input.Repository.Alias)
+			autopilot.Equals(t, "Z2lkOi8vb3BzbGV2ZWwvU2VydmljZS8xNzg5Nw", string(*input.Service.Id))
+			return nil
 			return nil
 		},
 		CreateTagHandler: func(input opslevel.TagCreateInput) error {

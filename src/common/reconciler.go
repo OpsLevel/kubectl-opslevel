@@ -414,7 +414,7 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 		}
 
 		// if the ServiceRepository is not found, create the ServiceRepository (assign the repository to the current service)
-		inputRepository.Service = opslevel.IdentifierInput{Alias: &service.Aliases[0]}
+		inputRepository.Service = opslevel.IdentifierInput{Id: &service.Id}
 		err := r.client.CreateServiceRepository(inputRepository)
 		if err != nil {
 			repoLogger.Error().Err(err).Msgf("failed creating a new service repository")
