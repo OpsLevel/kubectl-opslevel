@@ -385,10 +385,9 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 		}
 
 		// look up the ServiceRepository matching the base directory
-		// TODO: add a client handler for repo.GetService() to make testing easier
 		serviceRepository := foundRepository.GetService(service.Id, *inputRepository.BaseDirectory)
 
-		// if the ServiceRepository is found, update the fields on the ServiceRepository (currently just display name)
+		// if the ServiceRepository is found, update the fields on the ServiceRepository (currently just the display name)
 		if serviceRepository != nil {
 			repoLogger.Debug().Msgf("found service repository (%s) has display name: '%s'", serviceRepository.Id, serviceRepository.DisplayName)
 
@@ -400,7 +399,7 @@ func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, regist
 				needsUpdate = true
 			}
 			if !needsUpdate {
-				repoLogger.Debug().Msgf("service repository (%s) does not require any updates", serviceRepository.Id)
+				repoLogger.Info().Msgf("service repository (%s) does not require any updates", serviceRepository.Id)
 				continue
 			}
 
