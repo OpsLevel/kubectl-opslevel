@@ -596,7 +596,6 @@ func Test_Reconciler_RepoNeedsCreate(t *testing.T) {
 			autopilot.Equals(t, "repo_needs_create", *input.Repository.Alias)
 			autopilot.Equals(t, "Z2lkOi8vb3BzbGV2ZWwvU2VydmljZS8xNzg5Nw", string(*input.Service.Id))
 			return nil
-			return nil
 		},
 		CreateTagHandler: func(input opslevel.TagCreateInput) error {
 			panic("should not be called")
