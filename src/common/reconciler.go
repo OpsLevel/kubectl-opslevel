@@ -366,13 +366,18 @@ func (r *ServiceReconciler) handleTools(service *opslevel.Service, registration 
 
 func (r *ServiceReconciler) handleRepositories(service *opslevel.Service, registration opslevel_jq_parser.ServiceRegistration) {
 	for _, inputRepository := range registration.Repositories {
-		// must have alias, must have base directory. if input is just a repository alias like github.com:org/repo then base directory from jq parser will be empty string (root dir)
-		if inputRepository.Repository.Alias == nil || *inputRepository.Repository.Alias == "null" || *inputRepository.Repository.Alias == "" || inputRepository.BaseDirectory == nil {
+		if inputRepository.Repository.Alias == nil || *inputRepository.Repository.Alias == "null" || *inputRepository.Repository.Alias == "" {
 			continue
 		}
 
 		// setup logger to use for this repository
-		repoLogger := log.With().Str("repo", *inputRepository.Repository.Alias).Str("base_dir", *inputRepository.BaseDirectory).Logger()
+		repoLogger := log.With().Str("service", service.Name).Str("repo", *inputRepository.Repository.Alias).Logger()
+		if inputRepository.BaseDirectory == nil {
+			// case for when input is just 'github.com:OrgName/RepoName'
+			repoLogger.Warn().Msgf("no base directory was associated with this repo - using root directory (/)")
+			inputRepository.BaseDirectory = opslevel.RefOf("")
+		}
+		repoLogger = repoLogger.With().Str("base_dir", *inputRepository.BaseDirectory).Logger()
 
 		// look up the repository in OpsLevel - exit if it does not exist
 		foundRepository, foundRepositoryErr := r.client.GetRepositoryWithAlias(*inputRepository.Repository.Alias)
