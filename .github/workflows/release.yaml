@@ -90,31 +90,41 @@ jobs:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          repository: OpsLevel/homebrew-tap
-          token: ${{ secrets.ORG_GITHUB_TOKEN }}
-          path: homebrew-tap
-      - name: Update homebrew
-        working-directory: homebrew-tap
-        env:
-          GORELEASER_ARTIFACTS: "${{ steps.goreleaser.outputs.artifacts }}"
-        run: |
-          RELEASE_SHA256=$(echo $GORELEASER_ARTIFACTS | jq -r '.[] | select(.type == "Archive") | .extra.Checksum | split(":")[1]')
-          [ -z "$RELEASE_SHA256" ] && exit 1
-          cd Formula
-          awk -v ver="${RELEASE_VERSION:1}" '/version/, /ldflags/ {sub(/[0-9]+\.[0-9]+\.[0-9]+/, ver)} {print}' kubectl.rb > tmp.txt
-          awk -v new_sha="${RELEASE_SHA256}" \
-              -v new_commit="${GITHUB_SHA::12}" \
-              '/commit/ {sub(/[0-9a-f]{12}/, new_commit)} /sha256/ {sub(/[0-9a-f]{10}+/, new_sha)} {print}' \
-              tmp.txt > kubectl.rb
-          rm tmp.txt
-          git config user.name "OpsLevel Bots"
-          git config user.email "bots@opslevel.com"
-          git add .
-          git commit -m "Brew formula update for kubectl-opslevel version $RELEASE_VERSION"
-          git push -f origin HEAD
+      # - name: Checkout
+      #   uses: actions/checkout@v4
+      #   with:
+      #     repository: OpsLevel/homebrew-tap
+      #     token: ${{ secrets.ORG_GITHUB_TOKEN }}
+      #     path: homebrew-tap
+      # - name: Update homebrew
+      #   working-directory: homebrew-tap
+      #   run: |
+      #     cd Formula
+      #     awk -v ver="${RELEASE_VERSION:1}" '/version/ {sub(/[0-9]+\.[0-9]+\.[0-9]+/, ver)} {print}' kubectl.rb > tmp.txt
+      #     awk -v full_sha="${GITHUB_SHA}" \
+      #         -v short_sha="${GITHUB_SHA::12}" \
+      #         '/commit/ {sub(/[0-9a-f]{12}/, short_sha)} /revision/ {sub(/[0-9a-f]{10}+/, full_sha)} {print}' \
+      #         tmp.txt > kubectl.rb
+      #     rm tmp.txt
+      #     git config user.name "OpsLevel Bots"
+      #     git config user.email "bots@opslevel.com"
+      #     git add .
+      #     git commit -m "Brew formula update for kubectl-opslevel version $RELEASE_VERSION"
+      #     git push -f origin HEAD
+      # - name: Update homebrew
+      #   env:
+      #     HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
+      #   run: >
+      #     brew tap opslevel/tap &&
+      #     brew bump-formula-pr
+      #     --verbose
+      #     --no-audit
+      #     --no-browse
+      #     --write-only
+      #     --message="Brew formula update for kubectl-opslevel version $RELEASE_VERSION"
+      #     --version="$RELEASE_VERSION"
+      #     --revision="${GITHUB_SHA}"
+      #     opslevel/tap/kubectl
 
   release-docker:
     runs-on: ubuntu-latest
