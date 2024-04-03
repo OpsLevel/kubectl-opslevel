@@ -16,9 +16,8 @@ import (
 	"github.com/rocktavious/autopilot/v2023"
 )
 
-// TODO: tests here would be much easier to use if we had a builder for service registrations
-// TODO: tests here would be much easier to use if we had a builder for existing services
-// TODO: tests here would be much easier to use if we had a builder for clients so that we don't have to `panic("should not be called")` everything.
+// TODO: use builder pattern for client so that every function that isn't explicitly stubbed will panic
+
 func TestReconcilerReconcile(t *testing.T) {
 	// Arrange
 	type TestCase struct {
@@ -79,12 +78,10 @@ func TestReconcilerReconcile(t *testing.T) {
 		Aliases: []string{"aliases_has_update", "updates_only_aliases"},
 	}
 	testRegistrationChangesDescriptionOnly := opslevel_jq_parser.ServiceRegistration{
-		// at least one alias is required, so just using the alias that is already is in testService
 		Aliases:     []string{"test"},
 		Description: "description has update",
 	}
 	testRegistrationChangesEveryField := opslevel_jq_parser.ServiceRegistration{
-		// at least one alias is required, so just using the alias that is already is in testService
 		Aliases:     []string{"test1", "test2", "test3"},
 		Description: "changed_description",
 		Framework:   "changed_framework",
@@ -206,15 +203,18 @@ func TestReconcilerReconcile(t *testing.T) {
 				autopilot.Ok(t, err)
 			},
 		},
+		// TODO: need test where service creation is disabled and the service already exists
 		"Happy Path Do Not Create Services": {
 			registration: testRegistration,
 			reconciler: common.NewServiceReconciler(&common.OpslevelClient{
+				// TODO: if we are testing if service creation is disabled shouldn't this return nil, instead of empty service?
 				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
 					return &opslevel.Service{}, nil // This returns a nil service as if the alias lookup didn't find anything
 				},
 				CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
 					panic("should not be called")
 				},
+				// TODO: should this panic? it is valid for a service to be updated if service creation is not enabled
 				UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
 					panic("should not be called")
 				},
@@ -429,6 +429,355 @@ func TestReconcilerReconcile(t *testing.T) {
 	})
 }
 
+func Test_Reconciler_RepoNotInOpsLevel(t *testing.T) {
+	testService := opslevel.Service{
+		ServiceId: opslevel.ServiceId{Id: "Z2lkOi8vb3BzbGV2ZWwvU2VydmljZS8xNzg5Nw", Aliases: []string{"test"}},
+		Name:      "Test Service",
+	}
+	testRegistration := opslevel_jq_parser.ServiceRegistration{
+		Aliases: []string{"test"},
+		Repositories: []opslevel.ServiceRepositoryCreateInput{
+			{
+				BaseDirectory: opslevel.RefOf(""),
+				DisplayName:   opslevel.RefOf("Repo not in OpsLevel"),
+				Repository:    *opslevel.NewIdentifier("repo_not_in_opslevel"),
+				Service:       *opslevel.NewIdentifier(""),
+			},
+		},
+	}
+	calledGetRepositoryWithAliasHandler := false
+	reconciler := common.NewServiceReconciler(&common.OpslevelClient{
+		AssignPropertyHandler: func(input opslevel.PropertyInput) error {
+			panic("should not be called")
+		},
+		AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
+			panic("should not be called")
+		},
+		CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
+			panic("should not be called")
+		},
+		CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+			panic("should not be called")
+		},
+		CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
+			panic("should not be called")
+		},
+		CreateTagHandler: func(input opslevel.TagCreateInput) error {
+			panic("should not be called")
+		},
+		CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
+			panic("should not be called")
+		},
+		GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
+			calledGetRepositoryWithAliasHandler = true
+			return nil, fmt.Errorf("[test] error fetching repository")
+		},
+		GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+			return &testService, nil
+		},
+		UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+			panic("should not be called")
+		},
+		UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
+			panic("should not be called")
+		},
+	}, true)
+	reconcilerError := reconciler.Reconcile(testRegistration)
+
+	autopilot.Ok(t, reconcilerError)
+	autopilot.Assert(t, calledGetRepositoryWithAliasHandler, "expected call to GetRepositoryWithAliasHandler")
+}
+
+func Test_Reconciler_RepoIsAttached(t *testing.T) {
+	testService := opslevel.Service{
+		ServiceId: opslevel.ServiceId{Id: "Z2lkOi8vb3BzbGV2ZWwvU2VydmljZS8xNzg5Nw", Aliases: []string{"test"}},
+		Name:      "Test Service",
+	}
+	testRegistration := opslevel_jq_parser.ServiceRegistration{
+		Aliases: []string{"test"},
+		Repositories: []opslevel.ServiceRepositoryCreateInput{
+			{
+				BaseDirectory: opslevel.RefOf(""),
+				DisplayName:   opslevel.RefOf("Repo is attached"),
+				Repository:    *opslevel.NewIdentifier("repo_is_attached"),
+				Service:       *opslevel.NewIdentifier("test"),
+			},
+		},
+	}
+	calledGetRepositoryWithAliasHandler := false
+	reconciler := common.NewServiceReconciler(&common.OpslevelClient{
+		AssignPropertyHandler: func(input opslevel.PropertyInput) error {
+			panic("should not be called")
+		},
+		AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
+			panic("should not be called")
+		},
+		CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
+			panic("should not be called")
+		},
+		CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+			panic("should not be called")
+		},
+		CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
+			panic("should not be called")
+		},
+		CreateTagHandler: func(input opslevel.TagCreateInput) error {
+			panic("should not be called")
+		},
+		CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
+			panic("should not be called")
+		},
+		GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
+			calledGetRepositoryWithAliasHandler = true
+			return &opslevel.Repository{
+				Services: &opslevel.RepositoryServiceConnection{Edges: []opslevel.RepositoryServiceEdge{{
+					Node: testService.ServiceId,
+					ServiceRepositories: []opslevel.ServiceRepository{{
+						BaseDirectory: "",
+						DisplayName:   "Repo is attached",
+						Id:            "Z2lkOi8vb3BzbGV2ZWwvU2VydmljZVJlcG9zaXRvcnkvMTAwNDc",
+						Repository:    opslevel.RepositoryId{DefaultAlias: "repo_is_attached"},
+						Service:       testService.ServiceId,
+					}},
+				}}},
+			}, nil
+		},
+		GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+			return &testService, nil
+		},
+		UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+			panic("should not be called")
+		},
+		UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
+			panic("should not be called")
+		},
+	}, true)
+	reconcilerError := reconciler.Reconcile(testRegistration)
+
+	autopilot.Ok(t, reconcilerError)
+	autopilot.Assert(t, calledGetRepositoryWithAliasHandler, "expected call to GetRepositoryWithAliasHandler")
+}
+
+func Test_Reconciler_RepoNeedsCreate(t *testing.T) {
+	testService := opslevel.Service{
+		ServiceId: opslevel.ServiceId{Id: "Z2lkOi8vb3BzbGV2ZWwvU2VydmljZS8xNzg5Nw", Aliases: []string{"test"}},
+		Name:      "Test Service",
+	}
+	testRegistration := opslevel_jq_parser.ServiceRegistration{
+		Aliases: []string{"test"},
+		Repositories: []opslevel.ServiceRepositoryCreateInput{
+			{
+				BaseDirectory: opslevel.RefOf(""),
+				DisplayName:   opslevel.RefOf("Repo needs create"),
+				Repository:    *opslevel.NewIdentifier("repo_needs_create"),
+				Service:       *opslevel.NewIdentifier("test"),
+			},
+		},
+	}
+	calledGetRepositoryWithAliasHandler := false
+	calledCreateServiceRepositoryHandler := false
+	reconciler := common.NewServiceReconciler(&common.OpslevelClient{
+		AssignPropertyHandler: func(input opslevel.PropertyInput) error {
+			panic("should not be called")
+		},
+		AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
+			panic("should not be called")
+		},
+		CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
+			panic("should not be called")
+		},
+		CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+			panic("should not be called")
+		},
+		CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
+			calledCreateServiceRepositoryHandler = true
+			autopilot.Equals(t, *testRegistration.Repositories[0].BaseDirectory, *input.BaseDirectory)
+			autopilot.Equals(t, *testRegistration.Repositories[0].DisplayName, *input.DisplayName)
+			autopilot.Equals(t, "repo_needs_create", *input.Repository.Alias)
+			autopilot.Equals(t, "Z2lkOi8vb3BzbGV2ZWwvU2VydmljZS8xNzg5Nw", string(*input.Service.Id))
+			return nil
+		},
+		CreateTagHandler: func(input opslevel.TagCreateInput) error {
+			panic("should not be called")
+		},
+		CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
+			panic("should not be called")
+		},
+		GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
+			calledGetRepositoryWithAliasHandler = true
+			// TODO: because we don't have a repo.GetService() handler, this stub is super dependent on the current logic of opslevel-go
+			return &opslevel.Repository{
+				Services: &opslevel.RepositoryServiceConnection{Edges: make([]opslevel.RepositoryServiceEdge, 0)},
+			}, nil
+		},
+		GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+			return &testService, nil
+		},
+		UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+			panic("should not be called")
+		},
+		UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
+			panic("should not be called")
+		},
+	}, true)
+	reconcilerError := reconciler.Reconcile(testRegistration)
+
+	autopilot.Ok(t, reconcilerError)
+	autopilot.Assert(t, calledGetRepositoryWithAliasHandler, "expected call to GetRepositoryWithAliasHandler")
+	autopilot.Assert(t, calledCreateServiceRepositoryHandler, "expected call to CreateServiceRepositoryHandler")
+}
+
+// this test is a copy of Test_Reconciler_RepoNeedsCreate with registration repository base directory set to nil
+// tests for case where registration is just a string like 'github.com:OrgName/RepoName'
+func Test_Reconciler_RepoNeedsCreateBasic(t *testing.T) {
+	testService := opslevel.Service{
+		ServiceId: opslevel.ServiceId{Id: "Z2lkOi8vb3BzbGV2ZWwvU2VydmljZS8xNzg5Nw", Aliases: []string{"test"}},
+		Name:      "Test Service",
+	}
+	testRegistration := opslevel_jq_parser.ServiceRegistration{
+		Aliases: []string{"test"},
+		Repositories: []opslevel.ServiceRepositoryCreateInput{
+			{
+				BaseDirectory: nil,
+				DisplayName:   nil,
+				Repository:    *opslevel.NewIdentifier("repo_needs_create"),
+				Service:       *opslevel.NewIdentifier("test"),
+			},
+		},
+	}
+	calledGetRepositoryWithAliasHandler := false
+	calledCreateServiceRepositoryHandler := false
+	reconciler := common.NewServiceReconciler(&common.OpslevelClient{
+		AssignPropertyHandler: func(input opslevel.PropertyInput) error {
+			panic("should not be called")
+		},
+		AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
+			panic("should not be called")
+		},
+		CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
+			panic("should not be called")
+		},
+		CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+			panic("should not be called")
+		},
+		CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
+			calledCreateServiceRepositoryHandler = true
+			autopilot.Equals(t, "", *input.BaseDirectory)
+			autopilot.Assert(t, input.DisplayName == nil, "expected display name to be nil for basic repository input")
+			autopilot.Equals(t, "repo_needs_create", *input.Repository.Alias)
+			autopilot.Equals(t, "Z2lkOi8vb3BzbGV2ZWwvU2VydmljZS8xNzg5Nw", string(*input.Service.Id))
+			return nil
+		},
+		CreateTagHandler: func(input opslevel.TagCreateInput) error {
+			panic("should not be called")
+		},
+		CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
+			panic("should not be called")
+		},
+		GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
+			calledGetRepositoryWithAliasHandler = true
+			// TODO: because we don't have a repo.GetService() handler, this stub is super dependent on the current logic of opslevel-go
+			return &opslevel.Repository{
+				Services: &opslevel.RepositoryServiceConnection{Edges: make([]opslevel.RepositoryServiceEdge, 0)},
+			}, nil
+		},
+		GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+			return &testService, nil
+		},
+		UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+			panic("should not be called")
+		},
+		UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
+			panic("should not be called")
+		},
+	}, true)
+	reconcilerError := reconciler.Reconcile(testRegistration)
+
+	autopilot.Ok(t, reconcilerError)
+	autopilot.Assert(t, calledGetRepositoryWithAliasHandler, "expected call to GetRepositoryWithAliasHandler")
+	autopilot.Assert(t, calledCreateServiceRepositoryHandler, "expected call to CreateServiceRepositoryHandler")
+}
+
+func Test_Reconciler_RepoNeedsUpdate(t *testing.T) {
+	testService := opslevel.Service{
+		ServiceId: opslevel.ServiceId{Id: "Z2lkOi8vb3BzbGV2ZWwvU2VydmljZS8xNzg5Nw", Aliases: []string{"test"}},
+		Name:      "Test Service",
+	}
+	testRegistration := opslevel_jq_parser.ServiceRegistration{
+		Aliases: []string{"test"},
+		Repositories: []opslevel.ServiceRepositoryCreateInput{
+			{
+				BaseDirectory: opslevel.RefOf(""),
+				DisplayName:   opslevel.RefOf("Repo needs update"),
+				Repository:    *opslevel.NewIdentifier("repo_needs_update"),
+				Service:       *opslevel.NewIdentifier("test"),
+			},
+		},
+	}
+	calledGetRepositoryWithAliasHandler := false
+	calledUpdateServiceRepositoryHandler := false
+	reconciler := common.NewServiceReconciler(&common.OpslevelClient{
+		AssignPropertyHandler: func(input opslevel.PropertyInput) error {
+			panic("should not be called")
+		},
+		AssignTagsHandler: func(service *opslevel.Service, tags map[string]string) error {
+			panic("should not be called")
+		},
+		CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
+			panic("should not be called")
+		},
+		CreateServiceHandler: func(input opslevel.ServiceCreateInput) (*opslevel.Service, error) {
+			panic("should not be called")
+		},
+		CreateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryCreateInput) error {
+			panic("should not be called")
+		},
+		CreateTagHandler: func(input opslevel.TagCreateInput) error {
+			panic("should not be called")
+		},
+		CreateToolHandler: func(tool opslevel.ToolCreateInput) error {
+			panic("should not be called")
+		},
+		GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
+			calledGetRepositoryWithAliasHandler = true
+			return &opslevel.Repository{
+				Services: &opslevel.RepositoryServiceConnection{Edges: []opslevel.RepositoryServiceEdge{
+					{
+						Node: testService.ServiceId,
+						ServiceRepositories: []opslevel.ServiceRepository{
+							{
+								BaseDirectory: "",
+								DisplayName:   "Hello World",
+								Id:            "Z2lkOi8vb3BzbGV2ZWwvU2VydmljZVJlcG9zaXRvcnkvMTAwNDc",
+								Repository:    opslevel.RepositoryId{DefaultAlias: "repo_needs_update"},
+								Service:       testService.ServiceId,
+							},
+						},
+					},
+				}},
+			}, nil
+		},
+		GetServiceHandler: func(alias string) (*opslevel.Service, error) {
+			return &testService, nil
+		},
+		UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
+			panic("should not be called")
+		},
+		UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
+			calledUpdateServiceRepositoryHandler = true
+			autopilot.Equals(t, *testRegistration.Repositories[0].BaseDirectory, *input.BaseDirectory)
+			autopilot.Equals(t, *testRegistration.Repositories[0].DisplayName, *input.DisplayName)
+			autopilot.Equals(t, "Z2lkOi8vb3BzbGV2ZWwvU2VydmljZVJlcG9zaXRvcnkvMTAwNDc", string(input.Id))
+			return nil
+		},
+	}, true)
+	reconcilerError := reconciler.Reconcile(testRegistration)
+
+	autopilot.Ok(t, reconcilerError)
+	autopilot.Assert(t, calledGetRepositoryWithAliasHandler, "expected call to GetRepositoryWithAliasHandler")
+	autopilot.Assert(t, calledUpdateServiceRepositoryHandler, "expected call to UpdateServiceRepositoryHandler")
+}
+
 func Test_Reconciler_ContainsAllTags(t *testing.T) {
 	// Arrange
 	type TestCase struct {
@@ -570,7 +919,7 @@ func Test_Reconciler_HandleProperties(t *testing.T) {
 		},
 		"prop_empty_object": {
 			Definition: *opslevel.NewIdentifier("prop_empty_object"),
-			Value:      opslevel.JsonString("{"),
+			Value:      opslevel.JsonString("{}"),
 		},
 		"prop_object": {
 			Definition: *opslevel.NewIdentifier("prop_object"),
