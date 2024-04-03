@@ -1,4 +1,0 @@
-kind: Bugfix
-body: Fix bug where repositories were being attached unnecessarily, resulting in error
-  logs
-time: 2024-04-02T15:01:18.219217-04:00
