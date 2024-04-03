@@ -101,28 +101,30 @@ jobs:
       #   run: |
       #     cd Formula
       #     awk -v ver="${RELEASE_VERSION:1}" '/version/ {sub(/[0-9]+\.[0-9]+\.[0-9]+/, ver)} {print}' kubectl.rb > tmp.txt
-      #     awk -v new_commit="${GITHUB_SHA::12}" '/commit/ {sub(/[0-9a-f]{12}/, new_commit)} {print}' tmp.txt > kubectl.rb
+      #     awk -v full_sha="${GITHUB_SHA}" \
+      #         -v short_sha="${GITHUB_SHA::12}" \
+      #         '/commit/ {sub(/[0-9a-f]{12}/, short_sha)} /revision/ {sub(/[0-9a-f]{10}+/, full_sha)} {print}' \
+      #         tmp.txt > kubectl.rb
       #     rm tmp.txt
       #     git config user.name "OpsLevel Bots"
       #     git config user.email "bots@opslevel.com"
       #     git add .
       #     git commit -m "Brew formula update for kubectl-opslevel version $RELEASE_VERSION"
       #     git push -f origin HEAD
-      - name: Update homebrew
-        env:
-          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
-        run: >
-          brew tap opslevel/tap &&
-          brew bump-formula-pr
-          --verbose
-          --no-audit
-          --no-browse
-          --write-only
-          --message="Brew formula update for kubectl-opslevel version $RELEASE_VERSION"
-          --version="$RELEASE_VERSION"
-          --tag="v$RELEASE_VERSION"
-          --revision="${GITHUB_SHA}"
-          opslevel/tap/kubectl
+      # - name: Update homebrew
+      #   env:
+      #     HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
+      #   run: >
+      #     brew tap opslevel/tap &&
+      #     brew bump-formula-pr
+      #     --verbose
+      #     --no-audit
+      #     --no-browse
+      #     --write-only
+      #     --message="Brew formula update for kubectl-opslevel version $RELEASE_VERSION"
+      #     --version="$RELEASE_VERSION"
+      #     --revision="${GITHUB_SHA}"
+      #     opslevel/tap/kubectl
 
   release-docker:
     runs-on: ubuntu-latest
