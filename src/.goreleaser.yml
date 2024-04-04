@@ -43,7 +43,7 @@ brews:
     commit_author:
       name: OpsLevel Bots
       email: bots@opslevel.com
-    commit_msg_template: "Cut Release '{{ .Tag }}'"
+    commit_msg_template: "Cut Release '{{ .Tag }}' for '{{ .ProjectName }}'"
     license: MIT
     dependencies:
       - name: go
