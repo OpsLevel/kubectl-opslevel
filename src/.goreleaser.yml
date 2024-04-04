@@ -17,6 +17,9 @@ builds:
     binary: '{{ .ProjectName }}'
 archives:
   - name_template: '{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}'
+  - name_template: '{{ .ProjectName }}'
+    id: generic-archive
+    meta: true
 checksum:
   name_template: '{{ .ProjectName }}.sha256'
   algorithm: sha256
@@ -30,6 +33,36 @@ signs:
       - "${signature}"
       - "--detach-sign"
       - "${artifact}"
+brews:
+  -
+    ids:
+      - generic-archive
+    description: "Command line tool that enables you to import & reconcile services with OpsLevel"
+    homepage: "https://www.opslevel.com/"
+    url_template: "https://github.com/opslevel/{{ .ProjectName }}/archive/refs/tags/{{ .Tag }}.tar.gz"
+    commit_author:
+      name: OpsLevel Bots
+      email: bots@opslevel.com
+    commit_msg_template: "Cut Release '{{ .Tag }}'"
+    license: MIT
+    dependencies:
+      - name: go
+      - name: jq
+    install: |
+      ENV['CGO_ENABLED'] = '1'
+      ENV['CGO_CFLAGS'] = "-I#{Formula['jq'].opt_include}"
+      ENV['CGO_LDFLAGS'] = "-L#{Formula['jq'].opt_lib}"
+      cd 'src' do
+        system 'go', 'build', *std_go_args(
+          output: bin / 'kubectl-opslevel',
+          ldflags: "-s -w -X main.version={{ trimprefix {{ .Tag }} "v" }} -X main.commit={{ .ShortCommit }}"
+        )
+      end
+    test: |
+      system "#{bin}/kubectl-opslevel", 'version'
+    repository:
+      owner: OpsLevel
+      name: kubectl-opslevel
 changelog:
   sort: desc
   filters:
