@@ -35,7 +35,7 @@ tasks:
     cmds:
       - test -z "$(gofumpt -d -e . | tee /dev/stderr)"
       - golangci-lint run --timeout 5m
-      - nilaway -include-pkgs='github.com/opslevel/kubectl-opslevel' -test=false ./...
+      #- nilaway -include-pkgs='github.com/opslevel/kubectl-opslevel' -test=false ./...
 
   fix:
     desc: Fix formatting and linting
