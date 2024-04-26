@@ -133,7 +133,7 @@ tasks:
       vars: [OPSLEVEL_PKG]
 
   brew-install-jq:
-    internal: true
+    internal: false
     platforms: [darwin]
     cmds: ["which jq > /dev/null || brew install jq"]
     preconditions:

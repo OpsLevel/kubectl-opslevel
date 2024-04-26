@@ -63,6 +63,8 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Verify release has latest OpsLevel dependencies
         run: task has-latest-opslevel-dependencies
+      - name: Verify jq installed
+        run: task brew-install-jq
       - name: Ensure Changelog
         run: |
           git config user.name "OpsLevel Bots"
