@@ -5,6 +5,8 @@ before:
 builds:
   - env:
       - CGO_ENABLED=1
+      - CGO_CFLAGS="-I/usr/local/include"
+      - CGO_LDFLAGS="-L/usr/local/lib"
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
       - -trimpath
