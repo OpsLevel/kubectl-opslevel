@@ -55,8 +55,10 @@ jobs:
         run: task has-latest-opslevel-dependencies
       - name: Verify jq installed
         run: task brew-install-jq
-      - name: Echo cellar
-        run: ls -al /usr/local/Cellar/jq/$(brew info jq --json | jq -r '.[0].versions.stable')/include
+      - name: brew info jq
+        run: brew info jq --json
+      - name: which jq
+        run: which -a jq
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5.0.0
         id: goreleaser
