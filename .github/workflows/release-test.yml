@@ -61,7 +61,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v5.0.0
         id: goreleaser
         with:
-          args: release --clean --snapshot --release-notes=../.changes/${{ needs.release-version.outputs.release_version }}.md
+          args: release --clean --release-notes=../.changes/${{ needs.release-version.outputs.release_version }}.md
           workdir: ./src
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}

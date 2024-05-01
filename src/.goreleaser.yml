@@ -36,7 +36,7 @@ signs:
       - "--detach-sign"
       - "${artifact}"
 brews:
-  -
+  - name: kubectl
     ids:
       - generic-archive
     description: "Command line tool that enables you to import & reconcile services with OpsLevel"
@@ -46,7 +46,8 @@ brews:
       name: OpsLevel Bots
       email: bots@opslevel.com
     commit_msg_template: "Cut Release '{{ .Tag }}' for '{{ .ProjectName }}'"
-    license: MIT
+    license: "MIT"
+    folder: Formula
     dependencies:
       - name: go
       - name: jq
@@ -64,7 +65,8 @@ brews:
       system "#{bin}/kubectl-opslevel", 'version'
     repository:
       owner: OpsLevel
-      name: kubectl-opslevel
+      name: homebrew-tap
+      token: "{{ .Env.ORG_GITHUB_TOKEN }}"
 changelog:
   sort: desc
   filters:
