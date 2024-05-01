@@ -55,10 +55,6 @@ jobs:
         run: task has-latest-opslevel-dependencies
       - name: Verify jq installed
         run: task brew-install-jq
-      - name: Echo include
-        run: ls -al /usr/local/include
-      - name: Echo lib
-        run: ls -al /usr/local/lib
       - name: Echo cellar
         run: ls -al /usr/local/Cellar/jq/$(brew info jq --json | jq -r '.[0].versions.stable')/include
       - name: Run GoReleaser
