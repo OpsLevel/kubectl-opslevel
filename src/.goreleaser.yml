@@ -15,7 +15,7 @@ builds:
     goos:
       - darwin
     goarch:
-      - amd64
+      - arm64
     binary: '{{ .ProjectName }}'
 archives:
   - name_template: '{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}'
