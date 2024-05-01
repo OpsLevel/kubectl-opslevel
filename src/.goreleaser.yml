@@ -19,9 +19,8 @@ builds:
     binary: '{{ .ProjectName }}'
 archives:
   - name_template: '{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}'
-  - name_template: '{{ .ProjectName }}'
-    id: generic-archive
-    meta: true
+source:
+  enabled: true
 checksum:
   name_template: '{{ .ProjectName }}.sha256'
   algorithm: sha256
@@ -37,8 +36,6 @@ signs:
       - "${artifact}"
 brews:
   - name: kubectl
-    ids:
-      - generic-archive
     description: "Command line tool that enables you to import & reconcile services with OpsLevel"
     homepage: "https://www.opslevel.com/"
     url_template: "https://github.com/opslevel/{{ .ProjectName }}/archive/refs/tags/{{ .Tag }}.tar.gz"
@@ -47,7 +44,7 @@ brews:
       email: bots@opslevel.com
     commit_msg_template: "Cut Release '{{ .Tag }}' for '{{ .ProjectName }}'"
     license: "MIT"
-    folder: Formula
+    directory: Formula
     dependencies:
       - name: go
       - name: jq
@@ -58,7 +55,7 @@ brews:
       cd 'src' do
         system 'go', 'build', *std_go_args(
           output: bin / 'kubectl-opslevel',
-          ldflags: "-s -w -X main.version={{ trimprefix {{ .Tag }} "v" }} -X main.commit={{ .ShortCommit }}"
+          ldflags: "-s -w -X main.version={{ trimprefix .Tag "v" }} -X main.commit={{ .ShortCommit }}"
         )
       end
     test: |
@@ -67,6 +64,13 @@ brews:
       owner: OpsLevel
       name: homebrew-tap
       token: "{{ .Env.ORG_GITHUB_TOKEN }}"
+      pull_request:
+        enabled: true
+        draft: false
+        base:
+          owner: OpsLevel
+          name: homebrew-tap
+          branch: main
 changelog:
   sort: desc
   filters:
