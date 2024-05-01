@@ -1,0 +1,73 @@
+name: "Release Testing"
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  release-version:
+    runs-on: ubuntu-latest
+    outputs:
+      release_version: ${{ steps.version.outputs.RELEASE_VERSION }}
+    steps:
+      - name: Set Release Version
+        id: version
+        run: |
+          echo "RELEASE_VERSION=$(date +v%Y.%-m.%-d)" >> $GITHUB_OUTPUT
+      - name: Ensure Release Does Not Exist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete $RELEASE_VERSION || true
+
+  release-brew:
+    runs-on: macos-latest
+    needs: release-version
+    env:
+      RELEASE_VERSION: ${{ needs.release-version.outputs.release_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: 'true'
+          token: ${{ secrets.ORG_GITHUB_TOKEN }}
+      - name: Fetch All Tags
+        run: git fetch --force --tags
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: src/go.mod
+      - name: Import GPG Key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify release has latest OpsLevel dependencies
+        run: task has-latest-opslevel-dependencies
+      - name: Verify jq installed
+        run: task brew-install-jq
+      - name: Echo include
+        run: ls -al /usr/local/include
+      - name: Echo lib
+        run: ls -al /usr/local/lib
+      - name: Echo cellar
+        run: ls -al /usr/local/Cellar/jq/$(brew info jq --json | jq -r '.[0].versions.stable')/include
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5.0.0
+        id: goreleaser
+        with:
+          args: release --clean --snapshot --release-notes=../.changes/${{ needs.release-version.outputs.release_version }}.md
+          workdir: ./src
+        env:
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
