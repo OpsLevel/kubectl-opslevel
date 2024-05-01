@@ -55,6 +55,8 @@ jobs:
         run: task has-latest-opslevel-dependencies
       - name: Verify jq installed
         run: task brew-install-jq
+      - name: LS
+        run: ls -al /opt/homebrew
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5.0.0
         id: goreleaser

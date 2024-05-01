@@ -5,8 +5,8 @@ before:
 builds:
   - env:
       - CGO_ENABLED=1
-      - CGO_CFLAGS="-I/opt/homebrew/opt/jq/include"
-      - CGO_LDFLAGS="-L/opt/homebrew/opt/jq/lib"
+      - CGO_CFLAGS="-I/opt/homebrew/include"
+      - CGO_LDFLAGS="-L/opt/homebrew/lib"
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
       - -trimpath
