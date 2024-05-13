@@ -58,7 +58,7 @@ jobs:
       - name: LS
         run: ls -al /opt/homebrew
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5.0.0
+        uses: goreleaser/goreleaser-action@v5.1.0
         id: goreleaser
         with:
           args: release --clean --release-notes=../.changes/${{ needs.release-version.outputs.release_version }}.md
