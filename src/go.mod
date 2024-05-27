@@ -10,9 +10,9 @@ require (
 	github.com/opslevel/opslevel-jq-parser/v2024 v2024.4.26
 	github.com/opslevel/opslevel-k8s-controller/v2024 v2024.4.26
 	github.com/rocktavious/autopilot/v2023 v2023.12.7
-	github.com/rs/zerolog v1.32.0
-	github.com/spf13/cobra v1.8.1
-	github.com/spf13/viper v1.19.0
+	github.com/rs/zerolog v1.33.0
+	github.com/spf13/cobra v1.8.0
+	github.com/spf13/viper v1.18.2
 	go.uber.org/automaxprocs v1.5.3
 	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f
 	gopkg.in/yaml.v3 v3.0.1
