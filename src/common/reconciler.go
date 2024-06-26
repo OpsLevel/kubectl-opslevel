@@ -93,6 +93,11 @@ func (r *ServiceReconciler) lookupService(registration opslevel_jq_parser.Servic
 		} else if foundService == nil {
 			log.Warn().Msgf("unexpected happened: got service with alias '%s' but the result is nil", alias)
 		} else if foundService.Id == "" {
+			if len(foundService.Aliases) == 1 {
+				// If this happens and there is only 1 alias to check we cannot assume the service doesn't exist
+				// because it seems like our API has a race condition looking up the service
+				return nil, serviceAliasesResult_APIErrorHappened
+			}
 			log.Warn().Msgf("unexpected happened: got service with alias '%s' but the result has no ID", alias)
 		} else {
 			// happy path
