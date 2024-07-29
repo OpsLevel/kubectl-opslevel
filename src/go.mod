@@ -6,7 +6,7 @@ require (
 	github.com/alecthomas/jsonschema v0.0.0-20220216202328-9eeeec9d044b
 	github.com/creasty/defaults v1.7.0
 	github.com/google/go-cmp v0.6.0
-	github.com/opslevel/opslevel-go/v2024 v2024.4.26
+	github.com/opslevel/opslevel-go/v2024 v2024.7.5
 	github.com/opslevel/opslevel-jq-parser/v2024 v2024.4.26
 	github.com/opslevel/opslevel-k8s-controller/v2024 v2024.4.26
 	github.com/rocktavious/autopilot/v2023 v2023.12.7
@@ -33,8 +33,8 @@ require (
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.19.0 // indirect
-	github.com/go-resty/resty/v2 v2.12.0 // indirect
+	github.com/go-playground/validator/v10 v10.22.0 // indirect
+	github.com/go-resty/resty/v2 v2.13.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
@@ -45,7 +45,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hasura/go-graphql-client v0.12.1 // indirect
+	github.com/hasura/go-graphql-client v0.12.2 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/iancoleman/orderedmap v0.3.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
@@ -76,12 +76,12 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.22.0 // indirect
-	golang.org/x/net v0.24.0 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/oauth2 v0.19.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
-	golang.org/x/term v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/term v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
