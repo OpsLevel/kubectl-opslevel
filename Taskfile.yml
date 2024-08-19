@@ -12,6 +12,7 @@ env:
   SRC_DIR: "{{.TASKFILE_DIR}}/src"
 
 tasks:
+
   ci:
     desc: Workflow to run in CI - MacOS only
     deps: [brew-install-jq]
@@ -28,6 +29,17 @@ tasks:
       - task: lint
       - task: has-latest-opslevel-dependencies
       - task: test
+
+  debug:
+    desc: Debug with Delve via CLI
+    vars:
+      CGO_CFLAGS:
+        sh: echo -I$(dirname $(dirname $(which jq)))/include
+      CGO_LDFLAGS:
+        sh: echo -L$(dirname $(dirname $(which jq)))/lib
+    dir: "{{.SRC_DIR}}"
+    cmds:
+      - dlv debug . --api-version=2 --build-flags="-gcflags='all=-N -l' -ldflags='-X main.version=task-debug'" -- {{.CLI_ARGS}}
 
   lint:
     desc: Formatting and linting
