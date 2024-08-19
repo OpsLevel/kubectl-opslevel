@@ -12,6 +12,7 @@ env:
   SRC_DIR: "{{.TASKFILE_DIR}}/src"
 
 tasks:
+
   ci:
     desc: Workflow to run in CI - MacOS only
     deps: [brew-install-jq]
@@ -28,6 +29,19 @@ tasks:
       - task: lint
       - task: has-latest-opslevel-dependencies
       - task: test
+
+  debug:
+    desc: Debug with Delve via CLI
+    vars:
+      CGO_CFLAGS:
+        sh: echo -I$(dirname $(dirname $(which jq)))/include
+      CGO_LDFLAGS:
+        sh: echo -L$(dirname $(dirname $(which jq)))/lib
+    dir: "{{.SRC_DIR}}"
+    deps:
+      - task: install-delve
+    cmds:
+      - dlv debug . --api-version=2 --build-flags="-gcflags='all=-N -l' -ldflags='-X main.version=task-debug'" -- {{.CLI_ARGS}}
 
   lint:
     desc: Formatting and linting
@@ -161,6 +175,13 @@ tasks:
     cmds:
       - task: go-install-tool
         vars: { GO_TOOL: "changie", GO_TOOL_PATH: "github.com/miniscruff/changie@latest" }
+
+  install-delve:
+    desc: go install "dlv"
+    internal: true
+    cmds:
+      - task: go-install-tool
+        vars: { GO_TOOL: "dlv", GO_TOOL_PATH: "github.com/go-delve/delve/cmd/dlv@latest" }
 
   install-nilaway:
     desc: go install "nilaway"
