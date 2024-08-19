@@ -4,7 +4,7 @@ go 1.22.0
 
 require (
 	github.com/alecthomas/jsonschema v0.0.0-20220216202328-9eeeec9d044b
-	github.com/creasty/defaults v1.7.0
+	github.com/creasty/defaults v1.8.0
 	github.com/google/go-cmp v0.6.0
 	github.com/opslevel/opslevel-go/v2024 v2024.4.26
 	github.com/opslevel/opslevel-jq-parser/v2024 v2024.4.26
