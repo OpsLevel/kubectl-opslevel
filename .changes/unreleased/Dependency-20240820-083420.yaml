@@ -1,0 +1,4 @@
+kind: Dependency
+body: bump opslevel-go to v2024.8.16, opslevel-jq-parser to v2024.8.19, opslevel-k8s-controller
+  to v2024.8.19
+time: 2024-08-20T08:34:20.256578-05:00
