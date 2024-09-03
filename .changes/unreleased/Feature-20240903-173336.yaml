@@ -1,0 +1,4 @@
+kind: Feature
+body: Add flag on `service reconcile` to disable service name updates which can in
+  certain cases cause unwanted alias generation
+time: 2024-09-03T17:33:36.909815-05:00

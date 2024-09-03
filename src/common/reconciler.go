@@ -24,14 +24,16 @@ const (
 )
 
 type ServiceReconciler struct {
-	client                 *OpslevelClient
-	disableServiceCreation bool
+	client                   *OpslevelClient
+	disableServiceCreation   bool
+	disableServiceNameUpdate bool
 }
 
-func NewServiceReconciler(client *OpslevelClient, disableServiceCreation bool) *ServiceReconciler {
+func NewServiceReconciler(client *OpslevelClient, disableServiceCreation, disableServiceNameUpdate bool) *ServiceReconciler {
 	return &ServiceReconciler{
-		client:                 client,
-		disableServiceCreation: disableServiceCreation,
+		client:                   client,
+		disableServiceCreation:   disableServiceCreation,
+		disableServiceNameUpdate: disableServiceNameUpdate,
 	}
 }
 
@@ -237,7 +239,7 @@ func (r *ServiceReconciler) updateService(service *opslevel.Service, registratio
 			log.Warn().Msgf("[%s] Unable to find 'Lifecycle' with alias '%s'", service.Name, registration.Lifecycle)
 		}
 	}
-	if registration.Name != "" && registration.Name != service.Name {
+	if !r.disableServiceNameUpdate && registration.Name != "" && registration.Name != service.Name {
 		updateServiceInput.Name = opslevel.RefOf(registration.Name)
 	}
 	if registration.Owner != "" && registration.Owner != service.Owner.Alias {
