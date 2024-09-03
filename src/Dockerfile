@@ -1,4 +1,4 @@
-FROM flant/jq:b6be13d5-glibc as libjq
+FROM flant/jq:b6be13d5-glibc AS libjq
 
 FROM golang:1.22 AS builder
 ENV CGO_ENABLED=1 CGO_CFLAGS="-I/libjq/include" CGO_LDFLAGS="-L/libjq/lib"
@@ -14,10 +14,10 @@ COPY . /src
 
 ARG COMMIT
 ARG VERSION
-RUN GOOS=linux \
-  go build -ldflags="-s -w -X main.version=${VERSION} -X main.commit=${COMMIT}" -o kubectl-opslevel main.go
+RUN GOOS=linux go build -ldflags="-s -w -X main.version=${VERSION} -X main.commit=${COMMIT}" -o kubectl-opslevel main.go &&\
+    chmod +x /src/kubectl-opslevel
 
-FROM scratch as release
-ENV USER_UID=1001 USER_NAME=opslevel
-COPY --from=builder /src/kubectl-opslevel /go/bin/kubectl-opslevel
-ENTRYPOINT ["/go/bin/kubectl-opslevel"]
+FROM gcr.io/distroless/base-debian12 AS release
+WORKDIR /
+COPY --from=builder /src/kubectl-opslevel /kubectl-opslevel
+ENTRYPOINT ["/kubectl-opslevel"]
