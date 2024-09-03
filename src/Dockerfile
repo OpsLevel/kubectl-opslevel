@@ -17,7 +17,7 @@ ARG VERSION
 RUN GOOS=linux \
   go build -ldflags="-s -w -X main.version=${VERSION} -X main.commit=${COMMIT}" -o kubectl-opslevel main.go
 
-FROM golang:1.22 as release
-COPY --from=builder /src/kubectl-opslevel /usr/local/bin
+FROM scratch as release
 ENV USER_UID=1001 USER_NAME=opslevel
-ENTRYPOINT ["/usr/local/bin/kubectl-opslevel"]
+COPY --from=builder /src/kubectl-opslevel /go/bin/kubectl-opslevel
+ENTRYPOINT ["/go/bin/kubectl-opslevel"]
