@@ -1,0 +1,4 @@
+kind: Feature
+body: When the tool loads if it doesn't find a valid configuration file it will fallback
+  to the default printed out by the `config sample` command
+time: 2024-09-04T15:11:02.347334-05:00
