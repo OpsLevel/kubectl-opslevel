@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	reconcileResyncInterval  int
-	disableServiceNameUpdate bool
+	reconcileResyncInterval int
+	enableServiceNameUpdate bool
 )
 
 var reconcileCmd = &cobra.Command{
@@ -33,12 +33,12 @@ var reconcileCmd = &cobra.Command{
 		common.SyncCache(client)
 		common.SyncCaches(createOpslevelClient(), resync)
 		common.SetupControllers(ctx, config, queue, resync)
-		common.ReconcileServices(client, disableServiceCreation, queue)
+		common.ReconcileServices(client, disableServiceCreation, enableServiceNameUpdate, queue)
 	},
 }
 
 func init() {
 	serviceCmd.AddCommand(reconcileCmd)
 	reconcileCmd.Flags().IntVar(&reconcileResyncInterval, "resync", 24, "The amount (in hours) before a full resync of the kubernetes cluster happens with OpsLevel.")
-	reconcileCmd.Flags().BoolVar(&disableServiceNameUpdate, "disable-service-name-update", true, "Turns off updating the service name.")
+	reconcileCmd.Flags().BoolVar(&enableServiceNameUpdate, "enable-service-name-update", false, "Turns on updating the service name.")
 }
