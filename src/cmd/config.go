@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"os"
 
 	"github.com/opslevel/kubectl-opslevel/common"
@@ -89,7 +90,8 @@ func readConfig() []byte {
 		res, err = os.ReadFile(cfgFile)
 	}
 	if err != nil {
-		panic(err)
+		log.Warn().Err(err).Msg("could not read config file - falling back to default")
+		return []byte(common.ConfigSample)
 	}
 	return res
 }
