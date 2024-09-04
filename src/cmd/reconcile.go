@@ -10,7 +10,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var reconcileResyncInterval int
+var (
+	reconcileResyncInterval int
+)
 
 var reconcileCmd = &cobra.Command{
 	Use:   "reconcile",
@@ -30,7 +32,7 @@ var reconcileCmd = &cobra.Command{
 		common.SyncCache(client)
 		common.SyncCaches(createOpslevelClient(), resync)
 		common.SetupControllers(ctx, config, queue, resync)
-		common.ReconcileServices(client, disableServiceCreation, queue)
+		common.ReconcileServices(client, disableServiceCreation, enableServiceNameUpdate, queue)
 	},
 }
 

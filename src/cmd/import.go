@@ -22,7 +22,7 @@ var importCmd = &cobra.Command{
 		client := createOpslevelClient()
 		common.SyncCache(client)
 		common.SetupControllers(ctx, config, queue, 0)
-		common.ReconcileServices(client, disableServiceCreation, queue)
+		common.ReconcileServices(client, disableServiceCreation, enableServiceNameUpdate, queue)
 		log.Info().Msg("Import Complete")
 	},
 }
