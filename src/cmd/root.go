@@ -53,7 +53,7 @@ func init() {
 	rootCmd.PersistentFlags().IntP("workers", "w", -1, "Sets the number of workers for API call processing. -1 == # CPU cores (cgroup aware). Overrides environment variable 'OPSLEVEL_WORKERS'")
 	rootCmd.PersistentFlags().StringP("output", "o", "text", "Output format.  One of: json|text")
 	rootCmd.PersistentFlags().Bool("disable-service-create", false, "Turns off automatic service creation (service data will still be reconciled). Overrides environment variable 'OPSLEVEL_DISABLE_SERVICE_CREATE'.")
-	rootCmd.Flags().BoolVar(&enableServiceNameUpdate, "enable-service-name-update", false, "Turns on updating the service name.")
+	rootCmd.PersistentFlags().BoolVar(&enableServiceNameUpdate, "enable-service-name-update", false, "Turns on updating the service name.")
 
 	cobra.CheckErr(viper.BindPFlags(rootCmd.PersistentFlags()))
 	cobra.CheckErr(viper.BindEnv("log-format", "OPSLEVEL_LOG_FORMAT", "OL_LOG_FORMAT", "OL_LOGFORMAT"))
