@@ -99,7 +99,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				Name:    "test",
 				Aliases: []string{},
 			},
-			reconciler: common.NewServiceReconciler(&common.OpslevelClient{}, false),
+			reconciler: common.NewServiceReconciler(&common.OpslevelClient{}, false, true),
 			assert: func(t *testing.T, err error) {
 				autopilot.Equals(t, "[test] found 0 aliases from kubernetes data", err.Error())
 			},
@@ -119,7 +119,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				GetRepositoryWithAliasHandler: func(alias string) (*opslevel.Repository, error) {
 					return nil, fmt.Errorf("api error")
 				},
-			}, false),
+			}, false, true),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
@@ -133,7 +133,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				GetServiceHandler: func(alias string) (*opslevel.Service, error) {
 					return nil, fmt.Errorf("api error")
 				},
-			}, false),
+			}, false, true),
 			assert: func(t *testing.T, err error) {
 				autopilot.Equals(t, "[test] api error during service lookup by alias.  unable to guarantee service was found or not ... skipping reconciliation", err.Error())
 			},
@@ -159,7 +159,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				CreateTagHandler: func(input opslevel.TagCreateInput) error {
 					panic("should not be called")
 				},
-			}, false),
+			}, false, true),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
@@ -198,7 +198,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
 					panic("should not be called")
 				},
-			}, false),
+			}, false, true),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
@@ -239,7 +239,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
 					panic("should not be called")
 				},
-			}, true),
+			}, true, true),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
@@ -277,7 +277,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
 					panic("should not be called")
 				},
-			}, false),
+			}, false, true),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
@@ -315,7 +315,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
 					panic("should not be called")
 				},
-			}, false),
+			}, false, true),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
@@ -361,7 +361,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
 					panic("should not be called")
 				},
-			}, false),
+			}, false, true),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
@@ -416,7 +416,7 @@ func TestReconcilerReconcile(t *testing.T) {
 				UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
 					panic("should not be called")
 				},
-			}, false),
+			}, false, true),
 			assert: func(t *testing.T, err error) {
 				autopilot.Ok(t, err)
 			},
@@ -481,7 +481,7 @@ func Test_Reconciler_RepoNotInOpsLevel(t *testing.T) {
 		UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
 			panic("should not be called")
 		},
-	}, true)
+	}, true, true)
 	reconcilerError := reconciler.Reconcile(testRegistration)
 
 	autopilot.Ok(t, reconcilerError)
@@ -551,7 +551,7 @@ func Test_Reconciler_RepoIsAttached(t *testing.T) {
 		UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
 			panic("should not be called")
 		},
-	}, true)
+	}, true, true)
 	reconcilerError := reconciler.Reconcile(testRegistration)
 
 	autopilot.Ok(t, reconcilerError)
@@ -619,7 +619,7 @@ func Test_Reconciler_RepoNeedsCreate(t *testing.T) {
 		UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
 			panic("should not be called")
 		},
-	}, true)
+	}, true, true)
 	reconcilerError := reconciler.Reconcile(testRegistration)
 
 	autopilot.Ok(t, reconcilerError)
@@ -690,7 +690,7 @@ func Test_Reconciler_RepoNeedsCreateBasic(t *testing.T) {
 		UpdateServiceRepositoryHandler: func(input opslevel.ServiceRepositoryUpdateInput) error {
 			panic("should not be called")
 		},
-	}, true)
+	}, true, true)
 	reconcilerError := reconciler.Reconcile(testRegistration)
 
 	autopilot.Ok(t, reconcilerError)
@@ -770,7 +770,7 @@ func Test_Reconciler_RepoNeedsUpdate(t *testing.T) {
 			autopilot.Equals(t, "Z2lkOi8vb3BzbGV2ZWwvU2VydmljZVJlcG9zaXRvcnkvMTAwNDc", string(input.Id))
 			return nil
 		},
-	}, true)
+	}, true, true)
 	reconcilerError := reconciler.Reconcile(testRegistration)
 
 	autopilot.Ok(t, reconcilerError)
@@ -785,7 +785,7 @@ func Test_Reconciler_ContainsAllTags(t *testing.T) {
 		tags   []opslevel.Tag
 		result bool
 	}
-	reconciler := common.NewServiceReconciler(&common.OpslevelClient{}, false)
+	reconciler := common.NewServiceReconciler(&common.OpslevelClient{}, false, true)
 	cases := map[string]TestCase{
 		"Is True When All Tags Overlap": {
 			input: []opslevel.TagInput{
@@ -900,7 +900,7 @@ func Test_Reconciler_HandleTools(t *testing.T) {
 			toolsCreated = append(toolsCreated, tool)
 			return nil
 		},
-	}, false)
+	}, false, true)
 	// Act
 	err := reconciler.Reconcile(registration)
 	autopilot.Ok(t, err)
@@ -951,7 +951,7 @@ func Test_Reconciler_HandleProperties(t *testing.T) {
 			results = append(results, input)
 			return nil
 		},
-	}, false)
+	}, false, true)
 
 	// Act
 	err := reconciler.Reconcile(registration)
