@@ -1,3 +1,0 @@
-kind: Security
-body: Change docker base image to fix vulnerabilities that were in the previous one
-time: 2024-09-03T16:57:11.396066-05:00
