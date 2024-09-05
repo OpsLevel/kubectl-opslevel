@@ -6,20 +6,8 @@ on:
     - cron: "0 13 * * 1"  # 8am CT on Mondays
 
 jobs:
-  scan-for-vulns:
-    runs-on: ubuntu-latest
-    container:
-      image: public.ecr.aws/opslevel/platform-tools:latest
-      env:
-        ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
-        GRYPE_INTEGRATION_SECRET: ${{ secrets.GRYPE_INTEGRATION_SECRET }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.ORG_GITHUB_TOKEN }}
-      - name: Scan
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
-          grype dir:$(pwd) --only-fixed -o json | jq '{"matches": .matches}' |
-          curl -s -X POST https://upload.opslevel.com/integrations/custom_event/${GRYPE_INTEGRATION_SECRET}?alias=opslevel_kubernetes_sync -H 'content-type: application/json'  --data-binary @-
+  call-grype:
+    uses: opslevel/actions/.github/workflows/grype.yml@main
+    with:
+      alias: opslevel_kubernetes_sync
+    secrets: inherit
