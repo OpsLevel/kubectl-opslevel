@@ -10,6 +10,7 @@ service:
           - .metadata.annotations."opslevel.com/ignore"
       opslevel: # This is how you map your kubernetes data to opslevel service
         aliases: # This is how we identify the services again during reconciliation - please make sure they are unique
+          - .metadata.name # Consolidate the same service in multiple namespaces into a single record
           - '"k8s:\(.metadata.name)-\(.metadata.namespace)"'
           - '"\(.metadata.namespace)-\(.metadata.name)"'
         description: .metadata.annotations."opslevel.com/description"
