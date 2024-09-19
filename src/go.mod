@@ -1,6 +1,6 @@
 module github.com/opslevel/kubectl-opslevel
 
-go 1.22.0
+go 1.23
 
 require (
 	github.com/alecthomas/jsonschema v0.0.0-20220216202328-9eeeec9d044b
