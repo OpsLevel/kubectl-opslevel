@@ -104,7 +104,7 @@ func NewOpslevelClient(client *opslevel.Client) *OpslevelClient {
 			return client.CreateService(input)
 		},
 		UpdateServiceHandler: func(input opslevel.ServiceUpdateInput) (*opslevel.Service, error) {
-			return client.UpdateService(input)
+			return client.UpdateService(opslevel.ConvertServiceUpdateInput(input))
 		},
 		CreateAliasHandler: func(input opslevel.AliasCreateInput) error {
 			_, err := client.CreateAlias(input)
