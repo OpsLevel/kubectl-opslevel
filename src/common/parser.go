@@ -21,8 +21,8 @@ func AggregateServices(queue <-chan opslevel_jq_parser.ServiceRegistration) *[]o
 	return &services
 }
 
-func ReconcileServices(client *opslevel.Client, disableServiceCreation, enableServiceNameUpdate bool, queue <-chan opslevel_jq_parser.ServiceRegistration) {
-	reconciler := NewServiceReconciler(NewOpslevelClient(client), disableServiceCreation, enableServiceNameUpdate)
+func ReconcileServices(client *opslevel.Client, disableServiceCreation, enableServiceNameUpdate bool, queue <-chan opslevel_jq_parser.ServiceRegistration, resync time.Duration) {
+	reconciler := NewServiceReconciler(NewOpslevelClient(client), disableServiceCreation, enableServiceNameUpdate, resync)
 	for registration := range queue {
 		err := reconciler.Reconcile(registration)
 		if err != nil {

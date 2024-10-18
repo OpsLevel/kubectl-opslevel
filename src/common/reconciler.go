@@ -3,7 +3,9 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
+	"time"
 
 	"golang.org/x/exp/maps"
 
@@ -14,6 +16,48 @@ import (
 )
 
 type serviceAliasesResult string
+
+type RegistrationItem struct {
+	registration opslevel_jq_parser.ServiceRegistration
+	expiration   int64
+}
+
+func (item RegistrationItem) Expired() bool {
+	if item.expiration == 0 {
+		return false
+	}
+	return time.Now().UnixNano() > item.expiration
+}
+
+func (rc *RegistrationCache) Key(registration opslevel_jq_parser.ServiceRegistration) string {
+	return strings.Join(registration.Aliases, "-")
+}
+
+func (rc *RegistrationCache) Exists(registration opslevel_jq_parser.ServiceRegistration) bool {
+	key := rc.Key(registration)
+	cachedRegistrationItem, found := rc.cache[key]
+	if found {
+		if cachedRegistrationItem.Expired() {
+			// not strictly necessary
+			delete(rc.cache, key)
+			return false
+		} else if reflect.DeepEqual(cachedRegistrationItem.registration, registration) {
+			return true
+		}
+	}
+	return false
+}
+
+func (rc *RegistrationCache) Set(registration opslevel_jq_parser.ServiceRegistration) bool {
+	key := rc.Key(registration)
+	rc.cache[key] = RegistrationItem{registration: registration, expiration: time.Now().Add(rc.duration * time.Second).UnixNano()}
+	return true
+}
+
+type RegistrationCache struct {
+	cache    map[string]RegistrationItem
+	duration time.Duration
+}
 
 const (
 	serviceAliasesResult_NoAliasesMatched      serviceAliasesResult = "NoAliasesMatched"
@@ -27,13 +71,16 @@ type ServiceReconciler struct {
 	client                  *OpslevelClient
 	disableServiceCreation  bool
 	enableServiceNameUpdate bool
+	resync                  time.Duration
+	cache                   *RegistrationCache
 }
 
-func NewServiceReconciler(client *OpslevelClient, disableServiceCreation, enableServiceNameUpdate bool) *ServiceReconciler {
+func NewServiceReconciler(client *OpslevelClient, disableServiceCreation, enableServiceNameUpdate bool, resync time.Duration) *ServiceReconciler {
 	return &ServiceReconciler{
 		client:                  client,
 		disableServiceCreation:  disableServiceCreation,
 		enableServiceNameUpdate: enableServiceNameUpdate,
+		cache:                   &RegistrationCache{cache: map[string]RegistrationItem{}, duration: resync},
 	}
 }
 
@@ -41,6 +88,12 @@ func (r *ServiceReconciler) Reconcile(registration opslevel_jq_parser.ServiceReg
 	if len(registration.Aliases) <= 0 {
 		return fmt.Errorf("[%s] found 0 aliases from kubernetes data", registration.Name)
 	}
+
+	if r.cache.Exists(registration) {
+		log.Info().Msgf("[%s] Avoided reconciling.\n\tREASON: Attributes didn't change", registration.Name)
+		return nil
+	}
+
 	service, err := r.handleService(registration)
 	if err != nil {
 		return err
@@ -48,6 +101,9 @@ func (r *ServiceReconciler) Reconcile(registration opslevel_jq_parser.ServiceReg
 	if service == nil {
 		return nil
 	}
+
+	// Update the cache with a 1-day expiration (in nanoseconds)
+	r.cache.Set(registration)
 
 	// We don't care about errors at this point because they will just be logged
 	r.handleAliases(service, registration)

@@ -30,7 +30,7 @@ var reconcileCmd = &cobra.Command{
 		common.SyncCache(client)
 		common.SyncCaches(createOpslevelClient(), resync)
 		common.SetupControllers(ctx, config, queue, resync)
-		common.ReconcileServices(client, disableServiceCreation, enableServiceNameUpdate, queue)
+		common.ReconcileServices(client, disableServiceCreation, enableServiceNameUpdate, queue, resync)
 	},
 }
 
