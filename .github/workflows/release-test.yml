@@ -40,6 +40,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: src/go.mod
+          cache-dependency-path: |
+            src/go.sum
       - name: Import GPG Key
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v6
