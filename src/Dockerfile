@@ -1,6 +1,6 @@
 FROM flant/jq:b6be13d5-glibc AS libjq
 
-FROM golang:1.23 AS builder
+FROM golang:1.24 AS builder
 ENV CGO_ENABLED=1 CGO_CFLAGS="-I/libjq/include" CGO_LDFLAGS="-L/libjq/lib"
 WORKDIR /src
 
