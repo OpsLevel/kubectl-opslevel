@@ -1,3 +1,8 @@
+> [!IMPORTANT]  
+> This project and tool as been deprecated in favor of the [opslevel-agent](https://github.com/OpsLevel/helm-charts/blob/main/charts/opslevel-agent/README.md#opslevel-agent).  Please Migrate!
+
+
+
 <p align="center">
     <a href="https://github.com/OpsLevel/kubectl-opslevel/blob/main/LICENSE">
         <img src="https://img.shields.io/github/license/OpsLevel/kubectl-opslevel.svg" alt="License" /></a>
